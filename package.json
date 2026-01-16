@@ -1,0 +1,42 @@
+{
+  "name": "rarefivault",
+  "version": "1.0.0",
+  "description": "RareFi Vault - Permissionless yield vault contract for Algorand",
+  "main": "scripts/deploy.js",
+  "scripts": {
+    "compile": "npx puya-ts contracts/RareFiVault.algo.ts --out-dir artifacts",
+    "deploy": "node scripts/deploy.js",
+    "test": "jest",
+    "test:verbose": "jest --verbose",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "algorand",
+    "defi",
+    "yield",
+    "vault",
+    "staking",
+    "tinyman",
+    "smart-contract"
+  ],
+  "author": "RareFi",
+  "license": "MIT",
+  "dependencies": {
+    "algosdk": "^3.4.0",
+    "dotenv": "^16.6.1"
+  },
+  "devDependencies": {
+    "@algorandfoundation/algokit-utils": "^9.1.2",
+    "@algorandfoundation/algorand-typescript": "^1.0.1",
+    "@algorandfoundation/puya-ts": "^1.0.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.19.22",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

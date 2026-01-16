@@ -1,0 +1,9 @@
+#pragma version 11
+#pragma typetrack false
+
+// contracts/MockTinymanPool.algo.ts::MockTinymanPool.clearStateProgram() -> uint64:
+main:
+    // contracts/MockTinymanPool.algo.ts:110
+    // return true;
+    pushint 1 // 1
+    return

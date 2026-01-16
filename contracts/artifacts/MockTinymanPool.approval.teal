@@ -1,0 +1,711 @@
+#pragma version 11
+#pragma typetrack false
+
+// contracts/MockTinymanPool.algo.ts::MockTinymanPool.approvalProgram() -> uint64:
+main:
+    intcblock 0 1 4 2
+    bytecblock "asset_1_reserves" "asset_2_reserves" "asset1Id" "asset2Id" "total_fee_share"
+    intc_0 // 0
+    pushbytes ""
+    dupn 7
+    // contracts/MockTinymanPool.algo.ts:54
+    // if (Txn.applicationId.id === Uint64(0)) {
+    txn ApplicationID
+    bnz main_after_if_else@2
+    // contracts/MockTinymanPool.algo.ts:120
+    // if (Txn.numAppArgs >= Uint64(1)) {
+    txn NumAppArgs
+    bz main_after_inlined_contracts/MockTinymanPool.algo.ts::MockTinymanPool.onCreate@37
+    // contracts/MockTinymanPool.algo.ts:121
+    // const firstArg = Txn.applicationArgs(0);
+    intc_0 // 0
+    txnas ApplicationArgs
+    // contracts/MockTinymanPool.algo.ts:123
+    // if (firstArg.length === Uint64(4)) {
+    len
+    intc_2 // 4
+    ==
+    bz main_after_inlined_contracts/MockTinymanPool.algo.ts::MockTinymanPool.onCreate@37
+    // contracts/MockTinymanPool.algo.ts:125
+    // const asset1Id = btoi(Txn.applicationArgs(1));
+    intc_1 // 1
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:126
+    // const asset2Id = btoi(Txn.applicationArgs(2));
+    intc_3 // 2
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:127
+    // const reserve1 = btoi(Txn.applicationArgs(3));
+    pushint 3 // 3
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:128
+    // const reserve2 = btoi(Txn.applicationArgs(4));
+    intc_2 // 4
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:129
+    // const feeBps = btoi(Txn.applicationArgs(5));
+    pushint 5 // 5
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:130
+    // this.createPool(asset1Id, asset2Id, reserve1, reserve2, feeBps);
+    callsub createPool
+
+main_after_inlined_contracts/MockTinymanPool.algo.ts::MockTinymanPool.onCreate@37:
+    // contracts/MockTinymanPool.algo.ts:131
+    // return true;
+    intc_1 // 1
+    // contracts/MockTinymanPool.algo.ts:55
+    // return this.onCreate();
+    return
+
+main_after_if_else@2:
+    // contracts/MockTinymanPool.algo.ts:59
+    // if (Txn.numAppArgs === Uint64(0)) {
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    // contracts/MockTinymanPool.algo.ts:60
+    // return false; // No bare calls supported (except create)
+    err
+
+main_after_if_else@4:
+    // contracts/MockTinymanPool.algo.ts:63
+    // const action = Txn.applicationArgs(0);
+    intc_0 // 0
+    txnas ApplicationArgs
+    dup
+    bury 10
+    // contracts/MockTinymanPool.algo.ts:65
+    // if (action === Bytes('createPool')) {
+    pushbytes "createPool"
+    ==
+    bz main_after_if_else@6
+    // contracts/MockTinymanPool.algo.ts:67
+    // const asset1Id = btoi(Txn.applicationArgs(1));
+    intc_1 // 1
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:68
+    // const asset2Id = btoi(Txn.applicationArgs(2));
+    intc_3 // 2
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:69
+    // const initialReserve1 = btoi(Txn.applicationArgs(3));
+    pushint 3 // 3
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:70
+    // const initialReserve2 = btoi(Txn.applicationArgs(4));
+    intc_2 // 4
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:71
+    // const feeBps = btoi(Txn.applicationArgs(5));
+    pushint 5 // 5
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:72
+    // this.createPool(asset1Id, asset2Id, initialReserve1, initialReserve2, feeBps);
+    callsub createPool
+    // contracts/MockTinymanPool.algo.ts:73
+    // return true;
+    intc_1 // 1
+    return
+
+main_after_if_else@6:
+    // contracts/MockTinymanPool.algo.ts:76
+    // if (action === Bytes('optInAssets')) {
+    dig 8
+    pushbytes "optInAssets"
+    ==
+    bz main_after_if_else@8
+    // contracts/MockTinymanPool.algo.ts:155
+    // const appAddr: Account = Global.currentApplicationAddress;
+    global CurrentApplicationAddress
+    // contracts/MockTinymanPool.algo.ts:157-162
+    // itxn.assetTransfer({
+    //   assetReceiver: appAddr,
+    //   xferAsset: Asset(this.asset1Id.value),
+    //   assetAmount: Uint64(0),
+    //   fee: Uint64(0),
+    // }).submit();
+    itxn_begin
+    // contracts/MockTinymanPool.algo.ts:159
+    // xferAsset: Asset(this.asset1Id.value),
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:29
+    // asset1Id = GlobalState<uint64>();  // e.g., USDC
+    bytec_2 // "asset1Id"
+    // contracts/MockTinymanPool.algo.ts:159
+    // xferAsset: Asset(this.asset1Id.value),
+    app_global_get_ex
+    assert // check GlobalState exists
+    // contracts/MockTinymanPool.algo.ts:160
+    // assetAmount: Uint64(0),
+    intc_0 // 0
+    itxn_field AssetAmount
+    itxn_field XferAsset
+    dup
+    itxn_field AssetReceiver
+    // contracts/MockTinymanPool.algo.ts:157-162
+    // itxn.assetTransfer({
+    //   assetReceiver: appAddr,
+    //   xferAsset: Asset(this.asset1Id.value),
+    //   assetAmount: Uint64(0),
+    //   fee: Uint64(0),
+    // }).submit();
+    intc_2 // 4
+    itxn_field TypeEnum
+    // contracts/MockTinymanPool.algo.ts:161
+    // fee: Uint64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // contracts/MockTinymanPool.algo.ts:157-162
+    // itxn.assetTransfer({
+    //   assetReceiver: appAddr,
+    //   xferAsset: Asset(this.asset1Id.value),
+    //   assetAmount: Uint64(0),
+    //   fee: Uint64(0),
+    // }).submit();
+    itxn_submit
+    // contracts/MockTinymanPool.algo.ts:164-169
+    // itxn.assetTransfer({
+    //   assetReceiver: appAddr,
+    //   xferAsset: Asset(this.asset2Id.value),
+    //   assetAmount: Uint64(0),
+    //   fee: Uint64(0),
+    // }).submit();
+    itxn_begin
+    // contracts/MockTinymanPool.algo.ts:166
+    // xferAsset: Asset(this.asset2Id.value),
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:30
+    // asset2Id = GlobalState<uint64>();  // e.g., Project token
+    bytec_3 // "asset2Id"
+    // contracts/MockTinymanPool.algo.ts:166
+    // xferAsset: Asset(this.asset2Id.value),
+    app_global_get_ex
+    assert // check GlobalState exists
+    // contracts/MockTinymanPool.algo.ts:167
+    // assetAmount: Uint64(0),
+    intc_0 // 0
+    itxn_field AssetAmount
+    itxn_field XferAsset
+    itxn_field AssetReceiver
+    // contracts/MockTinymanPool.algo.ts:164-169
+    // itxn.assetTransfer({
+    //   assetReceiver: appAddr,
+    //   xferAsset: Asset(this.asset2Id.value),
+    //   assetAmount: Uint64(0),
+    //   fee: Uint64(0),
+    // }).submit();
+    intc_2 // 4
+    itxn_field TypeEnum
+    // contracts/MockTinymanPool.algo.ts:168
+    // fee: Uint64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // contracts/MockTinymanPool.algo.ts:164-169
+    // itxn.assetTransfer({
+    //   assetReceiver: appAddr,
+    //   xferAsset: Asset(this.asset2Id.value),
+    //   assetAmount: Uint64(0),
+    //   fee: Uint64(0),
+    // }).submit();
+    itxn_submit
+    // contracts/MockTinymanPool.algo.ts:78
+    // return true;
+    intc_1 // 1
+    return
+
+main_after_if_else@8:
+    // contracts/MockTinymanPool.algo.ts:81
+    // if (action === Bytes('swap')) {
+    dig 8
+    pushbytes "swap"
+    ==
+    bz main_after_if_else@10
+    // contracts/MockTinymanPool.algo.ts:83
+    // assert(Txn.numAppArgs >= Uint64(3), 'Need 3 args for swap');
+    txn NumAppArgs
+    pushint 3 // 3
+    >=
+    assert // Need 3 args for swap
+    // contracts/MockTinymanPool.algo.ts:84
+    // const swapType = Txn.applicationArgs(1);
+    intc_1 // 1
+    txnas ApplicationArgs
+    // contracts/MockTinymanPool.algo.ts:85
+    // const minAmountOut = btoi(Txn.applicationArgs(2));
+    intc_3 // 2
+    txnas ApplicationArgs
+    btoi
+    bury 5
+    // contracts/MockTinymanPool.algo.ts:178
+    // assert(swapType === Bytes('fixed-input'), 'Only fixed-input supported');
+    pushbytes "fixed-input"
+    ==
+    assert // Only fixed-input supported
+    // contracts/MockTinymanPool.algo.ts:180
+    // const appAddr: Account = Global.currentApplicationAddress;
+    global CurrentApplicationAddress
+    // contracts/MockTinymanPool.algo.ts:181
+    // const currentIndex = Txn.groupIndex;
+    txn GroupIndex
+    // contracts/MockTinymanPool.algo.ts:182
+    // assert(currentIndex >= Uint64(1), 'Must follow asset transfer');
+    dup
+    assert // Must follow asset transfer
+    // contracts/MockTinymanPool.algo.ts:185
+    // const incomingTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
+    intc_1 // 1
+    -
+    dup
+    gtxns TypeEnum
+    intc_2 // axfer
+    ==
+    assert // transaction type is axfer
+    // contracts/MockTinymanPool.algo.ts:186
+    // const incomingAsset = incomingTransfer.xferAsset;
+    dup
+    gtxns XferAsset
+    dup
+    cover 2
+    bury 9
+    // contracts/MockTinymanPool.algo.ts:187
+    // const incomingAmount = incomingTransfer.assetAmount;
+    dup
+    gtxns AssetAmount
+    bury 10
+    // contracts/MockTinymanPool.algo.ts:188
+    // assert(incomingTransfer.assetReceiver === appAddr, 'Must send to pool');
+    gtxns AssetReceiver
+    uncover 2
+    ==
+    assert // Must send to pool
+    // contracts/MockTinymanPool.algo.ts:191
+    // const feeBps = this.total_fee_share.value;
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:37
+    // total_fee_share = GlobalState<uint64>();  // Fee in basis points
+    bytec 4 // "total_fee_share"
+    // contracts/MockTinymanPool.algo.ts:191
+    // const feeBps = this.total_fee_share.value;
+    app_global_get_ex
+    swap
+    bury 10
+    assert // check GlobalState exists
+    // contracts/MockTinymanPool.algo.ts:196
+    // if (incomingAsset === Asset(this.asset1Id.value)) {
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:29
+    // asset1Id = GlobalState<uint64>();  // e.g., USDC
+    bytec_2 // "asset1Id"
+    // contracts/MockTinymanPool.algo.ts:196
+    // if (incomingAsset === Asset(this.asset1Id.value)) {
+    app_global_get_ex
+    assert // check GlobalState exists
+    ==
+    bz main_else_body@21
+    // contracts/MockTinymanPool.algo.ts:198
+    // inputReserves = this.asset_1_reserves.value;
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:35
+    // asset_1_reserves = GlobalState<uint64>();
+    bytec_0 // "asset_1_reserves"
+    // contracts/MockTinymanPool.algo.ts:198
+    // inputReserves = this.asset_1_reserves.value;
+    app_global_get_ex
+    swap
+    bury 6
+    assert // check GlobalState exists
+    // contracts/MockTinymanPool.algo.ts:199
+    // outputReserves = this.asset_2_reserves.value;
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:36
+    // asset_2_reserves = GlobalState<uint64>();
+    bytec_1 // "asset_2_reserves"
+    // contracts/MockTinymanPool.algo.ts:199
+    // outputReserves = this.asset_2_reserves.value;
+    app_global_get_ex
+    swap
+    bury 3
+    assert // check GlobalState exists
+    // contracts/MockTinymanPool.algo.ts:200
+    // outAsset = Asset(this.asset2Id.value);
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:30
+    // asset2Id = GlobalState<uint64>();  // e.g., Project token
+    bytec_3 // "asset2Id"
+    // contracts/MockTinymanPool.algo.ts:200
+    // outAsset = Asset(this.asset2Id.value);
+    app_global_get_ex
+    swap
+    bury 4
+    assert // check GlobalState exists
+
+main_after_if_else@22:
+    // contracts/MockTinymanPool.algo.ts:211
+    // const netInput = this.mulDivFloor(incomingAmount, FEE_BPS_BASE - feeBps, FEE_BPS_BASE);
+    pushint 10000 // 10000
+    dig 8
+    -
+    // contracts/MockTinymanPool.algo.ts:43
+    // const [hi, lo] = mulw(n1, n2);
+    dig 7
+    mulw
+    // contracts/MockTinymanPool.algo.ts:44
+    // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:211
+    // const netInput = this.mulDivFloor(incomingAmount, FEE_BPS_BASE - feeBps, FEE_BPS_BASE);
+    pushint 10000 // 10000
+    // contracts/MockTinymanPool.algo.ts:44
+    // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
+    divmodw
+    popn 2
+    swap
+    // contracts/MockTinymanPool.algo.ts:45
+    // assert(q_hi === Uint64(0), 'Overflow');
+    !
+    assert // Overflow
+    // contracts/MockTinymanPool.algo.ts:214
+    // const outAmount = this.mulDivFloor(outputReserves, netInput, inputReserves + netInput);
+    dig 5
+    dig 1
+    +
+    // contracts/MockTinymanPool.algo.ts:43
+    // const [hi, lo] = mulw(n1, n2);
+    dig 3
+    uncover 2
+    mulw
+    // contracts/MockTinymanPool.algo.ts:44
+    // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
+    intc_0 // 0
+    uncover 3
+    divmodw
+    popn 2
+    dup
+    cover 2
+    bury 3
+    // contracts/MockTinymanPool.algo.ts:45
+    // assert(q_hi === Uint64(0), 'Overflow');
+    !
+    assert // Overflow
+    // contracts/MockTinymanPool.algo.ts:216
+    // assert(outAmount >= minAmountOut, 'Slippage exceeded');
+    dig 4
+    >=
+    assert // Slippage exceeded
+    // contracts/MockTinymanPool.algo.ts:219
+    // if (incomingAsset === Asset(this.asset1Id.value)) {
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:29
+    // asset1Id = GlobalState<uint64>();  // e.g., USDC
+    bytec_2 // "asset1Id"
+    // contracts/MockTinymanPool.algo.ts:219
+    // if (incomingAsset === Asset(this.asset1Id.value)) {
+    app_global_get_ex
+    assert // check GlobalState exists
+    dig 6
+    ==
+    bz main_else_body@24
+    // contracts/MockTinymanPool.algo.ts:220
+    // this.asset_1_reserves.value = inputReserves + incomingAmount;
+    dig 4
+    dig 7
+    +
+    // contracts/MockTinymanPool.algo.ts:35
+    // asset_1_reserves = GlobalState<uint64>();
+    bytec_0 // "asset_1_reserves"
+    // contracts/MockTinymanPool.algo.ts:220
+    // this.asset_1_reserves.value = inputReserves + incomingAmount;
+    swap
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:221
+    // this.asset_2_reserves.value = outputReserves - outAmount;
+    dup2
+    -
+    // contracts/MockTinymanPool.algo.ts:36
+    // asset_2_reserves = GlobalState<uint64>();
+    bytec_1 // "asset_2_reserves"
+    // contracts/MockTinymanPool.algo.ts:221
+    // this.asset_2_reserves.value = outputReserves - outAmount;
+    swap
+    app_global_put
+
+main_after_if_else@25:
+    // contracts/MockTinymanPool.algo.ts:228-233
+    // itxn.assetTransfer({
+    //   assetReceiver: Txn.sender,
+    //   xferAsset: outAsset,
+    //   assetAmount: outAmount,
+    //   fee: Uint64(0),
+    // }).submit();
+    itxn_begin
+    // contracts/MockTinymanPool.algo.ts:229
+    // assetReceiver: Txn.sender,
+    txn Sender
+    dig 1
+    itxn_field AssetAmount
+    dig 3
+    itxn_field XferAsset
+    itxn_field AssetReceiver
+    // contracts/MockTinymanPool.algo.ts:228-233
+    // itxn.assetTransfer({
+    //   assetReceiver: Txn.sender,
+    //   xferAsset: outAsset,
+    //   assetAmount: outAmount,
+    //   fee: Uint64(0),
+    // }).submit();
+    intc_2 // 4
+    itxn_field TypeEnum
+    // contracts/MockTinymanPool.algo.ts:232
+    // fee: Uint64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // contracts/MockTinymanPool.algo.ts:228-233
+    // itxn.assetTransfer({
+    //   assetReceiver: Txn.sender,
+    //   xferAsset: outAsset,
+    //   assetAmount: outAmount,
+    //   fee: Uint64(0),
+    // }).submit();
+    itxn_submit
+    // contracts/MockTinymanPool.algo.ts:87
+    // return true;
+    intc_1 // 1
+    return
+
+main_else_body@24:
+    // contracts/MockTinymanPool.algo.ts:223
+    // this.asset_2_reserves.value = inputReserves + incomingAmount;
+    dig 4
+    dig 7
+    +
+    // contracts/MockTinymanPool.algo.ts:36
+    // asset_2_reserves = GlobalState<uint64>();
+    bytec_1 // "asset_2_reserves"
+    // contracts/MockTinymanPool.algo.ts:223
+    // this.asset_2_reserves.value = inputReserves + incomingAmount;
+    swap
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:224
+    // this.asset_1_reserves.value = outputReserves - outAmount;
+    dup2
+    -
+    // contracts/MockTinymanPool.algo.ts:35
+    // asset_1_reserves = GlobalState<uint64>();
+    bytec_0 // "asset_1_reserves"
+    // contracts/MockTinymanPool.algo.ts:224
+    // this.asset_1_reserves.value = outputReserves - outAmount;
+    swap
+    app_global_put
+    b main_after_if_else@25
+
+main_else_body@21:
+    // contracts/MockTinymanPool.algo.ts:203
+    // assert(incomingAsset === Asset(this.asset2Id.value), 'Unknown asset');
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:30
+    // asset2Id = GlobalState<uint64>();  // e.g., Project token
+    bytec_3 // "asset2Id"
+    // contracts/MockTinymanPool.algo.ts:203
+    // assert(incomingAsset === Asset(this.asset2Id.value), 'Unknown asset');
+    app_global_get_ex
+    assert // check GlobalState exists
+    dig 6
+    ==
+    assert // Unknown asset
+    // contracts/MockTinymanPool.algo.ts:204
+    // inputReserves = this.asset_2_reserves.value;
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:36
+    // asset_2_reserves = GlobalState<uint64>();
+    bytec_1 // "asset_2_reserves"
+    // contracts/MockTinymanPool.algo.ts:204
+    // inputReserves = this.asset_2_reserves.value;
+    app_global_get_ex
+    swap
+    bury 6
+    assert // check GlobalState exists
+    // contracts/MockTinymanPool.algo.ts:205
+    // outputReserves = this.asset_1_reserves.value;
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:35
+    // asset_1_reserves = GlobalState<uint64>();
+    bytec_0 // "asset_1_reserves"
+    // contracts/MockTinymanPool.algo.ts:205
+    // outputReserves = this.asset_1_reserves.value;
+    app_global_get_ex
+    swap
+    bury 3
+    assert // check GlobalState exists
+    // contracts/MockTinymanPool.algo.ts:206
+    // outAsset = Asset(this.asset1Id.value);
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:29
+    // asset1Id = GlobalState<uint64>();  // e.g., USDC
+    bytec_2 // "asset1Id"
+    // contracts/MockTinymanPool.algo.ts:206
+    // outAsset = Asset(this.asset1Id.value);
+    app_global_get_ex
+    swap
+    bury 4
+    assert // check GlobalState exists
+    b main_after_if_else@22
+
+main_after_if_else@10:
+    // contracts/MockTinymanPool.algo.ts:90
+    // if (action === Bytes('updateFee')) {
+    dig 8
+    pushbytes "updateFee"
+    ==
+    bz main_after_if_else@12
+    // contracts/MockTinymanPool.algo.ts:91
+    // const newFeeBps = btoi(Txn.applicationArgs(1));
+    intc_1 // 1
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:37
+    // total_fee_share = GlobalState<uint64>();  // Fee in basis points
+    bytec 4 // "total_fee_share"
+    // contracts/MockTinymanPool.algo.ts:237
+    // this.total_fee_share.value = newFeeBps;
+    swap
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:93
+    // return true;
+    intc_1 // 1
+    return
+
+main_after_if_else@12:
+    // contracts/MockTinymanPool.algo.ts:96
+    // if (action === Bytes('addLiquidity')) {
+    dig 8
+    pushbytes "addLiquidity"
+    ==
+    bz main_after_if_else@14
+    // contracts/MockTinymanPool.algo.ts:97
+    // const amount1 = btoi(Txn.applicationArgs(1));
+    intc_1 // 1
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:98
+    // const amount2 = btoi(Txn.applicationArgs(2));
+    intc_3 // 2
+    txnas ApplicationArgs
+    btoi
+    // contracts/MockTinymanPool.algo.ts:241
+    // this.asset_1_reserves.value = this.asset_1_reserves.value + amount1;
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:35
+    // asset_1_reserves = GlobalState<uint64>();
+    bytec_0 // "asset_1_reserves"
+    // contracts/MockTinymanPool.algo.ts:241
+    // this.asset_1_reserves.value = this.asset_1_reserves.value + amount1;
+    app_global_get_ex
+    assert // check GlobalState exists
+    uncover 2
+    +
+    // contracts/MockTinymanPool.algo.ts:35
+    // asset_1_reserves = GlobalState<uint64>();
+    bytec_0 // "asset_1_reserves"
+    // contracts/MockTinymanPool.algo.ts:241
+    // this.asset_1_reserves.value = this.asset_1_reserves.value + amount1;
+    swap
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:242
+    // this.asset_2_reserves.value = this.asset_2_reserves.value + amount2;
+    intc_0 // 0
+    // contracts/MockTinymanPool.algo.ts:36
+    // asset_2_reserves = GlobalState<uint64>();
+    bytec_1 // "asset_2_reserves"
+    // contracts/MockTinymanPool.algo.ts:242
+    // this.asset_2_reserves.value = this.asset_2_reserves.value + amount2;
+    app_global_get_ex
+    assert // check GlobalState exists
+    +
+    // contracts/MockTinymanPool.algo.ts:36
+    // asset_2_reserves = GlobalState<uint64>();
+    bytec_1 // "asset_2_reserves"
+    // contracts/MockTinymanPool.algo.ts:242
+    // this.asset_2_reserves.value = this.asset_2_reserves.value + amount2;
+    swap
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:100
+    // return true;
+    intc_1 // 1
+    return
+
+main_after_if_else@14:
+    // contracts/MockTinymanPool.algo.ts:103
+    // return false; // Unknown action
+    err
+
+
+// contracts/MockTinymanPool.algo.ts::MockTinymanPool.createPool(asset1Id: uint64, asset2Id: uint64, initialReserve1: uint64, initialReserve2: uint64, feeBps: uint64) -> void:
+createPool:
+    // contracts/MockTinymanPool.algo.ts:137-143
+    // private createPool(
+    //   asset1Id: uint64,
+    //   asset2Id: uint64,
+    //   initialReserve1: uint64,
+    //   initialReserve2: uint64,
+    //   feeBps: uint64
+    // ): void {
+    proto 5 0
+    // contracts/MockTinymanPool.algo.ts:29
+    // asset1Id = GlobalState<uint64>();  // e.g., USDC
+    bytec_2 // "asset1Id"
+    // contracts/MockTinymanPool.algo.ts:144
+    // this.asset1Id.value = asset1Id;
+    frame_dig -5
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:30
+    // asset2Id = GlobalState<uint64>();  // e.g., Project token
+    bytec_3 // "asset2Id"
+    // contracts/MockTinymanPool.algo.ts:145
+    // this.asset2Id.value = asset2Id;
+    frame_dig -4
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:34
+    // asset_1_id = GlobalState<uint64>();
+    pushbytes "asset_1_id"
+    // contracts/MockTinymanPool.algo.ts:148
+    // this.asset_1_id.value = asset1Id;
+    frame_dig -5
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:35
+    // asset_1_reserves = GlobalState<uint64>();
+    bytec_0 // "asset_1_reserves"
+    // contracts/MockTinymanPool.algo.ts:149
+    // this.asset_1_reserves.value = initialReserve1;
+    frame_dig -3
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:36
+    // asset_2_reserves = GlobalState<uint64>();
+    bytec_1 // "asset_2_reserves"
+    // contracts/MockTinymanPool.algo.ts:150
+    // this.asset_2_reserves.value = initialReserve2;
+    frame_dig -2
+    app_global_put
+    // contracts/MockTinymanPool.algo.ts:151
+    // this.total_fee_share.value = feeBps > Uint64(0) ? feeBps : DEFAULT_FEE_BPS;
+    pushint 30 // 30
+    frame_dig -1
+    dup
+    select
+    // contracts/MockTinymanPool.algo.ts:37
+    // total_fee_share = GlobalState<uint64>();  // Fee in basis points
+    bytec 4 // "total_fee_share"
+    // contracts/MockTinymanPool.algo.ts:151
+    // this.total_fee_share.value = feeBps > Uint64(0) ? feeBps : DEFAULT_FEE_BPS;
+    swap
+    app_global_put
+    retsub
