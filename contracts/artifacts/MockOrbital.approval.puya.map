@@ -1,0 +1,4250 @@
+{
+  "version": 3,
+  "sources": [
+    "../MockOrbital.algo.ts"
+  ],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AA+EQ;;AAAJ;;;AA3CF;AA+GuB;;AAArB;AAnHF;AAoHqC;AAAnC;AAnHF;AAoHsC;AAApC;AAGI;;AAAyB;;AAAzB;AAAJ;;;AACuC;AAApB;;AAEb;AAA2B;AAA3B;AAAJ;;;AAC0C;AAApB;;AAAL;AAC0B;;AAApB;;AAAL;AAChB;;;AAIG;AAlFL;AAIE;;AAAJ;;;AACE;AAGiC;AAApB;;AAAA;AAAA;;AAEM;;;;;;;;;;;;AAAjB;AAAJ;;;AAC0C;AAApB;;AAAL;AAC0B;;AAApB;;AAAL;AAChB;;;AACO;AAAP;AAGE;AAAiB;;;;;;;;;;;;;AAAjB;AAAJ;;;AAoFyB;;AAGzB;AAEmB;AA/JrB;AA+JqB;AAAA;AACG;;;;;;;;AAHtB;;;AAIc;;;AAJd;AAQA;AAEmB;AAtKrB;;AAsKqB;AAAA;AACG;;;;;;;AAHtB;;;AAIc;;;AAJd;AA7FS;AAAP;AAGE;AAAiB;;;;;;;;;AAAjB;AAAJ;;;AAyGyB;;AACJ;;AACrB;AAAA;AAGqE;AAAtB;AAAtB;AAAA;;AAAA;AAAA;AAAA;AAClB;AAAA;;AAAqC;AA1L9C;AA0L8C;AAAA;AAArC;AAAP;AACO;AAAA;;AAAA;;AAAA;AAAP;AAEmB;;AACnB;AAAA;AAIoB;;;AAnLH;;AAoLgC;AApLhC;AACyC;AAAvB;;AAAA;AAAA;;AAAA;AAC5B;AAAP;AAoLA;AAAA;AAG4B;AAnM9B;AAmM8B;AAAA;AAAA;;AAAA;AAnM9B;AAmME;AAAA;AAC6B;AAnM/B;AAmM+B;AAAA;AAAA;;AAAA;AAnM/B;AAmME;AAAA;AAGA;AACiB;;AACE;AA7MrB;;AA6MqB;AAAA;;;;;;;;;AAFnB;;;AAIc;;;AAJd;AA9HS;AAAP;AAGE;AAAiB;;;;;;;;AAAjB;AAAJ;;;AAE0C;AAApB;;AAAL;AAwIQ;;AACJ;;AACrB;AAAA;AAGqE;AAAtB;AAAtB;AAAA;;AAAA;AAAA;AAAA;AAClB;AAAA;;AAAqC;AAhO9C;;AAgO8C;AAAA;AAArC;AAAP;AACO;AAAA;;AAAA;;AAAA;AAAP;AACO;;AAAA;;AAAA;AAAP;AAEA;AAAA;AACsB;AAhOxB;AAgOwB;AAAA;AAAf;;AAAA;AAAP;AAIoB;;;AA3NH;;AAAA;AACyC;AA2NM;AA3N7B;AAAA;;AAAA;AAC5B;AAAP;AA4NA;AAAA;AACuB;AAzOzB;AAyOyB;AAAA;AAAhB;AAAA;AAAP;AAG4B;;AAAA;AA5O9B;AA4OE;AAAA;AAC6B;AA5O/B;AA4O+B;AAAA;AAAA;;AAAA;AA5O/B;AA4OE;AAAA;AAGA;AACiB;;AACE;AAvPrB;AAuPqB;AAAA;;;;;;;;;AAFnB;;;AAIc;;;AAJd;AAhKS;AAAP;AAGE;AAAiB;;;;;;;;;;;;;;;;AAAjB;AAAJ;;;AAEmD;AAApB;;AAAL;AAyKnB;;AAAe;AA1PxB;AA0PwB;AAAA;AAAf;AAAP;AAGyB;;AACJ;;AACrB;AAAA;AAEqE;AAAtB;AAAtB;AAAA;;AAAA;AAAA;AAAA;AAClB;AAAA;;AAAqC;AA3Q9C;AA2Q8C;AAAA;AAArC;AAAP;AACO;AAAA;;AAAA;;AAAA;AAAP;AACO;;AAAA;;AAAA;AAAP;AAI4B;AA5Q9B;AA4Q8B;AAAA;AAAA;AA5Q9B;AA4QE;AAAA;AArLS;AAAP;AAGE;AAAiB;;;;;;;;;AAAjB;AAAJ;;;AAES;AAAP;AAGE;AAAiB;;;;;;;;;;;;;;AAAjB;AAAJ;;;AAqLO;;AAAe;AAhRxB;AAgRwB;AAAA;AAAf;AAAP;AAEyB;;AACJ;;AACrB;AAAA;AAIqE;AAAtB;AAAtB;AAAA;;AAAA;AAAA;AAAA;AAClB;;AAAA;AAAP;AA3LS;AAAP;AAGF;AAnEF;;;AACyB;AAlCzB;AAkCyB;AAAA;AAAA;AAAA;;AAAA;AACvB;;;AACS;AAAP;AAAA;AAEsB;AAvC1B;AAuC0B;AAAA;AAA2B;AA7BlC;AACyC;AAAvB;;AAAA;AAAA;;AAAA;AAC5B;AAAP;AA2BA;AAAA;AAiGF;;;AACS;;AAAe;AArIxB;AAqIwB;AAAA;AAAf;AAAP;AACA;;AAAA;AACA;;AAAA;AAhJF;AAkJE;;AAAA;AAjJF;;AAkJE;;AAAA;",
+  "op_pc_offset": 0,
+  "pc_events": {
+    "1": {
+      "subroutine": "contracts/MockOrbital.algo.ts::MockOrbital.approvalProgram",
+      "params": {},
+      "block": "main",
+      "stack_in": [],
+      "op": "intcblock 0 1 4 1000000"
+    },
+    "9": {
+      "op": "bytecblock \"total_deposits\" \"circulating_lst\" \"usdcAssetId\" \"creator\" \"cUsdcAssetId\""
+    },
+    "75": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "76": {
+      "op": "txn ApplicationID",
+      "defined_out": [
+        "tmp%0#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%0#0"
+      ]
+    },
+    "78": {
+      "op": "bnz main_after_if_else@2",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "81": {
+      "op": "bytec_3 // \"creator\"",
+      "defined_out": [
+        "\"creator\""
+      ],
+      "stack_out": [
+        "action#0",
+        "\"creator\""
+      ]
+    },
+    "82": {
+      "op": "txn Sender",
+      "defined_out": [
+        "\"creator\"",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "\"creator\"",
+        "tmp%0#1"
+      ]
+    },
+    "84": {
+      "op": "app_global_put",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "85": {
+      "op": "bytec_0 // \"total_deposits\"",
+      "defined_out": [
+        "\"total_deposits\""
+      ],
+      "stack_out": [
+        "action#0",
+        "\"total_deposits\""
+      ]
+    },
+    "86": {
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "\"total_deposits\"",
+        "0"
+      ],
+      "stack_out": [
+        "action#0",
+        "\"total_deposits\"",
+        "0"
+      ]
+    },
+    "87": {
+      "op": "app_global_put",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "88": {
+      "op": "bytec_1 // \"circulating_lst\"",
+      "defined_out": [
+        "\"circulating_lst\""
+      ],
+      "stack_out": [
+        "action#0",
+        "\"circulating_lst\""
+      ]
+    },
+    "89": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "\"circulating_lst\"",
+        "0"
+      ]
+    },
+    "90": {
+      "op": "app_global_put",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "91": {
+      "op": "txn NumAppArgs",
+      "defined_out": [
+        "tmp%1#5"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%1#5"
+      ]
+    },
+    "93": {
+      "op": "pushint 3 // 3",
+      "defined_out": [
+        "3",
+        "tmp%1#5"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%1#5",
+        "3"
+      ]
+    },
+    "95": {
+      "op": ">=",
+      "defined_out": [
+        "tmp%2#5"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%2#5"
+      ]
+    },
+    "96": {
+      "op": "bz main_after_if_else@37",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "99": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "0"
+      ]
+    },
+    "100": {
+      "op": "txnas ApplicationArgs",
+      "defined_out": [
+        "firstArg#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "firstArg#0"
+      ]
+    },
+    "102": {
+      "op": "len",
+      "defined_out": [
+        "tmp%4#5"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%4#5"
+      ]
+    },
+    "103": {
+      "op": "intc_2 // 4",
+      "defined_out": [
+        "4",
+        "tmp%4#5"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%4#5",
+        "4"
+      ]
+    },
+    "104": {
+      "op": "==",
+      "defined_out": [
+        "tmp%5#5"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%5#5"
+      ]
+    },
+    "105": {
+      "op": "bz main_after_if_else@37",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "108": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1"
+      ],
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "109": {
+      "op": "txnas ApplicationArgs",
+      "defined_out": [
+        "tmp%6#5"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%6#5"
+      ]
+    },
+    "111": {
+      "op": "btoi",
+      "defined_out": [
+        "usdcId#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcId#0"
+      ]
+    },
+    "112": {
+      "op": "pushint 2 // 2",
+      "defined_out": [
+        "2",
+        "usdcId#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcId#0",
+        "2"
+      ]
+    },
+    "114": {
+      "op": "txnas ApplicationArgs",
+      "defined_out": [
+        "tmp%8#4",
+        "usdcId#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcId#0",
+        "tmp%8#4"
+      ]
+    },
+    "116": {
+      "op": "btoi",
+      "defined_out": [
+        "cUsdcId#0",
+        "usdcId#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcId#0",
+        "cUsdcId#0"
+      ]
+    },
+    "117": {
+      "callsub": "contracts/MockOrbital.algo.ts::MockOrbital.initialize",
+      "op": "callsub initialize",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "120": {
+      "block": "main_after_if_else@37",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1"
+      ],
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "121": {
+      "op": "return",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "122": {
+      "block": "main_after_if_else@2",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "txn NumAppArgs",
+      "defined_out": [
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%3#0"
+      ]
+    },
+    "124": {
+      "op": "bnz main_after_if_else@4",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "127": {
+      "op": "err",
+      "defined_out": []
+    },
+    "128": {
+      "block": "main_after_if_else@4",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0"
+      ],
+      "stack_out": [
+        "action#0",
+        "0"
+      ]
+    },
+    "129": {
+      "op": "txnas ApplicationArgs",
+      "defined_out": [
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0"
+      ]
+    },
+    "131": {
+      "op": "dup",
+      "stack_out": [
+        "action#0",
+        "action#0",
+        "action#0"
+      ]
+    },
+    "132": {
+      "op": "bury 2",
+      "defined_out": [
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0"
+      ]
+    },
+    "134": {
+      "op": "pushbytes \"initialize\"",
+      "defined_out": [
+        "\"initialize\"",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0",
+        "\"initialize\""
+      ]
+    },
+    "146": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%6#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%6#0"
+      ]
+    },
+    "147": {
+      "op": "bz main_after_if_else@6",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "150": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "151": {
+      "op": "txnas ApplicationArgs",
+      "defined_out": [
+        "action#0",
+        "tmp%7#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%7#0"
+      ]
+    },
+    "153": {
+      "op": "btoi",
+      "defined_out": [
+        "action#0",
+        "usdcId#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcId#0"
+      ]
+    },
+    "154": {
+      "op": "pushint 2 // 2",
+      "defined_out": [
+        "2",
+        "action#0",
+        "usdcId#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcId#0",
+        "2"
+      ]
+    },
+    "156": {
+      "op": "txnas ApplicationArgs",
+      "defined_out": [
+        "action#0",
+        "tmp%9#0",
+        "usdcId#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcId#0",
+        "tmp%9#0"
+      ]
+    },
+    "158": {
+      "op": "btoi",
+      "defined_out": [
+        "action#0",
+        "cUsdcId#0",
+        "usdcId#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcId#0",
+        "cUsdcId#0"
+      ]
+    },
+    "159": {
+      "callsub": "contracts/MockOrbital.algo.ts::MockOrbital.initialize",
+      "op": "callsub initialize",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "162": {
+      "op": "intc_1 // 1",
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "163": {
+      "op": "return",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "164": {
+      "block": "main_after_if_else@6",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "dup",
+      "defined_out": [
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0"
+      ]
+    },
+    "165": {
+      "op": "pushbytes \"optInAssets\"",
+      "defined_out": [
+        "\"optInAssets\"",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0",
+        "\"optInAssets\""
+      ]
+    },
+    "178": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%11#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%11#0"
+      ]
+    },
+    "179": {
+      "op": "bz main_after_if_else@8",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "182": {
+      "op": "global CurrentApplicationAddress",
+      "defined_out": [
+        "action#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0"
+      ]
+    },
+    "184": {
+      "op": "itxn_begin"
+    },
+    "185": {
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0",
+        "action#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "0"
+      ]
+    },
+    "186": {
+      "op": "bytec_2 // \"usdcAssetId\"",
+      "defined_out": [
+        "\"usdcAssetId\"",
+        "0",
+        "action#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "0",
+        "\"usdcAssetId\""
+      ]
+    },
+    "187": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_exists%0#0",
+        "maybe_value%0#2"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_value%0#2",
+        "maybe_exists%0#0"
+      ]
+    },
+    "188": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_value%0#2"
+      ]
+    },
+    "189": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_value%0#2",
+        "0"
+      ]
+    },
+    "190": {
+      "op": "itxn_field AssetAmount",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_value%0#2"
+      ]
+    },
+    "192": {
+      "op": "itxn_field XferAsset",
+      "stack_out": [
+        "action#0",
+        "appAddr#0"
+      ]
+    },
+    "194": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "appAddr#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "appAddr#0 (copy)"
+      ]
+    },
+    "195": {
+      "op": "itxn_field AssetReceiver",
+      "stack_out": [
+        "action#0",
+        "appAddr#0"
+      ]
+    },
+    "197": {
+      "op": "intc_2 // 4",
+      "defined_out": [
+        "4",
+        "action#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "4"
+      ]
+    },
+    "198": {
+      "op": "itxn_field TypeEnum",
+      "stack_out": [
+        "action#0",
+        "appAddr#0"
+      ]
+    },
+    "200": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "0"
+      ]
+    },
+    "201": {
+      "op": "itxn_field Fee",
+      "stack_out": [
+        "action#0",
+        "appAddr#0"
+      ]
+    },
+    "203": {
+      "op": "itxn_submit"
+    },
+    "204": {
+      "op": "itxn_begin"
+    },
+    "205": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "0"
+      ]
+    },
+    "206": {
+      "op": "bytec 4 // \"cUsdcAssetId\"",
+      "defined_out": [
+        "\"cUsdcAssetId\"",
+        "0",
+        "action#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "0",
+        "\"cUsdcAssetId\""
+      ]
+    },
+    "208": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_exists%1#0",
+        "maybe_value%1#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_value%1#0",
+        "maybe_exists%1#0"
+      ]
+    },
+    "209": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_value%1#0"
+      ]
+    },
+    "210": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_value%1#0",
+        "0"
+      ]
+    },
+    "211": {
+      "op": "itxn_field AssetAmount",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "maybe_value%1#0"
+      ]
+    },
+    "213": {
+      "op": "itxn_field XferAsset",
+      "stack_out": [
+        "action#0",
+        "appAddr#0"
+      ]
+    },
+    "215": {
+      "op": "itxn_field AssetReceiver",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "217": {
+      "op": "intc_2 // 4",
+      "stack_out": [
+        "action#0",
+        "4"
+      ]
+    },
+    "218": {
+      "op": "itxn_field TypeEnum",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "220": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "0"
+      ]
+    },
+    "221": {
+      "op": "itxn_field Fee",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "223": {
+      "op": "itxn_submit"
+    },
+    "224": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "225": {
+      "op": "return",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "226": {
+      "block": "main_after_if_else@8",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "dup",
+      "defined_out": [
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0"
+      ]
+    },
+    "227": {
+      "op": "pushbytes \"deposit\"",
+      "defined_out": [
+        "\"deposit\"",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0",
+        "\"deposit\""
+      ]
+    },
+    "236": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%12#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%12#0"
+      ]
+    },
+    "237": {
+      "op": "bz main_after_if_else@10",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "240": {
+      "op": "global CurrentApplicationAddress",
+      "defined_out": [
+        "action#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0"
+      ]
+    },
+    "242": {
+      "op": "txn GroupIndex",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ]
+    },
+    "244": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "currentIndex#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "currentIndex#0 (copy)"
+      ]
+    },
+    "245": {
+      "error": "Must follow asset transfer",
+      "op": "assert // Must follow asset transfer",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ]
+    },
+    "246": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1",
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "1"
+      ]
+    },
+    "247": {
+      "op": "-",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "248": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "249": {
+      "op": "gtxns TypeEnum",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "gtxn_type%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type%0#0"
+      ]
+    },
+    "251": {
+      "op": "intc_2 // axfer",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "axfer",
+        "gtxn_type%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type%0#0",
+        "axfer"
+      ]
+    },
+    "252": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "gtxn_type_matches%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type_matches%0#0"
+      ]
+    },
+    "253": {
+      "error": "transaction type is axfer",
+      "op": "assert // transaction type is axfer",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "254": {
+      "op": "dup",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "255": {
+      "op": "gtxns XferAsset",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0"
+      ]
+    },
+    "257": {
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0",
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0",
+        "0"
+      ]
+    },
+    "258": {
+      "op": "bytec_2 // \"usdcAssetId\"",
+      "defined_out": [
+        "\"usdcAssetId\"",
+        "0",
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0",
+        "0",
+        "\"usdcAssetId\""
+      ]
+    },
+    "259": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "maybe_exists%0#0",
+        "maybe_value%0#2",
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0",
+        "maybe_value%0#2",
+        "maybe_exists%0#0"
+      ]
+    },
+    "260": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0",
+        "maybe_value%0#2"
+      ]
+    },
+    "261": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%4#3"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%4#3"
+      ]
+    },
+    "262": {
+      "error": "Must transfer USDC",
+      "op": "assert // Must transfer USDC",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "263": {
+      "op": "dup",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "264": {
+      "op": "gtxns AssetReceiver",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#1"
+      ]
+    },
+    "266": {
+      "op": "uncover 2",
+      "stack_out": [
+        "action#0",
+        "incomingTransfer#0",
+        "tmp%5#1",
+        "appAddr#0"
+      ]
+    },
+    "268": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "incomingTransfer#0",
+        "tmp%6#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "incomingTransfer#0",
+        "tmp%6#0"
+      ]
+    },
+    "269": {
+      "error": "Must send to contract",
+      "op": "assert // Must send to contract",
+      "stack_out": [
+        "action#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "270": {
+      "op": "gtxns AssetAmount",
+      "defined_out": [
+        "action#0",
+        "usdcAmount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0"
+      ]
+    },
+    "272": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "usdcAmount#0",
+        "usdcAmount#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "usdcAmount#0 (copy)"
+      ]
+    },
+    "273": {
+      "error": "Deposit amount must be positive",
+      "op": "assert // Deposit amount must be positive",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0"
+      ]
+    },
+    "274": {
+      "callsub": "contracts/MockOrbital.algo.ts::MockOrbital.getCurrentRate",
+      "op": "callsub getCurrentRate",
+      "defined_out": [
+        "action#0",
+        "currentRate#0",
+        "usdcAmount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "currentRate#0"
+      ]
+    },
+    "277": {
+      "op": "dig 1",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "currentRate#0",
+        "usdcAmount#0 (copy)"
+      ]
+    },
+    "279": {
+      "op": "intc_3 // 1000000",
+      "defined_out": [
+        "1000000",
+        "action#0",
+        "currentRate#0",
+        "usdcAmount#0",
+        "usdcAmount#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "currentRate#0",
+        "usdcAmount#0 (copy)",
+        "1000000"
+      ]
+    },
+    "280": {
+      "op": "mulw",
+      "defined_out": [
+        "action#0",
+        "currentRate#0",
+        "hi#0",
+        "lo#0",
+        "usdcAmount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "currentRate#0",
+        "hi#0",
+        "lo#0"
+      ]
+    },
+    "281": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "currentRate#0",
+        "hi#0",
+        "lo#0",
+        "0"
+      ]
+    },
+    "282": {
+      "op": "uncover 3",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "hi#0",
+        "lo#0",
+        "0",
+        "currentRate#0"
+      ]
+    },
+    "284": {
+      "op": "divmodw",
+      "defined_out": [
+        "_r_hi#0",
+        "_r_lo#0",
+        "action#0",
+        "q_hi#0",
+        "q_lo#0",
+        "usdcAmount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_hi#0",
+        "q_lo#0",
+        "_r_hi#0",
+        "_r_lo#0"
+      ]
+    },
+    "285": {
+      "op": "popn 2",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_hi#0",
+        "q_lo#0"
+      ]
+    },
+    "287": {
+      "op": "swap",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0",
+        "q_hi#0"
+      ]
+    },
+    "288": {
+      "op": "!",
+      "defined_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%0#7",
+        "usdcAmount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0",
+        "tmp%0#7"
+      ]
+    },
+    "289": {
+      "error": "Overflow in mulDivFloor",
+      "op": "assert // Overflow in mulDivFloor",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0"
+      ]
+    },
+    "290": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "q_lo#0",
+        "q_lo#0 (copy)",
+        "usdcAmount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0",
+        "q_lo#0 (copy)"
+      ]
+    },
+    "291": {
+      "error": "cUSDC mint amount is zero",
+      "op": "assert // cUSDC mint amount is zero",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0"
+      ]
+    },
+    "292": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0",
+        "0"
+      ]
+    },
+    "293": {
+      "op": "bytec_0 // \"total_deposits\"",
+      "defined_out": [
+        "\"total_deposits\"",
+        "0",
+        "action#0",
+        "q_lo#0",
+        "usdcAmount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0",
+        "0",
+        "\"total_deposits\""
+      ]
+    },
+    "294": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "maybe_exists%1#0",
+        "maybe_value%1#0",
+        "q_lo#0",
+        "usdcAmount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0",
+        "maybe_value%1#0",
+        "maybe_exists%1#0"
+      ]
+    },
+    "295": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "usdcAmount#0",
+        "q_lo#0",
+        "maybe_value%1#0"
+      ]
+    },
+    "296": {
+      "op": "uncover 2",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "maybe_value%1#0",
+        "usdcAmount#0"
+      ]
+    },
+    "298": {
+      "op": "+",
+      "defined_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%12#2"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%12#2"
+      ]
+    },
+    "299": {
+      "op": "bytec_0 // \"total_deposits\"",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%12#2",
+        "\"total_deposits\""
+      ]
+    },
+    "300": {
+      "op": "swap",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "\"total_deposits\"",
+        "tmp%12#2"
+      ]
+    },
+    "301": {
+      "op": "app_global_put",
+      "stack_out": [
+        "action#0",
+        "q_lo#0"
+      ]
+    },
+    "302": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "0"
+      ]
+    },
+    "303": {
+      "op": "bytec_1 // \"circulating_lst\"",
+      "defined_out": [
+        "\"circulating_lst\"",
+        "0",
+        "action#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "0",
+        "\"circulating_lst\""
+      ]
+    },
+    "304": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "maybe_exists%2#0",
+        "maybe_value%2#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "maybe_value%2#0",
+        "maybe_exists%2#0"
+      ]
+    },
+    "305": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "maybe_value%2#0"
+      ]
+    },
+    "306": {
+      "op": "dig 1",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "maybe_value%2#0",
+        "q_lo#0 (copy)"
+      ]
+    },
+    "308": {
+      "op": "+",
+      "defined_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%13#2"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%13#2"
+      ]
+    },
+    "309": {
+      "op": "bytec_1 // \"circulating_lst\"",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%13#2",
+        "\"circulating_lst\""
+      ]
+    },
+    "310": {
+      "op": "swap",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "\"circulating_lst\"",
+        "tmp%13#2"
+      ]
+    },
+    "311": {
+      "op": "app_global_put",
+      "stack_out": [
+        "action#0",
+        "q_lo#0"
+      ]
+    },
+    "312": {
+      "op": "itxn_begin"
+    },
+    "313": {
+      "op": "txn Sender",
+      "defined_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0"
+      ]
+    },
+    "315": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "0"
+      ]
+    },
+    "316": {
+      "op": "bytec 4 // \"cUsdcAssetId\"",
+      "defined_out": [
+        "\"cUsdcAssetId\"",
+        "0",
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "0",
+        "\"cUsdcAssetId\""
+      ]
+    },
+    "318": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_exists%3#1",
+        "maybe_value%3#1",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_value%3#1",
+        "maybe_exists%3#1"
+      ]
+    },
+    "319": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_value%3#1"
+      ]
+    },
+    "320": {
+      "op": "uncover 2",
+      "stack_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_value%3#1",
+        "q_lo#0"
+      ]
+    },
+    "322": {
+      "op": "itxn_field AssetAmount",
+      "stack_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_value%3#1"
+      ]
+    },
+    "324": {
+      "op": "itxn_field XferAsset",
+      "stack_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0"
+      ]
+    },
+    "326": {
+      "op": "itxn_field AssetReceiver",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "328": {
+      "op": "intc_2 // 4",
+      "defined_out": [
+        "4",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "4"
+      ]
+    },
+    "329": {
+      "op": "itxn_field TypeEnum",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "331": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "0"
+      ]
+    },
+    "332": {
+      "op": "itxn_field Fee",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "334": {
+      "op": "itxn_submit"
+    },
+    "335": {
+      "op": "intc_1 // 1",
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "336": {
+      "op": "return",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "337": {
+      "block": "main_after_if_else@10",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "dup",
+      "defined_out": [
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0"
+      ]
+    },
+    "338": {
+      "op": "pushbytes \"redeem\"",
+      "defined_out": [
+        "\"redeem\"",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0",
+        "\"redeem\""
+      ]
+    },
+    "346": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%13#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%13#0"
+      ]
+    },
+    "347": {
+      "op": "bz main_after_if_else@12",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "350": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "351": {
+      "op": "txnas ApplicationArgs",
+      "defined_out": [
+        "action#0",
+        "tmp%14#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%14#0"
+      ]
+    },
+    "353": {
+      "op": "btoi",
+      "defined_out": [
+        "action#0",
+        "amount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0"
+      ]
+    },
+    "354": {
+      "op": "global CurrentApplicationAddress",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0"
+      ]
+    },
+    "356": {
+      "op": "txn GroupIndex",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ]
+    },
+    "358": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "currentIndex#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "currentIndex#0 (copy)"
+      ]
+    },
+    "359": {
+      "error": "Must follow asset transfer",
+      "op": "assert // Must follow asset transfer",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ]
+    },
+    "360": {
+      "op": "intc_1 // 1",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "1"
+      ]
+    },
+    "361": {
+      "op": "-",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "362": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "363": {
+      "op": "gtxns TypeEnum",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "gtxn_type%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type%0#0"
+      ]
+    },
+    "365": {
+      "op": "intc_2 // axfer",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "axfer",
+        "gtxn_type%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type%0#0",
+        "axfer"
+      ]
+    },
+    "366": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "gtxn_type_matches%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type_matches%0#0"
+      ]
+    },
+    "367": {
+      "error": "transaction type is axfer",
+      "op": "assert // transaction type is axfer",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "368": {
+      "op": "dup",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "369": {
+      "op": "gtxns XferAsset",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0"
+      ]
+    },
+    "371": {
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0",
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0",
+        "0"
+      ]
+    },
+    "372": {
+      "op": "bytec 4 // \"cUsdcAssetId\"",
+      "defined_out": [
+        "\"cUsdcAssetId\"",
+        "0",
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0",
+        "0",
+        "\"cUsdcAssetId\""
+      ]
+    },
+    "374": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "maybe_exists%0#0",
+        "maybe_value%0#2",
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0",
+        "maybe_value%0#2",
+        "maybe_exists%0#0"
+      ]
+    },
+    "375": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%3#0",
+        "maybe_value%0#2"
+      ]
+    },
+    "376": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%4#3"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%4#3"
+      ]
+    },
+    "377": {
+      "error": "Must transfer cUSDC",
+      "op": "assert // Must transfer cUSDC",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "378": {
+      "op": "dup",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "379": {
+      "op": "gtxns AssetReceiver",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#1"
+      ]
+    },
+    "381": {
+      "op": "uncover 2",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "incomingTransfer#0",
+        "tmp%5#1",
+        "appAddr#0"
+      ]
+    },
+    "383": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "incomingTransfer#0",
+        "tmp%6#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "incomingTransfer#0",
+        "tmp%6#0"
+      ]
+    },
+    "384": {
+      "error": "Must send to contract",
+      "op": "assert // Must send to contract",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "385": {
+      "op": "gtxns AssetAmount",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "tmp%7#2"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "tmp%7#2"
+      ]
+    },
+    "387": {
+      "op": "dig 1",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "amount#0 (copy)",
+        "tmp%7#2"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "tmp%7#2",
+        "amount#0 (copy)"
+      ]
+    },
+    "389": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "tmp%8#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "tmp%8#1"
+      ]
+    },
+    "390": {
+      "error": "Amount mismatch",
+      "op": "assert // Amount mismatch",
+      "stack_out": [
+        "action#0",
+        "amount#0"
+      ]
+    },
+    "391": {
+      "op": "dup",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "amount#0 (copy)"
+      ]
+    },
+    "392": {
+      "error": "Redeem amount must be positive",
+      "op": "assert // Redeem amount must be positive",
+      "stack_out": [
+        "action#0",
+        "amount#0"
+      ]
+    },
+    "393": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "0"
+      ]
+    },
+    "394": {
+      "op": "bytec_1 // \"circulating_lst\"",
+      "defined_out": [
+        "\"circulating_lst\"",
+        "0",
+        "action#0",
+        "amount#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "0",
+        "\"circulating_lst\""
+      ]
+    },
+    "395": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "maybe_exists%1#0",
+        "maybe_value%1#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "maybe_value%1#0",
+        "maybe_exists%1#0"
+      ]
+    },
+    "396": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "maybe_value%1#0"
+      ]
+    },
+    "397": {
+      "op": "dig 1",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "maybe_value%1#0",
+        "amount#0 (copy)"
+      ]
+    },
+    "399": {
+      "op": ">=",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "tmp%10#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "tmp%10#1"
+      ]
+    },
+    "400": {
+      "error": "Exceeds circulating supply",
+      "op": "assert // Exceeds circulating supply",
+      "stack_out": [
+        "action#0",
+        "amount#0"
+      ]
+    },
+    "401": {
+      "callsub": "contracts/MockOrbital.algo.ts::MockOrbital.getCurrentRate",
+      "op": "callsub getCurrentRate",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "currentRate#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "currentRate#0"
+      ]
+    },
+    "404": {
+      "op": "dig 1",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "currentRate#0",
+        "amount#0 (copy)"
+      ]
+    },
+    "406": {
+      "op": "mulw",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "hi#0",
+        "lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "hi#0",
+        "lo#0"
+      ]
+    },
+    "407": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "hi#0",
+        "lo#0",
+        "0"
+      ]
+    },
+    "408": {
+      "op": "intc_3 // 1000000",
+      "defined_out": [
+        "0",
+        "1000000",
+        "action#0",
+        "amount#0",
+        "hi#0",
+        "lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "hi#0",
+        "lo#0",
+        "0",
+        "1000000"
+      ]
+    },
+    "409": {
+      "op": "divmodw",
+      "defined_out": [
+        "_r_hi#0",
+        "_r_lo#0",
+        "action#0",
+        "amount#0",
+        "q_hi#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_hi#0",
+        "q_lo#0",
+        "_r_hi#0",
+        "_r_lo#0"
+      ]
+    },
+    "410": {
+      "op": "popn 2",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_hi#0",
+        "q_lo#0"
+      ]
+    },
+    "412": {
+      "op": "swap",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "q_hi#0"
+      ]
+    },
+    "413": {
+      "op": "!",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "tmp%0#7"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "tmp%0#7"
+      ]
+    },
+    "414": {
+      "error": "Overflow in mulDivFloor",
+      "op": "assert // Overflow in mulDivFloor",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0"
+      ]
+    },
+    "415": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "q_lo#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "q_lo#0 (copy)"
+      ]
+    },
+    "416": {
+      "error": "USDC return amount is zero",
+      "op": "assert // USDC return amount is zero",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0"
+      ]
+    },
+    "417": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "0"
+      ]
+    },
+    "418": {
+      "op": "bytec_0 // \"total_deposits\"",
+      "defined_out": [
+        "\"total_deposits\"",
+        "0",
+        "action#0",
+        "amount#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "0",
+        "\"total_deposits\""
+      ]
+    },
+    "419": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "maybe_exists%2#0",
+        "maybe_value%2#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "maybe_value%2#0",
+        "maybe_exists%2#0"
+      ]
+    },
+    "420": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "maybe_value%2#0"
+      ]
+    },
+    "421": {
+      "op": "dup2",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "maybe_value%2#0",
+        "maybe_value%2#0 (copy)",
+        "q_lo#0",
+        "q_lo#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "maybe_value%2#0",
+        "q_lo#0 (copy)",
+        "maybe_value%2#0 (copy)"
+      ]
+    },
+    "422": {
+      "op": "<=",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "maybe_value%2#0",
+        "q_lo#0",
+        "tmp%14#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "maybe_value%2#0",
+        "tmp%14#1"
+      ]
+    },
+    "423": {
+      "error": "Insufficient protocol reserves",
+      "op": "assert // Insufficient protocol reserves",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "maybe_value%2#0"
+      ]
+    },
+    "424": {
+      "op": "dig 1",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "maybe_value%2#0",
+        "q_lo#0 (copy)"
+      ]
+    },
+    "426": {
+      "op": "-",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "tmp%15#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "tmp%15#1"
+      ]
+    },
+    "427": {
+      "op": "bytec_0 // \"total_deposits\"",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "tmp%15#1",
+        "\"total_deposits\""
+      ]
+    },
+    "428": {
+      "op": "swap",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "\"total_deposits\"",
+        "tmp%15#1"
+      ]
+    },
+    "429": {
+      "op": "app_global_put",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0"
+      ]
+    },
+    "430": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "0"
+      ]
+    },
+    "431": {
+      "op": "bytec_1 // \"circulating_lst\"",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "0",
+        "\"circulating_lst\""
+      ]
+    },
+    "432": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "amount#0",
+        "maybe_exists%4#0",
+        "maybe_value%4#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "maybe_value%4#0",
+        "maybe_exists%4#0"
+      ]
+    },
+    "433": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "amount#0",
+        "q_lo#0",
+        "maybe_value%4#0"
+      ]
+    },
+    "434": {
+      "op": "uncover 2",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "maybe_value%4#0",
+        "amount#0"
+      ]
+    },
+    "436": {
+      "op": "-",
+      "defined_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%16#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%16#1"
+      ]
+    },
+    "437": {
+      "op": "bytec_1 // \"circulating_lst\"",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "tmp%16#1",
+        "\"circulating_lst\""
+      ]
+    },
+    "438": {
+      "op": "swap",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "\"circulating_lst\"",
+        "tmp%16#1"
+      ]
+    },
+    "439": {
+      "op": "app_global_put",
+      "stack_out": [
+        "action#0",
+        "q_lo#0"
+      ]
+    },
+    "440": {
+      "op": "itxn_begin"
+    },
+    "441": {
+      "op": "txn Sender",
+      "defined_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0"
+      ]
+    },
+    "443": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "0"
+      ]
+    },
+    "444": {
+      "op": "bytec_2 // \"usdcAssetId\"",
+      "defined_out": [
+        "\"usdcAssetId\"",
+        "0",
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "0",
+        "\"usdcAssetId\""
+      ]
+    },
+    "445": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_exists%5#0",
+        "maybe_value%5#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_value%5#0",
+        "maybe_exists%5#0"
+      ]
+    },
+    "446": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "q_lo#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_value%5#0"
+      ]
+    },
+    "447": {
+      "op": "uncover 2",
+      "stack_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_value%5#0",
+        "q_lo#0"
+      ]
+    },
+    "449": {
+      "op": "itxn_field AssetAmount",
+      "stack_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0",
+        "maybe_value%5#0"
+      ]
+    },
+    "451": {
+      "op": "itxn_field XferAsset",
+      "stack_out": [
+        "action#0",
+        "inner_txn_params%0%%param_AssetReceiver_idx_0#0"
+      ]
+    },
+    "453": {
+      "op": "itxn_field AssetReceiver",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "455": {
+      "op": "intc_2 // 4",
+      "defined_out": [
+        "4",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "4"
+      ]
+    },
+    "456": {
+      "op": "itxn_field TypeEnum",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "458": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "0"
+      ]
+    },
+    "459": {
+      "op": "itxn_field Fee",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "461": {
+      "op": "itxn_submit"
+    },
+    "462": {
+      "op": "intc_1 // 1",
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "463": {
+      "op": "return",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "464": {
+      "block": "main_after_if_else@12",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "dup",
+      "defined_out": [
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0"
+      ]
+    },
+    "465": {
+      "op": "pushbytes \"accrueInterest\"",
+      "defined_out": [
+        "\"accrueInterest\"",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0",
+        "\"accrueInterest\""
+      ]
+    },
+    "481": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%16#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%16#0"
+      ]
+    },
+    "482": {
+      "op": "bz main_after_if_else@14",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "485": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "486": {
+      "op": "txnas ApplicationArgs",
+      "defined_out": [
+        "action#0",
+        "tmp%17#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%17#0"
+      ]
+    },
+    "488": {
+      "op": "btoi",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0"
+      ]
+    },
+    "489": {
+      "op": "txn Sender",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%0#1"
+      ]
+    },
+    "491": {
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0",
+        "action#0",
+        "additionalYield#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%0#1",
+        "0"
+      ]
+    },
+    "492": {
+      "op": "bytec_3 // \"creator\"",
+      "defined_out": [
+        "\"creator\"",
+        "0",
+        "action#0",
+        "additionalYield#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%0#1",
+        "0",
+        "\"creator\""
+      ]
+    },
+    "493": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "maybe_exists%0#0",
+        "maybe_value%0#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%0#1",
+        "maybe_value%0#0",
+        "maybe_exists%0#0"
+      ]
+    },
+    "494": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%0#1",
+        "maybe_value%0#0"
+      ]
+    },
+    "495": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%1#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%1#1"
+      ]
+    },
+    "496": {
+      "error": "Only creator can accrue interest",
+      "op": "assert // Only creator can accrue interest",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0"
+      ]
+    },
+    "497": {
+      "op": "global CurrentApplicationAddress",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0"
+      ]
+    },
+    "499": {
+      "op": "txn GroupIndex",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ]
+    },
+    "501": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "currentIndex#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "currentIndex#0 (copy)"
+      ]
+    },
+    "502": {
+      "error": "Must follow asset transfer",
+      "op": "assert // Must follow asset transfer",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ]
+    },
+    "503": {
+      "op": "intc_1 // 1",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "1"
+      ]
+    },
+    "504": {
+      "op": "-",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "505": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "506": {
+      "op": "gtxns TypeEnum",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "gtxn_type%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type%0#0"
+      ]
+    },
+    "508": {
+      "op": "intc_2 // axfer",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "axfer",
+        "gtxn_type%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type%0#0",
+        "axfer"
+      ]
+    },
+    "509": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "gtxn_type_matches%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type_matches%0#0"
+      ]
+    },
+    "510": {
+      "error": "transaction type is axfer",
+      "op": "assert // transaction type is axfer",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "511": {
+      "op": "dup",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "512": {
+      "op": "gtxns XferAsset",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#2"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#2"
+      ]
+    },
+    "514": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#2",
+        "0"
+      ]
+    },
+    "515": {
+      "op": "bytec_2 // \"usdcAssetId\"",
+      "defined_out": [
+        "\"usdcAssetId\"",
+        "0",
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#2"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#2",
+        "0",
+        "\"usdcAssetId\""
+      ]
+    },
+    "516": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "maybe_exists%1#0",
+        "maybe_value%1#0",
+        "tmp%5#2"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#2",
+        "maybe_value%1#0",
+        "maybe_exists%1#0"
+      ]
+    },
+    "517": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%5#2",
+        "maybe_value%1#0"
+      ]
+    },
+    "518": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%6#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%6#0"
+      ]
+    },
+    "519": {
+      "error": "Must transfer USDC",
+      "op": "assert // Must transfer USDC",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "520": {
+      "op": "dup",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "521": {
+      "op": "gtxns AssetReceiver",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%7#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "tmp%7#1"
+      ]
+    },
+    "523": {
+      "op": "uncover 2",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "incomingTransfer#0",
+        "tmp%7#1",
+        "appAddr#0"
+      ]
+    },
+    "525": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "incomingTransfer#0",
+        "tmp%8#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "incomingTransfer#0",
+        "tmp%8#1"
+      ]
+    },
+    "526": {
+      "error": "Must send to contract",
+      "op": "assert // Must send to contract",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "527": {
+      "op": "gtxns AssetAmount",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%9#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%9#1"
+      ]
+    },
+    "529": {
+      "op": "dig 1",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "additionalYield#0 (copy)",
+        "tmp%9#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%9#1",
+        "additionalYield#0 (copy)"
+      ]
+    },
+    "531": {
+      "op": ">=",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%10#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "tmp%10#1"
+      ]
+    },
+    "532": {
+      "error": "Insufficient USDC sent",
+      "op": "assert // Insufficient USDC sent",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0"
+      ]
+    },
+    "533": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "0"
+      ]
+    },
+    "534": {
+      "op": "bytec_0 // \"total_deposits\"",
+      "defined_out": [
+        "\"total_deposits\"",
+        "0",
+        "action#0",
+        "additionalYield#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "0",
+        "\"total_deposits\""
+      ]
+    },
+    "535": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "additionalYield#0",
+        "maybe_exists%2#0",
+        "maybe_value%2#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "maybe_value%2#0",
+        "maybe_exists%2#0"
+      ]
+    },
+    "536": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "additionalYield#0",
+        "maybe_value%2#0"
+      ]
+    },
+    "537": {
+      "op": "+",
+      "defined_out": [
+        "action#0",
+        "tmp%11#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%11#1"
+      ]
+    },
+    "538": {
+      "op": "bytec_0 // \"total_deposits\"",
+      "stack_out": [
+        "action#0",
+        "tmp%11#1",
+        "\"total_deposits\""
+      ]
+    },
+    "539": {
+      "op": "swap",
+      "stack_out": [
+        "action#0",
+        "\"total_deposits\"",
+        "tmp%11#1"
+      ]
+    },
+    "540": {
+      "op": "app_global_put",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "541": {
+      "op": "intc_1 // 1",
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "542": {
+      "op": "return",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "543": {
+      "block": "main_after_if_else@14",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "dup",
+      "defined_out": [
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0"
+      ]
+    },
+    "544": {
+      "op": "pushbytes \"getRate\"",
+      "defined_out": [
+        "\"getRate\"",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0",
+        "\"getRate\""
+      ]
+    },
+    "553": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%19#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%19#0"
+      ]
+    },
+    "554": {
+      "op": "bz main_after_if_else@16",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "557": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "558": {
+      "op": "return",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "559": {
+      "block": "main_after_if_else@16",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "dup",
+      "defined_out": [
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0"
+      ]
+    },
+    "560": {
+      "op": "pushbytes \"fundProtocol\"",
+      "defined_out": [
+        "\"fundProtocol\"",
+        "action#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "action#0",
+        "\"fundProtocol\""
+      ]
+    },
+    "574": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%20#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%20#0"
+      ]
+    },
+    "575": {
+      "op": "bz main_after_if_else@18",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "578": {
+      "op": "txn Sender",
+      "defined_out": [
+        "action#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%0#1"
+      ]
+    },
+    "580": {
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0",
+        "action#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%0#1",
+        "0"
+      ]
+    },
+    "581": {
+      "op": "bytec_3 // \"creator\"",
+      "defined_out": [
+        "\"creator\"",
+        "0",
+        "action#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%0#1",
+        "0",
+        "\"creator\""
+      ]
+    },
+    "582": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "action#0",
+        "maybe_exists%0#0",
+        "maybe_value%0#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%0#1",
+        "maybe_value%0#0",
+        "maybe_exists%0#0"
+      ]
+    },
+    "583": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "action#0",
+        "tmp%0#1",
+        "maybe_value%0#0"
+      ]
+    },
+    "584": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%1#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%1#1"
+      ]
+    },
+    "585": {
+      "error": "Only creator can fund protocol",
+      "op": "assert // Only creator can fund protocol",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "586": {
+      "op": "global CurrentApplicationAddress",
+      "defined_out": [
+        "action#0",
+        "appAddr#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0"
+      ]
+    },
+    "588": {
+      "op": "txn GroupIndex",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ]
+    },
+    "590": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "currentIndex#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "currentIndex#0 (copy)"
+      ]
+    },
+    "591": {
+      "error": "Must follow asset transfer",
+      "op": "assert // Must follow asset transfer",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ]
+    },
+    "592": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1",
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "currentIndex#0",
+        "1"
+      ]
+    },
+    "593": {
+      "op": "-",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "594": {
+      "op": "dup",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "incomingTransfer#0 (copy)"
+      ]
+    },
+    "595": {
+      "op": "gtxns TypeEnum",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "gtxn_type%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type%0#0"
+      ]
+    },
+    "597": {
+      "op": "intc_2 // axfer",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "axfer",
+        "gtxn_type%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type%0#0",
+        "axfer"
+      ]
+    },
+    "598": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "gtxn_type_matches%0#0",
+        "incomingTransfer#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0",
+        "gtxn_type_matches%0#0"
+      ]
+    },
+    "599": {
+      "error": "transaction type is axfer",
+      "op": "assert // transaction type is axfer",
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "incomingTransfer#0"
+      ]
+    },
+    "600": {
+      "op": "gtxns AssetReceiver",
+      "defined_out": [
+        "action#0",
+        "appAddr#0",
+        "tmp%5#1"
+      ],
+      "stack_out": [
+        "action#0",
+        "appAddr#0",
+        "tmp%5#1"
+      ]
+    },
+    "602": {
+      "op": "==",
+      "defined_out": [
+        "action#0",
+        "tmp%6#0"
+      ],
+      "stack_out": [
+        "action#0",
+        "tmp%6#0"
+      ]
+    },
+    "603": {
+      "error": "Must send to contract",
+      "op": "assert // Must send to contract",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "604": {
+      "op": "intc_1 // 1",
+      "stack_out": [
+        "action#0",
+        "1"
+      ]
+    },
+    "605": {
+      "op": "return",
+      "stack_out": [
+        "action#0"
+      ]
+    },
+    "606": {
+      "block": "main_after_if_else@18",
+      "stack_in": [
+        "action#0"
+      ],
+      "op": "err",
+      "defined_out": []
+    },
+    "607": {
+      "subroutine": "contracts/MockOrbital.algo.ts::MockOrbital.getCurrentRate",
+      "params": {},
+      "block": "getCurrentRate",
+      "stack_in": [],
+      "op": "proto 0 1"
+    },
+    "610": {
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0"
+      ],
+      "stack_out": [
+        "0"
+      ]
+    },
+    "611": {
+      "op": "bytec_1 // \"circulating_lst\"",
+      "defined_out": [
+        "\"circulating_lst\"",
+        "0"
+      ],
+      "stack_out": [
+        "0",
+        "\"circulating_lst\""
+      ]
+    },
+    "612": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "circulatingLst#0",
+        "maybe_exists%0#0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "maybe_exists%0#0"
+      ]
+    },
+    "613": {
+      "op": "swap",
+      "stack_out": [
+        "maybe_exists%0#0",
+        "circulatingLst#0"
+      ]
+    },
+    "614": {
+      "op": "dup",
+      "stack_out": [
+        "maybe_exists%0#0",
+        "circulatingLst#0",
+        "circulatingLst#0 (copy)"
+      ]
+    },
+    "615": {
+      "op": "uncover 2",
+      "defined_out": [
+        "circulatingLst#0",
+        "maybe_exists%0#0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "circulatingLst#0",
+        "maybe_exists%0#0"
+      ]
+    },
+    "617": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "circulatingLst#0",
+        "circulatingLst#0"
+      ]
+    },
+    "618": {
+      "op": "bnz getCurrentRate_after_if_else@2",
+      "stack_out": [
+        "circulatingLst#0"
+      ]
+    },
+    "621": {
+      "op": "intc_3 // 1000000",
+      "defined_out": [
+        "1000000",
+        "circulatingLst#0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "1000000"
+      ]
+    },
+    "622": {
+      "op": "swap"
+    },
+    "623": {
+      "retsub": true,
+      "op": "retsub"
+    },
+    "624": {
+      "block": "getCurrentRate_after_if_else@2",
+      "stack_in": [
+        "circulatingLst#0"
+      ],
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "0"
+      ]
+    },
+    "625": {
+      "op": "bytec_0 // \"total_deposits\"",
+      "defined_out": [
+        "\"total_deposits\"",
+        "0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "0",
+        "\"total_deposits\""
+      ]
+    },
+    "626": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "maybe_exists%1#0",
+        "n1#0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "n1#0",
+        "maybe_exists%1#0"
+      ]
+    },
+    "627": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "circulatingLst#0",
+        "n1#0"
+      ]
+    },
+    "628": {
+      "op": "intc_3 // 1000000",
+      "defined_out": [
+        "1000000",
+        "n1#0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "n1#0",
+        "1000000"
+      ]
+    },
+    "629": {
+      "op": "mulw",
+      "defined_out": [
+        "hi#0",
+        "lo#0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "hi#0",
+        "lo#0"
+      ]
+    },
+    "630": {
+      "op": "intc_0 // 0",
+      "stack_out": [
+        "circulatingLst#0",
+        "hi#0",
+        "lo#0",
+        "0"
+      ]
+    },
+    "631": {
+      "op": "frame_dig 0",
+      "defined_out": [
+        "0",
+        "circulatingLst#0",
+        "hi#0",
+        "lo#0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "hi#0",
+        "lo#0",
+        "0",
+        "circulatingLst#0"
+      ]
+    },
+    "633": {
+      "op": "divmodw",
+      "defined_out": [
+        "_r_hi#0",
+        "_r_lo#0",
+        "circulatingLst#0",
+        "q_hi#0",
+        "q_lo#0"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "q_hi#0",
+        "q_lo#0",
+        "_r_hi#0",
+        "_r_lo#0"
+      ]
+    },
+    "634": {
+      "op": "popn 2",
+      "stack_out": [
+        "circulatingLst#0",
+        "q_hi#0",
+        "q_lo#0"
+      ]
+    },
+    "636": {
+      "op": "swap",
+      "stack_out": [
+        "circulatingLst#0",
+        "q_lo#0",
+        "q_hi#0"
+      ]
+    },
+    "637": {
+      "op": "!",
+      "defined_out": [
+        "circulatingLst#0",
+        "q_lo#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "circulatingLst#0",
+        "q_lo#0",
+        "tmp%0#1"
+      ]
+    },
+    "638": {
+      "error": "Overflow in mulDivFloor",
+      "op": "assert // Overflow in mulDivFloor",
+      "stack_out": [
+        "circulatingLst#0",
+        "q_lo#0"
+      ]
+    },
+    "639": {
+      "op": "swap"
+    },
+    "640": {
+      "retsub": true,
+      "op": "retsub"
+    },
+    "641": {
+      "subroutine": "contracts/MockOrbital.algo.ts::MockOrbital.initialize",
+      "params": {
+        "usdcId#0": "uint64",
+        "cUsdcId#0": "uint64"
+      },
+      "block": "initialize",
+      "stack_in": [],
+      "op": "proto 2 0"
+    },
+    "644": {
+      "op": "txn Sender",
+      "defined_out": [
+        "tmp%0#0"
+      ],
+      "stack_out": [
+        "tmp%0#0"
+      ]
+    },
+    "646": {
+      "op": "intc_0 // 0",
+      "defined_out": [
+        "0",
+        "tmp%0#0"
+      ],
+      "stack_out": [
+        "tmp%0#0",
+        "0"
+      ]
+    },
+    "647": {
+      "op": "bytec_3 // \"creator\"",
+      "defined_out": [
+        "\"creator\"",
+        "0",
+        "tmp%0#0"
+      ],
+      "stack_out": [
+        "tmp%0#0",
+        "0",
+        "\"creator\""
+      ]
+    },
+    "648": {
+      "op": "app_global_get_ex",
+      "defined_out": [
+        "maybe_exists%0#0",
+        "maybe_value%0#0",
+        "tmp%0#0"
+      ],
+      "stack_out": [
+        "tmp%0#0",
+        "maybe_value%0#0",
+        "maybe_exists%0#0"
+      ]
+    },
+    "649": {
+      "error": "check GlobalState exists",
+      "op": "assert // check GlobalState exists",
+      "stack_out": [
+        "tmp%0#0",
+        "maybe_value%0#0"
+      ]
+    },
+    "650": {
+      "op": "==",
+      "defined_out": [
+        "tmp%1#0"
+      ],
+      "stack_out": [
+        "tmp%1#0"
+      ]
+    },
+    "651": {
+      "error": "Only creator can initialize",
+      "op": "assert // Only creator can initialize",
+      "stack_out": []
+    },
+    "652": {
+      "op": "frame_dig -2",
+      "defined_out": [
+        "usdcId#0 (copy)"
+      ],
+      "stack_out": [
+        "usdcId#0 (copy)"
+      ]
+    },
+    "654": {
+      "error": "Invalid USDC asset ID",
+      "op": "assert // Invalid USDC asset ID",
+      "stack_out": []
+    },
+    "655": {
+      "op": "frame_dig -1",
+      "defined_out": [
+        "cUsdcId#0 (copy)"
+      ],
+      "stack_out": [
+        "cUsdcId#0 (copy)"
+      ]
+    },
+    "657": {
+      "error": "Invalid cUSDC asset ID",
+      "op": "assert // Invalid cUSDC asset ID",
+      "stack_out": []
+    },
+    "658": {
+      "op": "bytec_2 // \"usdcAssetId\"",
+      "defined_out": [
+        "\"usdcAssetId\""
+      ],
+      "stack_out": [
+        "\"usdcAssetId\""
+      ]
+    },
+    "659": {
+      "op": "frame_dig -2",
+      "stack_out": [
+        "\"usdcAssetId\"",
+        "usdcId#0 (copy)"
+      ]
+    },
+    "661": {
+      "op": "app_global_put",
+      "stack_out": []
+    },
+    "662": {
+      "op": "bytec 4 // \"cUsdcAssetId\"",
+      "defined_out": [
+        "\"cUsdcAssetId\""
+      ],
+      "stack_out": [
+        "\"cUsdcAssetId\""
+      ]
+    },
+    "664": {
+      "op": "frame_dig -1",
+      "stack_out": [
+        "\"cUsdcAssetId\"",
+        "cUsdcId#0 (copy)"
+      ]
+    },
+    "666": {
+      "op": "app_global_put",
+      "stack_out": []
+    },
+    "667": {
+      "retsub": true,
+      "op": "retsub"
+    }
+  }
+}
