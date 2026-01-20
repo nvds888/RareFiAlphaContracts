@@ -19,7 +19,7 @@ import {
   Bytes,
   baremethod,
 } from '@algorandfoundation/algorand-typescript';
-import { mulw, divmodw, itob, AppGlobal } from '@algorandfoundation/algorand-typescript/op';
+import { mulw, divmodw, itob, AppGlobal, AppLocal } from '@algorandfoundation/algorand-typescript/op';
 
 // Constants
 const SCALE: uint64 = Uint64(1_000_000_000);           // 1e9 for yield_per_token precision
@@ -120,19 +120,19 @@ export class RareFiVault extends arc4.Contract {
    */
   private getExpectedSwapOutput(inputAmount: uint64): uint64 {
     const poolApp = this.tinymanPoolAppId.value;
+    const poolAddr = this.tinymanPoolAddress.value;
 
-    // Read pool state from global state (for MockTinymanPool)
-    // For real Tinyman V2, use AppLocal.getExUint64(poolAddr, poolApp, key)
-    const [asset1Id, hasAsset1Id] = AppGlobal.getExUint64(poolApp, Bytes('asset_1_id'));
+    // Read pool state from local state of pool address (Tinyman V2 stores pool data in local state)
+    const [asset1Id, hasAsset1Id] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('asset_1_id'));
     assert(hasAsset1Id, 'Cannot read pool asset_1_id');
 
-    const [asset1Reserves, hasAsset1Reserves] = AppGlobal.getExUint64(poolApp, Bytes('asset_1_reserves'));
+    const [asset1Reserves, hasAsset1Reserves] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('asset_1_reserves'));
     assert(hasAsset1Reserves, 'Cannot read pool asset_1_reserves');
 
-    const [asset2Reserves, hasAsset2Reserves] = AppGlobal.getExUint64(poolApp, Bytes('asset_2_reserves'));
+    const [asset2Reserves, hasAsset2Reserves] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('asset_2_reserves'));
     assert(hasAsset2Reserves, 'Cannot read pool asset_2_reserves');
 
-    const [totalFeeShare, hasTotalFeeShare] = AppGlobal.getExUint64(poolApp, Bytes('total_fee_share'));
+    const [totalFeeShare, hasTotalFeeShare] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('total_fee_share'));
     assert(hasTotalFeeShare, 'Cannot read pool total_fee_share');
 
     // Determine which asset is input and which is output based on asset_1_id
