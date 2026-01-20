@@ -352,6 +352,8 @@ export async function performDeposit(
   atc.addTransaction({ txn: alphaTransfer, signer });
 
   // Then deposit call
+  // Note: deposit now checks USDC balance for flash deposit protection,
+  // so we need to include both alphaAssetId and usdcAssetId in foreign assets
   atc.addMethodCall({
     appID: deployment.vaultAppId,
     method: contract.getMethodByName('deposit'),
@@ -359,7 +361,7 @@ export async function performDeposit(
     sender: userAddr,
     signer,
     suggestedParams: { ...suggestedParams, fee: 2000, flatFee: true },
-    appForeignAssets: [deployment.alphaAssetId],
+    appForeignAssets: [deployment.alphaAssetId, deployment.usdcAssetId],
   });
 
   await atc.execute(algod, 5);

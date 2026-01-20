@@ -25,7 +25,7 @@ import { mulw, divmodw, itob, AppGlobal } from '@algorandfoundation/algorand-typ
 const SCALE: uint64 = Uint64(1_000_000_000);           // 1e9 for yield_per_token precision
 const MAX_FEE_RATE: uint64 = Uint64(100);              // 100% max fee (basis is 100)
 const MIN_DEPOSIT_AMOUNT: uint64 = Uint64(1_000_000);  // Minimum deposit (1 token with 6 decimals)
-const MIN_SWAP_AMOUNT: uint64 = Uint64(2_000_000);     // Minimum swap amount (2 USDC)
+const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0.20 USDC)
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
 const MAX_SLIPPAGE_BPS: uint64 = Uint64(1000);         // Max 10% slippage allowed
 const CREATOR_SETUP_FEE: uint64 = Uint64(200_000_000); // 200 ALGO setup fee (in microALGO)
@@ -326,10 +326,20 @@ export class RareFiVault extends arc4.Contract {
   /**
    * User deposits Alpha into the vault
    * Expects an asset transfer in the group before this call
+   *
+   * NOTE: Deposits are paused when USDC balance >= minSwapThreshold to prevent
+   * flash deposit attacks where users deposit right before yield is swapped.
+   * This ensures yield only goes to users who held deposits during the airdrop period.
    */
   @arc4.abimethod()
   deposit(): void {
     const appAddr: Account = Global.currentApplicationAddress;
+
+    // Check if deposits are paused due to pending yield
+    // This prevents flash deposit attacks where users deposit right before swap
+    const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
+    assert(usdcBalance < this.minSwapThreshold.value, 'Deposits paused: yield pending swap');
+
     const currentIndex = Txn.groupIndex;
     assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
 

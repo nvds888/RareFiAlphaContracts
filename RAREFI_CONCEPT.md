@@ -95,6 +95,7 @@ For users who want lending yield paid in project tokens instead of the underlyin
 | **Project exposure** | Get tokens of projects you believe in |
 | **Fair distribution** | Yield is proportional to deposit amount and time |
 | **No lock-up** | Withdraw principal whenever you want |
+| **Protected from snipers** | Flash deposit protection ensures yield goes to loyal holders, not opportunistic latecomers |
 
 ### For Projects
 
@@ -143,7 +144,7 @@ This ensures:
 | `createVault()` | Deploy only | Initialize vault with asset IDs and configuration |
 | `optInAssets()` | Creator | Opt vault into required ASAs (requires 200.3 ALGO) |
 | `optIn()` | Any user | User opts into vault to enable deposits |
-| `deposit()` | Opted-in users | Deposit Alpha tokens |
+| `deposit()` | Opted-in users | Deposit Alpha tokens (paused when yield pending) |
 | `withdraw(amount)` | Depositors | Withdraw Alpha (0 = withdraw all) |
 | `claim()` | Depositors | Claim accumulated project tokens |
 | `swapYield(slippageBps)` | Creator/RareFi | Swap USDC yield to project tokens |
@@ -252,11 +253,51 @@ Orbital is a Compound-style lending protocol on Algorand.
 - **Slippage protection:** Swaps revert if output below minimum
 - **Minimum thresholds:** Prevents dust attacks and unprofitable swaps
 - **Safe math:** 128-bit multiplication prevents overflow
+- **Flash deposit protection:** Prevents yield sniping attacks (see below)
+
+### Flash Deposit Protection (RareFiVault)
+
+A critical security feature that prevents "yield sniping" attacks where opportunistic users deposit right before a yield swap to capture rewards they didn't earn.
+
+**The Problem:**
+Without protection, when a USDC airdrop arrives at the vault, there's a window before the swap happens. An attacker could:
+1. Monitor the vault for incoming USDC
+2. Deposit a large amount right before the swap
+3. Capture a share of yield they didn't earn
+4. Withdraw immediately after
+
+This dilutes rewards for legitimate long-term depositors.
+
+**The Solution:**
+Deposits are automatically paused when the vault's USDC balance reaches the swap threshold:
+
+```
+On deposit():
+  if (usdcBalance >= minSwapThreshold):
+    REJECT "Deposits paused: yield pending swap"
+```
+
+**How it works:**
+1. USDC airdrop arrives at vault (balance now >= threshold)
+2. New deposits are blocked
+3. RareFi cron job detects pending yield and executes swap
+4. USDC balance returns to 0
+5. Deposits are automatically re-enabled
+
+**Benefits:**
+| Benefit | Description |
+|---------|-------------|
+| **Fair yield distribution** | Only users who held during the airdrop period receive yield |
+| **No lock-ups needed** | Protection without requiring time-locked deposits |
+| **Minimal disruption** | Pause is brief (cron job runs frequently), users can still withdraw/claim |
+| **Self-penalizing attack** | If someone sends USDC to trigger pause, it becomes yield for existing depositors |
+
+**What still works during pause:**
+- Withdrawals (users can always exit)
+- Claiming yield (users can claim anytime)
+- All read operations
 
 ### Known Considerations
-
-**Alpha Vault - Timing between airdrop and swap:**
-When USDC airdrops arrive, there's a window before the swap happens. Users could theoretically deposit right before swap to capture yield. Mitigation: RareFi executes swaps promptly after airdrops detected.
 
 **Orbital Vault - Unharvested yield on closeOut:**
 If a user closes out before a harvest, any USDC yield accumulated since the last harvest is not converted to ASA. The UI should warn users about this.

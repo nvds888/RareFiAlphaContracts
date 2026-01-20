@@ -3,8 +3,8 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    intcblock 0 1 4 8 10000 1000000000 2000000
-    bytecblock "totalDeposits" "depositedAmount" "yieldAsset" "swapAsset" "yieldPerToken" "earnedYield" "creatorAddress" "creatorUnclaimedYield" "depositAsset" "rarefiAddress" "tinymanPoolAppId" "userYieldPerToken" 0x151f7c75 "minSwapThreshold" "tinymanPoolAddress" "creatorFeeRate"
+    intcblock 0 1 4 8 10000 1000000000 200000
+    bytecblock "totalDeposits" "depositedAmount" "yieldAsset" "swapAsset" "yieldPerToken" "earnedYield" "creatorAddress" "creatorUnclaimedYield" "depositAsset" "rarefiAddress" "minSwapThreshold" "tinymanPoolAppId" "userYieldPerToken" 0x151f7c75 "tinymanPoolAddress" "creatorFeeRate"
     // contracts/RareFiVault.algo.ts:34
     // export class RareFiVault extends arc4.Contract {
     txn NumAppArgs
@@ -66,20 +66,20 @@ main_bare_routing@24:
     err
 
 main_deleteApplication@26:
-    // contracts/RareFiVault.algo.ts:629
+    // contracts/RareFiVault.algo.ts:639
     // @baremethod({ allowActions: 'DeleteApplication' })
     txn ApplicationID
     assert // can only call when not creating
-    // contracts/RareFiVault.algo.ts:631
+    // contracts/RareFiVault.algo.ts:641
     // assert(false, 'Contract deletion disabled');
     err // Contract deletion disabled
 
 main_updateApplication@25:
-    // contracts/RareFiVault.algo.ts:624
+    // contracts/RareFiVault.algo.ts:634
     // @baremethod({ allowActions: 'UpdateApplication' })
     txn ApplicationID
     assert // can only call when not creating
-    // contracts/RareFiVault.algo.ts:626
+    // contracts/RareFiVault.algo.ts:636
     // assert(false, 'Contract updates disabled');
     err // Contract updates disabled
 
@@ -151,7 +151,7 @@ createVault:
     // contracts/RareFiVault.algo.ts:185
     // assert(minSwapThreshold >= MIN_SWAP_AMOUNT, 'Swap threshold too low');
     dig 3
-    intc 6 // 2000000
+    intc 6 // 200000
     >=
     assert // Swap threshold too low
     // contracts/RareFiVault.algo.ts:186
@@ -253,14 +253,14 @@ createVault:
     app_global_put
     // contracts/RareFiVault.algo.ts:53
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
-    bytec 13 // "minSwapThreshold"
+    bytec 10 // "minSwapThreshold"
     // contracts/RareFiVault.algo.ts:210
     // this.minSwapThreshold.value = minSwapThreshold;
     uncover 3
     app_global_put
     // contracts/RareFiVault.algo.ts:56
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
-    bytec 10 // "tinymanPoolAppId"
+    bytec 11 // "tinymanPoolAppId"
     // contracts/RareFiVault.algo.ts:213
     // this.tinymanPoolAppId.value = tinymanPoolAppId;
     uncover 2
@@ -533,7 +533,7 @@ optIn:
     txn Sender
     // contracts/RareFiVault.algo.ts:64
     // userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-    bytec 11 // "userYieldPerToken"
+    bytec 12 // "userYieldPerToken"
     // contracts/RareFiVault.algo.ts:284
     // this.userYieldPerToken(Txn.sender).value = Uint64(0);
     intc_0 // 0
@@ -719,17 +719,43 @@ closeOut_after_if_else@7:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.deposit[routing]() -> void:
 deposit:
-    // contracts/RareFiVault.algo.ts:332
+    // contracts/RareFiVault.algo.ts:336
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // contracts/RareFiVault.algo.ts:333
+    // contracts/RareFiVault.algo.ts:340
+    // const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
+    intc_0 // 0
+    // contracts/RareFiVault.algo.ts:41
+    // yieldAsset = GlobalState<uint64>();        // USDC ASA ID (what airdrops come in as)
+    bytec_2 // "yieldAsset"
+    // contracts/RareFiVault.algo.ts:340
+    // const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
+    app_global_get_ex
+    assert // check GlobalState exists
+    dig 1
+    swap
+    asset_holding_get AssetBalance
+    assert // account opted into asset
+    // contracts/RareFiVault.algo.ts:341
+    // assert(usdcBalance < this.minSwapThreshold.value, 'Deposits paused: yield pending swap');
+    intc_0 // 0
+    // contracts/RareFiVault.algo.ts:53
+    // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
+    bytec 10 // "minSwapThreshold"
+    // contracts/RareFiVault.algo.ts:341
+    // assert(usdcBalance < this.minSwapThreshold.value, 'Deposits paused: yield pending swap');
+    app_global_get_ex
+    assert // check GlobalState exists
+    <
+    assert // Deposits paused: yield pending swap
+    // contracts/RareFiVault.algo.ts:343
     // const currentIndex = Txn.groupIndex;
     txn GroupIndex
-    // contracts/RareFiVault.algo.ts:334
+    // contracts/RareFiVault.algo.ts:344
     // assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
     dup
     assert // App call must follow asset transfer
-    // contracts/RareFiVault.algo.ts:337
+    // contracts/RareFiVault.algo.ts:347
     // const depositTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
     intc_1 // 1
     -
@@ -738,7 +764,7 @@ deposit:
     intc_2 // axfer
     ==
     assert // transaction type is axfer
-    // contracts/RareFiVault.algo.ts:338
+    // contracts/RareFiVault.algo.ts:348
     // assert(depositTransfer.xferAsset === Asset(this.depositAsset.value), 'Must transfer deposit asset');
     dup
     gtxns XferAsset
@@ -746,47 +772,47 @@ deposit:
     // contracts/RareFiVault.algo.ts:40
     // depositAsset = GlobalState<uint64>();      // Alpha ASA ID (what users deposit)
     bytec 8 // "depositAsset"
-    // contracts/RareFiVault.algo.ts:338
+    // contracts/RareFiVault.algo.ts:348
     // assert(depositTransfer.xferAsset === Asset(this.depositAsset.value), 'Must transfer deposit asset');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Must transfer deposit asset
-    // contracts/RareFiVault.algo.ts:339
+    // contracts/RareFiVault.algo.ts:349
     // assert(depositTransfer.assetReceiver === appAddr, 'Must send to contract');
     dup
     gtxns AssetReceiver
     uncover 2
     ==
     assert // Must send to contract
-    // contracts/RareFiVault.algo.ts:340
+    // contracts/RareFiVault.algo.ts:350
     // assert(depositTransfer.sender === Txn.sender, 'Transfer must be from caller');
     dup
     gtxns Sender
     txn Sender
     ==
     assert // Transfer must be from caller
-    // contracts/RareFiVault.algo.ts:342
+    // contracts/RareFiVault.algo.ts:352
     // const amount = depositTransfer.assetAmount;
     gtxns AssetAmount
-    // contracts/RareFiVault.algo.ts:343
+    // contracts/RareFiVault.algo.ts:353
     // assert(amount >= MIN_DEPOSIT_AMOUNT, 'Deposit too small');
     dup
     pushint 1000000 // 1000000
     >=
     assert // Deposit too small
-    // contracts/RareFiVault.algo.ts:346
+    // contracts/RareFiVault.algo.ts:356
     // this.updateEarnedYield(Txn.sender);
     txn Sender
     callsub updateEarnedYield
-    // contracts/RareFiVault.algo.ts:349
+    // contracts/RareFiVault.algo.ts:359
     // this.depositedAmount(Txn.sender).value = this.depositedAmount(Txn.sender).value + amount;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:63
     // depositedAmount = LocalState<uint64>();    // User's Alpha balance in vault
     bytec_1 // "depositedAmount"
-    // contracts/RareFiVault.algo.ts:349
+    // contracts/RareFiVault.algo.ts:359
     // this.depositedAmount(Txn.sender).value = this.depositedAmount(Txn.sender).value + amount;
     app_local_get_ex
     assert // check LocalState exists
@@ -796,17 +822,17 @@ deposit:
     // contracts/RareFiVault.algo.ts:63
     // depositedAmount = LocalState<uint64>();    // User's Alpha balance in vault
     bytec_1 // "depositedAmount"
-    // contracts/RareFiVault.algo.ts:349
+    // contracts/RareFiVault.algo.ts:359
     // this.depositedAmount(Txn.sender).value = this.depositedAmount(Txn.sender).value + amount;
     uncover 2
     app_local_put
-    // contracts/RareFiVault.algo.ts:350
+    // contracts/RareFiVault.algo.ts:360
     // this.totalDeposits.value = this.totalDeposits.value + amount;
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:51
     // totalDeposits = GlobalState<uint64>();     // Total Alpha deposited in vault
     bytec_0 // "totalDeposits"
-    // contracts/RareFiVault.algo.ts:350
+    // contracts/RareFiVault.algo.ts:360
     // this.totalDeposits.value = this.totalDeposits.value + amount;
     app_global_get_ex
     assert // check GlobalState exists
@@ -814,11 +840,11 @@ deposit:
     // contracts/RareFiVault.algo.ts:51
     // totalDeposits = GlobalState<uint64>();     // Total Alpha deposited in vault
     bytec_0 // "totalDeposits"
-    // contracts/RareFiVault.algo.ts:350
+    // contracts/RareFiVault.algo.ts:360
     // this.totalDeposits.value = this.totalDeposits.value + amount;
     swap
     app_global_put
-    // contracts/RareFiVault.algo.ts:330
+    // contracts/RareFiVault.algo.ts:334
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -826,7 +852,7 @@ deposit:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.withdraw[routing]() -> void:
 withdraw:
-    // contracts/RareFiVault.algo.ts:357
+    // contracts/RareFiVault.algo.ts:367
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -836,30 +862,30 @@ withdraw:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    // contracts/RareFiVault.algo.ts:359
+    // contracts/RareFiVault.algo.ts:369
     // const userBalance = this.depositedAmount(Txn.sender).value;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:63
     // depositedAmount = LocalState<uint64>();    // User's Alpha balance in vault
     bytec_1 // "depositedAmount"
-    // contracts/RareFiVault.algo.ts:359
+    // contracts/RareFiVault.algo.ts:369
     // const userBalance = this.depositedAmount(Txn.sender).value;
     app_local_get_ex
     swap
     cover 2
     assert // check LocalState exists
-    // contracts/RareFiVault.algo.ts:363
+    // contracts/RareFiVault.algo.ts:373
     // if (withdrawAmount === Uint64(0)) {
     bz withdraw_if_body@2
     dig 1
 
 withdraw_after_if_else@3:
-    // contracts/RareFiVault.algo.ts:367
+    // contracts/RareFiVault.algo.ts:377
     // assert(withdrawAmount > Uint64(0), 'Nothing to withdraw');
     dup
     assert // Nothing to withdraw
-    // contracts/RareFiVault.algo.ts:368
+    // contracts/RareFiVault.algo.ts:378
     // assert(withdrawAmount <= userBalance, 'Insufficient balance');
     dup
     dig 2
@@ -867,11 +893,11 @@ withdraw_after_if_else@3:
     cover 2
     <=
     assert // Insufficient balance
-    // contracts/RareFiVault.algo.ts:371
+    // contracts/RareFiVault.algo.ts:381
     // this.updateEarnedYield(Txn.sender);
     txn Sender
     callsub updateEarnedYield
-    // contracts/RareFiVault.algo.ts:374
+    // contracts/RareFiVault.algo.ts:384
     // this.depositedAmount(Txn.sender).value = userBalance - withdrawAmount;
     dig 1
     -
@@ -879,17 +905,17 @@ withdraw_after_if_else@3:
     // contracts/RareFiVault.algo.ts:63
     // depositedAmount = LocalState<uint64>();    // User's Alpha balance in vault
     bytec_1 // "depositedAmount"
-    // contracts/RareFiVault.algo.ts:374
+    // contracts/RareFiVault.algo.ts:384
     // this.depositedAmount(Txn.sender).value = userBalance - withdrawAmount;
     uncover 2
     app_local_put
-    // contracts/RareFiVault.algo.ts:375
+    // contracts/RareFiVault.algo.ts:385
     // this.totalDeposits.value = this.totalDeposits.value - withdrawAmount;
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:51
     // totalDeposits = GlobalState<uint64>();     // Total Alpha deposited in vault
     bytec_0 // "totalDeposits"
-    // contracts/RareFiVault.algo.ts:375
+    // contracts/RareFiVault.algo.ts:385
     // this.totalDeposits.value = this.totalDeposits.value - withdrawAmount;
     app_global_get_ex
     assert // check GlobalState exists
@@ -898,11 +924,11 @@ withdraw_after_if_else@3:
     // contracts/RareFiVault.algo.ts:51
     // totalDeposits = GlobalState<uint64>();     // Total Alpha deposited in vault
     bytec_0 // "totalDeposits"
-    // contracts/RareFiVault.algo.ts:375
+    // contracts/RareFiVault.algo.ts:385
     // this.totalDeposits.value = this.totalDeposits.value - withdrawAmount;
     swap
     app_global_put
-    // contracts/RareFiVault.algo.ts:378-383
+    // contracts/RareFiVault.algo.ts:388-393
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.depositAsset.value),
@@ -910,16 +936,16 @@ withdraw_after_if_else@3:
     //   fee: Uint64(0),
     // }).submit();
     itxn_begin
-    // contracts/RareFiVault.algo.ts:379
+    // contracts/RareFiVault.algo.ts:389
     // assetReceiver: Txn.sender,
     txn Sender
-    // contracts/RareFiVault.algo.ts:380
+    // contracts/RareFiVault.algo.ts:390
     // xferAsset: Asset(this.depositAsset.value),
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:40
     // depositAsset = GlobalState<uint64>();      // Alpha ASA ID (what users deposit)
     bytec 8 // "depositAsset"
-    // contracts/RareFiVault.algo.ts:380
+    // contracts/RareFiVault.algo.ts:390
     // xferAsset: Asset(this.depositAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
@@ -927,7 +953,7 @@ withdraw_after_if_else@3:
     itxn_field AssetAmount
     itxn_field XferAsset
     itxn_field AssetReceiver
-    // contracts/RareFiVault.algo.ts:378-383
+    // contracts/RareFiVault.algo.ts:388-393
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.depositAsset.value),
@@ -936,11 +962,11 @@ withdraw_after_if_else@3:
     // }).submit();
     intc_2 // 4
     itxn_field TypeEnum
-    // contracts/RareFiVault.algo.ts:382
+    // contracts/RareFiVault.algo.ts:392
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // contracts/RareFiVault.algo.ts:378-383
+    // contracts/RareFiVault.algo.ts:388-393
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.depositAsset.value),
@@ -948,7 +974,7 @@ withdraw_after_if_else@3:
     //   fee: Uint64(0),
     // }).submit();
     itxn_submit
-    // contracts/RareFiVault.algo.ts:357
+    // contracts/RareFiVault.algo.ts:367
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -960,36 +986,36 @@ withdraw_if_body@2:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.claim[routing]() -> void:
 claim:
-    // contracts/RareFiVault.algo.ts:396
+    // contracts/RareFiVault.algo.ts:406
     // this.updateEarnedYield(Txn.sender);
     txn Sender
     callsub updateEarnedYield
-    // contracts/RareFiVault.algo.ts:398
+    // contracts/RareFiVault.algo.ts:408
     // const claimable = this.earnedYield(Txn.sender).value;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:65
     // earnedYield = LocalState<uint64>();        // Accumulated yield not yet claimed
     bytec 5 // "earnedYield"
-    // contracts/RareFiVault.algo.ts:398
+    // contracts/RareFiVault.algo.ts:408
     // const claimable = this.earnedYield(Txn.sender).value;
     app_local_get_ex
     assert // check LocalState exists
-    // contracts/RareFiVault.algo.ts:399
+    // contracts/RareFiVault.algo.ts:409
     // assert(claimable > Uint64(0), 'Nothing to claim');
     dup
     assert // Nothing to claim
-    // contracts/RareFiVault.algo.ts:402
+    // contracts/RareFiVault.algo.ts:412
     // this.earnedYield(Txn.sender).value = Uint64(0);
     txn Sender
     // contracts/RareFiVault.algo.ts:65
     // earnedYield = LocalState<uint64>();        // Accumulated yield not yet claimed
     bytec 5 // "earnedYield"
-    // contracts/RareFiVault.algo.ts:402
+    // contracts/RareFiVault.algo.ts:412
     // this.earnedYield(Txn.sender).value = Uint64(0);
     intc_0 // 0
     app_local_put
-    // contracts/RareFiVault.algo.ts:405-410
+    // contracts/RareFiVault.algo.ts:415-420
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.swapAsset.value),
@@ -997,16 +1023,16 @@ claim:
     //   fee: Uint64(0),
     // }).submit();
     itxn_begin
-    // contracts/RareFiVault.algo.ts:406
+    // contracts/RareFiVault.algo.ts:416
     // assetReceiver: Txn.sender,
     txn Sender
-    // contracts/RareFiVault.algo.ts:407
+    // contracts/RareFiVault.algo.ts:417
     // xferAsset: Asset(this.swapAsset.value),
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:42
     // swapAsset = GlobalState<uint64>();         // Project's ASA ID (what yield is swapped to)
     bytec_3 // "swapAsset"
-    // contracts/RareFiVault.algo.ts:407
+    // contracts/RareFiVault.algo.ts:417
     // xferAsset: Asset(this.swapAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
@@ -1014,7 +1040,7 @@ claim:
     itxn_field AssetAmount
     itxn_field XferAsset
     itxn_field AssetReceiver
-    // contracts/RareFiVault.algo.ts:405-410
+    // contracts/RareFiVault.algo.ts:415-420
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.swapAsset.value),
@@ -1023,11 +1049,11 @@ claim:
     // }).submit();
     intc_2 // 4
     itxn_field TypeEnum
-    // contracts/RareFiVault.algo.ts:409
+    // contracts/RareFiVault.algo.ts:419
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // contracts/RareFiVault.algo.ts:405-410
+    // contracts/RareFiVault.algo.ts:415-420
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.swapAsset.value),
@@ -1035,7 +1061,7 @@ claim:
     //   fee: Uint64(0),
     // }).submit();
     itxn_submit
-    // contracts/RareFiVault.algo.ts:393
+    // contracts/RareFiVault.algo.ts:403
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1043,41 +1069,41 @@ claim:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.claimCreator[routing]() -> void:
 claimCreator:
-    // contracts/RareFiVault.algo.ts:418
+    // contracts/RareFiVault.algo.ts:428
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can claim');
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:45
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // contracts/RareFiVault.algo.ts:418
+    // contracts/RareFiVault.algo.ts:428
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can claim');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Only creator can claim
-    // contracts/RareFiVault.algo.ts:420
+    // contracts/RareFiVault.algo.ts:430
     // const claimable = this.creatorUnclaimedYield.value;
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:48
     // creatorUnclaimedYield = GlobalState<uint64>(); // Accumulated yield for creator to claim
     bytec 7 // "creatorUnclaimedYield"
-    // contracts/RareFiVault.algo.ts:420
+    // contracts/RareFiVault.algo.ts:430
     // const claimable = this.creatorUnclaimedYield.value;
     app_global_get_ex
     assert // check GlobalState exists
-    // contracts/RareFiVault.algo.ts:421
+    // contracts/RareFiVault.algo.ts:431
     // assert(claimable > Uint64(0), 'Nothing to claim');
     dup
     assert // Nothing to claim
     // contracts/RareFiVault.algo.ts:48
     // creatorUnclaimedYield = GlobalState<uint64>(); // Accumulated yield for creator to claim
     bytec 7 // "creatorUnclaimedYield"
-    // contracts/RareFiVault.algo.ts:424
+    // contracts/RareFiVault.algo.ts:434
     // this.creatorUnclaimedYield.value = Uint64(0);
     intc_0 // 0
     app_global_put
-    // contracts/RareFiVault.algo.ts:427-432
+    // contracts/RareFiVault.algo.ts:437-442
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.swapAsset.value),
@@ -1085,16 +1111,16 @@ claimCreator:
     //   fee: Uint64(0),
     // }).submit();
     itxn_begin
-    // contracts/RareFiVault.algo.ts:428
+    // contracts/RareFiVault.algo.ts:438
     // assetReceiver: Txn.sender,
     txn Sender
-    // contracts/RareFiVault.algo.ts:429
+    // contracts/RareFiVault.algo.ts:439
     // xferAsset: Asset(this.swapAsset.value),
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:42
     // swapAsset = GlobalState<uint64>();         // Project's ASA ID (what yield is swapped to)
     bytec_3 // "swapAsset"
-    // contracts/RareFiVault.algo.ts:429
+    // contracts/RareFiVault.algo.ts:439
     // xferAsset: Asset(this.swapAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
@@ -1102,7 +1128,7 @@ claimCreator:
     itxn_field AssetAmount
     itxn_field XferAsset
     itxn_field AssetReceiver
-    // contracts/RareFiVault.algo.ts:427-432
+    // contracts/RareFiVault.algo.ts:437-442
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.swapAsset.value),
@@ -1111,11 +1137,11 @@ claimCreator:
     // }).submit();
     intc_2 // 4
     itxn_field TypeEnum
-    // contracts/RareFiVault.algo.ts:431
+    // contracts/RareFiVault.algo.ts:441
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // contracts/RareFiVault.algo.ts:427-432
+    // contracts/RareFiVault.algo.ts:437-442
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.swapAsset.value),
@@ -1123,7 +1149,7 @@ claimCreator:
     //   fee: Uint64(0),
     // }).submit();
     itxn_submit
-    // contracts/RareFiVault.algo.ts:416
+    // contracts/RareFiVault.algo.ts:426
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1131,7 +1157,7 @@ claimCreator:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.swapYield[routing]() -> void:
 swapYield:
-    // contracts/RareFiVault.algo.ts:450
+    // contracts/RareFiVault.algo.ts:460
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1140,50 +1166,50 @@ swapYield:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // contracts/RareFiVault.algo.ts:452
+    // contracts/RareFiVault.algo.ts:462
     // const isCreator = Txn.sender === this.creatorAddress.value;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:45
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // contracts/RareFiVault.algo.ts:452
+    // contracts/RareFiVault.algo.ts:462
     // const isCreator = Txn.sender === this.creatorAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // contracts/RareFiVault.algo.ts:453
+    // contracts/RareFiVault.algo.ts:463
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:46
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
     bytec 9 // "rarefiAddress"
-    // contracts/RareFiVault.algo.ts:453
+    // contracts/RareFiVault.algo.ts:463
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // contracts/RareFiVault.algo.ts:454
+    // contracts/RareFiVault.algo.ts:464
     // assert(isCreator || isRarefi, 'Only creator or RareFi can swap');
     ||
     assert // Only creator or RareFi can swap
-    // contracts/RareFiVault.algo.ts:455
+    // contracts/RareFiVault.algo.ts:465
     // assert(slippageBps <= MAX_SLIPPAGE_BPS, 'Slippage too high (max 10%)');
     dup
     pushint 1000 // 1000
     <=
     assert // Slippage too high (max 10%)
-    // contracts/RareFiVault.algo.ts:457
+    // contracts/RareFiVault.algo.ts:467
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // contracts/RareFiVault.algo.ts:458
+    // contracts/RareFiVault.algo.ts:468
     // const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:41
     // yieldAsset = GlobalState<uint64>();        // USDC ASA ID (what airdrops come in as)
     bytec_2 // "yieldAsset"
-    // contracts/RareFiVault.algo.ts:458
+    // contracts/RareFiVault.algo.ts:468
     // const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
@@ -1191,39 +1217,39 @@ swapYield:
     swap
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // contracts/RareFiVault.algo.ts:460
+    // contracts/RareFiVault.algo.ts:470
     // assert(usdcBalance >= this.minSwapThreshold.value, 'Below minimum swap threshold');
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:53
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
-    bytec 13 // "minSwapThreshold"
-    // contracts/RareFiVault.algo.ts:460
+    bytec 10 // "minSwapThreshold"
+    // contracts/RareFiVault.algo.ts:470
     // assert(usdcBalance >= this.minSwapThreshold.value, 'Below minimum swap threshold');
     app_global_get_ex
     assert // check GlobalState exists
     dig 1
     <=
     assert // Below minimum swap threshold
-    // contracts/RareFiVault.algo.ts:461
+    // contracts/RareFiVault.algo.ts:471
     // assert(this.totalDeposits.value > Uint64(0), 'No depositors to distribute to');
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:51
     // totalDeposits = GlobalState<uint64>();     // Total Alpha deposited in vault
     bytec_0 // "totalDeposits"
-    // contracts/RareFiVault.algo.ts:461
+    // contracts/RareFiVault.algo.ts:471
     // assert(this.totalDeposits.value > Uint64(0), 'No depositors to distribute to');
     app_global_get_ex
     assert // check GlobalState exists
     assert // No depositors to distribute to
-    // contracts/RareFiVault.algo.ts:464
+    // contracts/RareFiVault.algo.ts:474
     // const expectedOutput = this.getExpectedSwapOutput(usdcBalance);
     dup
     callsub getExpectedSwapOutput
-    // contracts/RareFiVault.algo.ts:465
+    // contracts/RareFiVault.algo.ts:475
     // assert(expectedOutput > Uint64(0), 'Expected output is zero');
     dup
     assert // Expected output is zero
-    // contracts/RareFiVault.algo.ts:468
+    // contracts/RareFiVault.algo.ts:478
     // const minAmountOut = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - slippageBps, FEE_BPS_BASE);
     intc 4 // 10000
     uncover 4
@@ -1234,7 +1260,7 @@ swapYield:
     // contracts/RareFiVault.algo.ts:77
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // contracts/RareFiVault.algo.ts:468
+    // contracts/RareFiVault.algo.ts:478
     // const minAmountOut = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - slippageBps, FEE_BPS_BASE);
     intc 4 // 10000
     // contracts/RareFiVault.algo.ts:77
@@ -1246,13 +1272,13 @@ swapYield:
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // contracts/RareFiVault.algo.ts:471
+    // contracts/RareFiVault.algo.ts:481
     // const swapAssetBefore = Asset(this.swapAsset.value).balance(appAddr);
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:42
     // swapAsset = GlobalState<uint64>();         // Project's ASA ID (what yield is swapped to)
     bytec_3 // "swapAsset"
-    // contracts/RareFiVault.algo.ts:471
+    // contracts/RareFiVault.algo.ts:481
     // const swapAssetBefore = Asset(this.swapAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
@@ -1260,7 +1286,7 @@ swapYield:
     dig 1
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // contracts/RareFiVault.algo.ts:475-495
+    // contracts/RareFiVault.algo.ts:485-505
     // itxn.submitGroup(
     //   // Transaction 1: Send USDC to pool
     //   itxn.assetTransfer({
@@ -1283,23 +1309,23 @@ swapYield:
     //   }),
     // );
     itxn_begin
-    // contracts/RareFiVault.algo.ts:478
+    // contracts/RareFiVault.algo.ts:488
     // assetReceiver: this.tinymanPoolAddress.value,
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:57
     // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
     bytec 14 // "tinymanPoolAddress"
-    // contracts/RareFiVault.algo.ts:478
+    // contracts/RareFiVault.algo.ts:488
     // assetReceiver: this.tinymanPoolAddress.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // contracts/RareFiVault.algo.ts:479
+    // contracts/RareFiVault.algo.ts:489
     // xferAsset: Asset(this.yieldAsset.value),
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:41
     // yieldAsset = GlobalState<uint64>();        // USDC ASA ID (what airdrops come in as)
     bytec_2 // "yieldAsset"
-    // contracts/RareFiVault.algo.ts:479
+    // contracts/RareFiVault.algo.ts:489
     // xferAsset: Asset(this.yieldAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
@@ -1308,7 +1334,7 @@ swapYield:
     itxn_field XferAsset
     dup
     itxn_field AssetReceiver
-    // contracts/RareFiVault.algo.ts:477-482
+    // contracts/RareFiVault.algo.ts:487-492
     // itxn.assetTransfer({
     //   assetReceiver: this.tinymanPoolAddress.value,
     //   xferAsset: Asset(this.yieldAsset.value),
@@ -1317,11 +1343,11 @@ swapYield:
     // }),
     intc_2 // 4
     itxn_field TypeEnum
-    // contracts/RareFiVault.algo.ts:481
+    // contracts/RareFiVault.algo.ts:491
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // contracts/RareFiVault.algo.ts:484-494
+    // contracts/RareFiVault.algo.ts:494-504
     // itxn.applicationCall({
     //   appId: Application(this.tinymanPoolAppId.value),
     //   appArgs: [
@@ -1334,17 +1360,17 @@ swapYield:
     //   fee: Uint64(0),  // Use fee pooling - outer txn covers fees
     // }),
     itxn_next
-    // contracts/RareFiVault.algo.ts:485
+    // contracts/RareFiVault.algo.ts:495
     // appId: Application(this.tinymanPoolAppId.value),
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:56
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
-    bytec 10 // "tinymanPoolAppId"
-    // contracts/RareFiVault.algo.ts:485
+    bytec 11 // "tinymanPoolAppId"
+    // contracts/RareFiVault.algo.ts:495
     // appId: Application(this.tinymanPoolAppId.value),
     app_global_get_ex
     assert // check GlobalState exists
-    // contracts/RareFiVault.algo.ts:489
+    // contracts/RareFiVault.algo.ts:499
     // itob(minAmountOut),
     dig 4
     itob
@@ -1352,17 +1378,17 @@ swapYield:
     itxn_field Accounts
     dig 3
     itxn_field Assets
-    // contracts/RareFiVault.algo.ts:487
+    // contracts/RareFiVault.algo.ts:497
     // Bytes('swap'),
     pushbytes "swap"
     itxn_field ApplicationArgs
-    // contracts/RareFiVault.algo.ts:488
+    // contracts/RareFiVault.algo.ts:498
     // Bytes('fixed-input'),
     pushbytes "fixed-input"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_field ApplicationID
-    // contracts/RareFiVault.algo.ts:484-494
+    // contracts/RareFiVault.algo.ts:494-504
     // itxn.applicationCall({
     //   appId: Application(this.tinymanPoolAppId.value),
     //   appArgs: [
@@ -1376,11 +1402,11 @@ swapYield:
     // }),
     pushint 6 // 6
     itxn_field TypeEnum
-    // contracts/RareFiVault.algo.ts:493
+    // contracts/RareFiVault.algo.ts:503
     // fee: Uint64(0),  // Use fee pooling - outer txn covers fees
     intc_0 // 0
     itxn_field Fee
-    // contracts/RareFiVault.algo.ts:475-495
+    // contracts/RareFiVault.algo.ts:485-505
     // itxn.submitGroup(
     //   // Transaction 1: Send USDC to pool
     //   itxn.assetTransfer({
@@ -1403,29 +1429,29 @@ swapYield:
     //   }),
     // );
     itxn_submit
-    // contracts/RareFiVault.algo.ts:498
+    // contracts/RareFiVault.algo.ts:508
     // const swapAssetAfter: uint64 = Asset(this.swapAsset.value).balance(appAddr);
     uncover 3
     uncover 2
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // contracts/RareFiVault.algo.ts:499
+    // contracts/RareFiVault.algo.ts:509
     // const swapOutput: uint64 = swapAssetAfter - swapAssetBefore;
     swap
     -
-    // contracts/RareFiVault.algo.ts:501
+    // contracts/RareFiVault.algo.ts:511
     // assert(swapOutput >= minAmountOut, 'Swap output below minimum');
     dup
     uncover 2
     >=
     assert // Swap output below minimum
-    // contracts/RareFiVault.algo.ts:504
+    // contracts/RareFiVault.algo.ts:514
     // const creatorCut: uint64 = this.mulDivFloor(swapOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:47
     // creatorFeeRate = GlobalState<uint64>();    // 0-100, percentage of yield to creator
     bytec 15 // "creatorFeeRate"
-    // contracts/RareFiVault.algo.ts:504
+    // contracts/RareFiVault.algo.ts:514
     // const creatorCut: uint64 = this.mulDivFloor(swapOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
     app_global_get_ex
     assert // check GlobalState exists
@@ -1436,7 +1462,7 @@ swapYield:
     // contracts/RareFiVault.algo.ts:77
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // contracts/RareFiVault.algo.ts:504
+    // contracts/RareFiVault.algo.ts:514
     // const creatorCut: uint64 = this.mulDivFloor(swapOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
     pushint 100 // 100
     // contracts/RareFiVault.algo.ts:77
@@ -1448,20 +1474,20 @@ swapYield:
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // contracts/RareFiVault.algo.ts:505
+    // contracts/RareFiVault.algo.ts:515
     // const userCut: uint64 = swapOutput - creatorCut;
     swap
     dig 1
     -
     dup
     uncover 2
-    // contracts/RareFiVault.algo.ts:508
+    // contracts/RareFiVault.algo.ts:518
     // this.creatorUnclaimedYield.value = this.creatorUnclaimedYield.value + creatorCut;
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:48
     // creatorUnclaimedYield = GlobalState<uint64>(); // Accumulated yield for creator to claim
     bytec 7 // "creatorUnclaimedYield"
-    // contracts/RareFiVault.algo.ts:508
+    // contracts/RareFiVault.algo.ts:518
     // this.creatorUnclaimedYield.value = this.creatorUnclaimedYield.value + creatorCut;
     app_global_get_ex
     assert // check GlobalState exists
@@ -1469,27 +1495,27 @@ swapYield:
     // contracts/RareFiVault.algo.ts:48
     // creatorUnclaimedYield = GlobalState<uint64>(); // Accumulated yield for creator to claim
     bytec 7 // "creatorUnclaimedYield"
-    // contracts/RareFiVault.algo.ts:508
+    // contracts/RareFiVault.algo.ts:518
     // this.creatorUnclaimedYield.value = this.creatorUnclaimedYield.value + creatorCut;
     swap
     app_global_put
-    // contracts/RareFiVault.algo.ts:512
+    // contracts/RareFiVault.algo.ts:522
     // if (userCut > Uint64(0)) {
     bz swapYield_after_if_else@5
-    // contracts/RareFiVault.algo.ts:513
+    // contracts/RareFiVault.algo.ts:523
     // const yieldIncrease: uint64 = this.mulDivFloor(userCut, SCALE, this.totalDeposits.value);
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:51
     // totalDeposits = GlobalState<uint64>();     // Total Alpha deposited in vault
     bytec_0 // "totalDeposits"
-    // contracts/RareFiVault.algo.ts:513
+    // contracts/RareFiVault.algo.ts:523
     // const yieldIncrease: uint64 = this.mulDivFloor(userCut, SCALE, this.totalDeposits.value);
     app_global_get_ex
     assert // check GlobalState exists
     // contracts/RareFiVault.algo.ts:76
     // const [hi, lo] = mulw(n1, n2);
     dig 1
-    // contracts/RareFiVault.algo.ts:513
+    // contracts/RareFiVault.algo.ts:523
     // const yieldIncrease: uint64 = this.mulDivFloor(userCut, SCALE, this.totalDeposits.value);
     intc 5 // 1000000000
     // contracts/RareFiVault.algo.ts:76
@@ -1506,13 +1532,13 @@ swapYield:
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // contracts/RareFiVault.algo.ts:514
+    // contracts/RareFiVault.algo.ts:524
     // this.yieldPerToken.value = this.yieldPerToken.value + yieldIncrease;
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:52
     // yieldPerToken = GlobalState<uint64>();     // Accumulator for yield distribution (scaled by SCALE)
     bytec 4 // "yieldPerToken"
-    // contracts/RareFiVault.algo.ts:514
+    // contracts/RareFiVault.algo.ts:524
     // this.yieldPerToken.value = this.yieldPerToken.value + yieldIncrease;
     app_global_get_ex
     assert // check GlobalState exists
@@ -1520,13 +1546,13 @@ swapYield:
     // contracts/RareFiVault.algo.ts:52
     // yieldPerToken = GlobalState<uint64>();     // Accumulator for yield distribution (scaled by SCALE)
     bytec 4 // "yieldPerToken"
-    // contracts/RareFiVault.algo.ts:514
+    // contracts/RareFiVault.algo.ts:524
     // this.yieldPerToken.value = this.yieldPerToken.value + yieldIncrease;
     swap
     app_global_put
 
 swapYield_after_if_else@5:
-    // contracts/RareFiVault.algo.ts:450
+    // contracts/RareFiVault.algo.ts:460
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1534,16 +1560,16 @@ swapYield_after_if_else@5:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.getVaultStats[routing]() -> void:
 getVaultStats:
-    // contracts/RareFiVault.algo.ts:527
+    // contracts/RareFiVault.algo.ts:537
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // contracts/RareFiVault.algo.ts:528
+    // contracts/RareFiVault.algo.ts:538
     // const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:41
     // yieldAsset = GlobalState<uint64>();        // USDC ASA ID (what airdrops come in as)
     bytec_2 // "yieldAsset"
-    // contracts/RareFiVault.algo.ts:528
+    // contracts/RareFiVault.algo.ts:538
     // const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
@@ -1551,13 +1577,13 @@ getVaultStats:
     swap
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // contracts/RareFiVault.algo.ts:529
+    // contracts/RareFiVault.algo.ts:539
     // const swapAssetBalance = Asset(this.swapAsset.value).balance(appAddr);
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:42
     // swapAsset = GlobalState<uint64>();         // Project's ASA ID (what yield is swapped to)
     bytec_3 // "swapAsset"
-    // contracts/RareFiVault.algo.ts:529
+    // contracts/RareFiVault.algo.ts:539
     // const swapAssetBalance = Asset(this.swapAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
@@ -1565,37 +1591,37 @@ getVaultStats:
     swap
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // contracts/RareFiVault.algo.ts:533
+    // contracts/RareFiVault.algo.ts:543
     // this.totalDeposits.value,
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:51
     // totalDeposits = GlobalState<uint64>();     // Total Alpha deposited in vault
     bytec_0 // "totalDeposits"
-    // contracts/RareFiVault.algo.ts:533
+    // contracts/RareFiVault.algo.ts:543
     // this.totalDeposits.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // contracts/RareFiVault.algo.ts:534
+    // contracts/RareFiVault.algo.ts:544
     // this.yieldPerToken.value,
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:52
     // yieldPerToken = GlobalState<uint64>();     // Accumulator for yield distribution (scaled by SCALE)
     bytec 4 // "yieldPerToken"
-    // contracts/RareFiVault.algo.ts:534
+    // contracts/RareFiVault.algo.ts:544
     // this.yieldPerToken.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // contracts/RareFiVault.algo.ts:535
+    // contracts/RareFiVault.algo.ts:545
     // this.creatorUnclaimedYield.value,
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:48
     // creatorUnclaimedYield = GlobalState<uint64>(); // Accumulated yield for creator to claim
     bytec 7 // "creatorUnclaimedYield"
-    // contracts/RareFiVault.algo.ts:535
+    // contracts/RareFiVault.algo.ts:545
     // this.creatorUnclaimedYield.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // contracts/RareFiVault.algo.ts:532-538
+    // contracts/RareFiVault.algo.ts:542-548
     // return [
     //   this.totalDeposits.value,
     //   this.yieldPerToken.value,
@@ -1617,9 +1643,9 @@ getVaultStats:
     swap
     itob
     concat
-    // contracts/RareFiVault.algo.ts:525
+    // contracts/RareFiVault.algo.ts:535
     // @arc4.abimethod({ readonly: true })
-    bytec 12 // 0x151f7c75
+    bytec 13 // 0x151f7c75
     swap
     concat
     log
@@ -1631,7 +1657,7 @@ getVaultStats:
 getPendingYield:
     pushbytes ""
     dup
-    // contracts/RareFiVault.algo.ts:544
+    // contracts/RareFiVault.algo.ts:554
     // @arc4.abimethod({ readonly: true })
     txna ApplicationArgs 1
     dupn 2
@@ -1639,14 +1665,14 @@ getPendingYield:
     pushint 32 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // contracts/RareFiVault.algo.ts:546
+    // contracts/RareFiVault.algo.ts:556
     // const deposited = this.depositedAmount(user).value;
     dup
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:63
     // depositedAmount = LocalState<uint64>();    // User's Alpha balance in vault
     bytec_1 // "depositedAmount"
-    // contracts/RareFiVault.algo.ts:546
+    // contracts/RareFiVault.algo.ts:556
     // const deposited = this.depositedAmount(user).value;
     app_local_get_ex
     swap
@@ -1654,28 +1680,28 @@ getPendingYield:
     cover 3
     cover 3
     assert // check LocalState exists
-    // contracts/RareFiVault.algo.ts:547
+    // contracts/RareFiVault.algo.ts:557
     // let pending = this.earnedYield(user).value;
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:65
     // earnedYield = LocalState<uint64>();        // Accumulated yield not yet claimed
     bytec 5 // "earnedYield"
-    // contracts/RareFiVault.algo.ts:547
+    // contracts/RareFiVault.algo.ts:557
     // let pending = this.earnedYield(user).value;
     app_local_get_ex
     swap
     cover 2
     assert // check LocalState exists
-    // contracts/RareFiVault.algo.ts:549
+    // contracts/RareFiVault.algo.ts:559
     // if (deposited > Uint64(0)) {
     bz getPendingYield_after_if_else@5
-    // contracts/RareFiVault.algo.ts:550
+    // contracts/RareFiVault.algo.ts:560
     // const currentYPT = this.yieldPerToken.value;
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:52
     // yieldPerToken = GlobalState<uint64>();     // Accumulator for yield distribution (scaled by SCALE)
     bytec 4 // "yieldPerToken"
-    // contracts/RareFiVault.algo.ts:550
+    // contracts/RareFiVault.algo.ts:560
     // const currentYPT = this.yieldPerToken.value;
     app_global_get_ex
     swap
@@ -1683,14 +1709,14 @@ getPendingYield:
     cover 2
     bury 7
     assert // check GlobalState exists
-    // contracts/RareFiVault.algo.ts:551
+    // contracts/RareFiVault.algo.ts:561
     // const userYPT = this.userYieldPerToken(user).value;
     dig 3
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:64
     // userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-    bytec 11 // "userYieldPerToken"
-    // contracts/RareFiVault.algo.ts:551
+    bytec 12 // "userYieldPerToken"
+    // contracts/RareFiVault.algo.ts:561
     // const userYPT = this.userYieldPerToken(user).value;
     app_local_get_ex
     swap
@@ -1698,11 +1724,11 @@ getPendingYield:
     cover 2
     bury 7
     assert // check LocalState exists
-    // contracts/RareFiVault.algo.ts:553
+    // contracts/RareFiVault.algo.ts:563
     // if (currentYPT > userYPT) {
     >
     bz getPendingYield_after_if_else@5
-    // contracts/RareFiVault.algo.ts:554
+    // contracts/RareFiVault.algo.ts:564
     // pending = pending + this.mulDivFloor(deposited, currentYPT - userYPT, SCALE);
     dig 4
     dig 4
@@ -1714,7 +1740,7 @@ getPendingYield:
     // contracts/RareFiVault.algo.ts:77
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // contracts/RareFiVault.algo.ts:554
+    // contracts/RareFiVault.algo.ts:564
     // pending = pending + this.mulDivFloor(deposited, currentYPT - userYPT, SCALE);
     intc 5 // 1000000000
     // contracts/RareFiVault.algo.ts:77
@@ -1726,18 +1752,18 @@ getPendingYield:
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // contracts/RareFiVault.algo.ts:554
+    // contracts/RareFiVault.algo.ts:564
     // pending = pending + this.mulDivFloor(deposited, currentYPT - userYPT, SCALE);
     dig 1
     +
     bury 1
 
 getPendingYield_after_if_else@5:
-    // contracts/RareFiVault.algo.ts:544
+    // contracts/RareFiVault.algo.ts:554
     // @arc4.abimethod({ readonly: true })
     dup
     itob
-    bytec 12 // 0x151f7c75
+    bytec 13 // 0x151f7c75
     swap
     concat
     log
@@ -1747,7 +1773,7 @@ getPendingYield_after_if_else@5:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.getUserDeposit[routing]() -> void:
 getUserDeposit:
-    // contracts/RareFiVault.algo.ts:564
+    // contracts/RareFiVault.algo.ts:574
     // @arc4.abimethod({ readonly: true })
     txna ApplicationArgs 1
     dup
@@ -1755,20 +1781,20 @@ getUserDeposit:
     pushint 32 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // contracts/RareFiVault.algo.ts:566
+    // contracts/RareFiVault.algo.ts:576
     // return this.depositedAmount(user).value;
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:63
     // depositedAmount = LocalState<uint64>();    // User's Alpha balance in vault
     bytec_1 // "depositedAmount"
-    // contracts/RareFiVault.algo.ts:566
+    // contracts/RareFiVault.algo.ts:576
     // return this.depositedAmount(user).value;
     app_local_get_ex
     assert // check LocalState exists
-    // contracts/RareFiVault.algo.ts:564
+    // contracts/RareFiVault.algo.ts:574
     // @arc4.abimethod({ readonly: true })
     itob
-    bytec 12 // 0x151f7c75
+    bytec 13 // 0x151f7c75
     swap
     concat
     log
@@ -1778,16 +1804,16 @@ getUserDeposit:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.getSwapQuote[routing]() -> void:
 getSwapQuote:
-    // contracts/RareFiVault.algo.ts:576
+    // contracts/RareFiVault.algo.ts:586
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // contracts/RareFiVault.algo.ts:577
+    // contracts/RareFiVault.algo.ts:587
     // const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:41
     // yieldAsset = GlobalState<uint64>();        // USDC ASA ID (what airdrops come in as)
     bytec_2 // "yieldAsset"
-    // contracts/RareFiVault.algo.ts:577
+    // contracts/RareFiVault.algo.ts:587
     // const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
@@ -1796,17 +1822,17 @@ getSwapQuote:
     dup
     uncover 2
     assert // account opted into asset
-    // contracts/RareFiVault.algo.ts:579
+    // contracts/RareFiVault.algo.ts:589
     // if (usdcBalance === Uint64(0)) {
     bnz getSwapQuote_after_if_else@3
-    // contracts/RareFiVault.algo.ts:580
+    // contracts/RareFiVault.algo.ts:590
     // return [Uint64(0), Uint64(0), Uint64(0)];
     pushbytes 0x000000000000000000000000000000000000000000000000
 
 getSwapQuote_after_inlined_contracts/RareFiVault.algo.ts::RareFiVault.getSwapQuote@4:
-    // contracts/RareFiVault.algo.ts:574
+    // contracts/RareFiVault.algo.ts:584
     // @arc4.abimethod({ readonly: true })
-    bytec 12 // 0x151f7c75
+    bytec 13 // 0x151f7c75
     swap
     concat
     log
@@ -1814,14 +1840,14 @@ getSwapQuote_after_inlined_contracts/RareFiVault.algo.ts::RareFiVault.getSwapQuo
     return
 
 getSwapQuote_after_if_else@3:
-    // contracts/RareFiVault.algo.ts:583
+    // contracts/RareFiVault.algo.ts:593
     // const expectedOutput = this.getExpectedSwapOutput(usdcBalance);
     dupn 2
     callsub getExpectedSwapOutput
     // contracts/RareFiVault.algo.ts:76
     // const [hi, lo] = mulw(n1, n2);
     dup
-    // contracts/RareFiVault.algo.ts:585
+    // contracts/RareFiVault.algo.ts:595
     // const minAt50Bps = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - Uint64(50), FEE_BPS_BASE);
     pushint 9950 // 9950
     // contracts/RareFiVault.algo.ts:76
@@ -1830,7 +1856,7 @@ getSwapQuote_after_if_else@3:
     // contracts/RareFiVault.algo.ts:77
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // contracts/RareFiVault.algo.ts:585
+    // contracts/RareFiVault.algo.ts:595
     // const minAt50Bps = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - Uint64(50), FEE_BPS_BASE);
     intc 4 // 10000
     // contracts/RareFiVault.algo.ts:77
@@ -1842,7 +1868,7 @@ getSwapQuote_after_if_else@3:
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // contracts/RareFiVault.algo.ts:587
+    // contracts/RareFiVault.algo.ts:597
     // return [usdcBalance, expectedOutput, minAt50Bps];
     uncover 2
     itob
@@ -1852,14 +1878,14 @@ getSwapQuote_after_if_else@3:
     swap
     itob
     concat
-    // contracts/RareFiVault.algo.ts:574
+    // contracts/RareFiVault.algo.ts:584
     // @arc4.abimethod({ readonly: true })
     b getSwapQuote_after_inlined_contracts/RareFiVault.algo.ts::RareFiVault.getSwapQuote@4
 
 
 // contracts/RareFiVault.algo.ts::RareFiVault.updateMinSwapThreshold[routing]() -> void:
 updateMinSwapThreshold:
-    // contracts/RareFiVault.algo.ts:597
+    // contracts/RareFiVault.algo.ts:607
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1868,48 +1894,48 @@ updateMinSwapThreshold:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // contracts/RareFiVault.algo.ts:599
+    // contracts/RareFiVault.algo.ts:609
     // const isCreator = Txn.sender === this.creatorAddress.value;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:45
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // contracts/RareFiVault.algo.ts:599
+    // contracts/RareFiVault.algo.ts:609
     // const isCreator = Txn.sender === this.creatorAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // contracts/RareFiVault.algo.ts:600
+    // contracts/RareFiVault.algo.ts:610
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:46
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
     bytec 9 // "rarefiAddress"
-    // contracts/RareFiVault.algo.ts:600
+    // contracts/RareFiVault.algo.ts:610
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // contracts/RareFiVault.algo.ts:601
+    // contracts/RareFiVault.algo.ts:611
     // assert(isCreator || isRarefi, 'Only creator or RareFi can update');
     ||
     assert // Only creator or RareFi can update
-    // contracts/RareFiVault.algo.ts:602
+    // contracts/RareFiVault.algo.ts:612
     // assert(newThreshold >= MIN_SWAP_AMOUNT, 'Threshold too low');
     dup
-    intc 6 // 2000000
+    intc 6 // 200000
     >=
     assert // Threshold too low
     // contracts/RareFiVault.algo.ts:53
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
-    bytec 13 // "minSwapThreshold"
-    // contracts/RareFiVault.algo.ts:603
+    bytec 10 // "minSwapThreshold"
+    // contracts/RareFiVault.algo.ts:613
     // this.minSwapThreshold.value = newThreshold;
     swap
     app_global_put
-    // contracts/RareFiVault.algo.ts:597
+    // contracts/RareFiVault.algo.ts:607
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1917,7 +1943,7 @@ updateMinSwapThreshold:
 
 // contracts/RareFiVault.algo.ts::RareFiVault.updateTinymanPool[routing]() -> void:
 updateTinymanPool:
-    // contracts/RareFiVault.algo.ts:610
+    // contracts/RareFiVault.algo.ts:620
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1932,53 +1958,53 @@ updateTinymanPool:
     pushint 32 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // contracts/RareFiVault.algo.ts:612
+    // contracts/RareFiVault.algo.ts:622
     // const isCreator = Txn.sender === this.creatorAddress.value;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:45
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // contracts/RareFiVault.algo.ts:612
+    // contracts/RareFiVault.algo.ts:622
     // const isCreator = Txn.sender === this.creatorAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // contracts/RareFiVault.algo.ts:613
+    // contracts/RareFiVault.algo.ts:623
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     txn Sender
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:46
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
     bytec 9 // "rarefiAddress"
-    // contracts/RareFiVault.algo.ts:613
+    // contracts/RareFiVault.algo.ts:623
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // contracts/RareFiVault.algo.ts:614
+    // contracts/RareFiVault.algo.ts:624
     // assert(isCreator || isRarefi, 'Only creator or RareFi can update');
     ||
     assert // Only creator or RareFi can update
-    // contracts/RareFiVault.algo.ts:615
+    // contracts/RareFiVault.algo.ts:625
     // assert(newPoolAppId !== Uint64(0), 'Invalid pool app ID');
     dig 1
     assert // Invalid pool app ID
     // contracts/RareFiVault.algo.ts:56
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
-    bytec 10 // "tinymanPoolAppId"
-    // contracts/RareFiVault.algo.ts:616
+    bytec 11 // "tinymanPoolAppId"
+    // contracts/RareFiVault.algo.ts:626
     // this.tinymanPoolAppId.value = newPoolAppId;
     uncover 2
     app_global_put
     // contracts/RareFiVault.algo.ts:57
     // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
     bytec 14 // "tinymanPoolAddress"
-    // contracts/RareFiVault.algo.ts:617
+    // contracts/RareFiVault.algo.ts:627
     // this.tinymanPoolAddress.value = newPoolAddress;
     swap
     app_global_put
-    // contracts/RareFiVault.algo.ts:610
+    // contracts/RareFiVault.algo.ts:620
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -2028,7 +2054,7 @@ updateEarnedYield:
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:64
     // userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-    bytec 11 // "userYieldPerToken"
+    bytec 12 // "userYieldPerToken"
     // contracts/RareFiVault.algo.ts:92
     // const userYPT = this.userYieldPerToken(user).value;
     app_local_get_ex
@@ -2100,7 +2126,7 @@ updateEarnedYield_after_if_else@4:
     frame_dig -1
     // contracts/RareFiVault.algo.ts:64
     // userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-    bytec 11 // "userYieldPerToken"
+    bytec 12 // "userYieldPerToken"
     // contracts/RareFiVault.algo.ts:101
     // this.userYieldPerToken(user).value = this.yieldPerToken.value;
     uncover 2
@@ -2119,7 +2145,7 @@ getExpectedSwapOutput:
     intc_0 // 0
     // contracts/RareFiVault.algo.ts:56
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
-    bytec 10 // "tinymanPoolAppId"
+    bytec 11 // "tinymanPoolAppId"
     // contracts/RareFiVault.algo.ts:122
     // const poolApp = this.tinymanPoolAppId.value;
     app_global_get_ex
