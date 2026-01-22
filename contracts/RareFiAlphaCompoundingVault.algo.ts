@@ -1,6 +1,7 @@
-// RareFiVault.algo.ts - Permissionless yield vault contract
-// Users deposit Alpha (yield-bearing asset) and earn yield in a project's ASA token
-// Yield is fairly distributed using the standard staking rewards accumulator pattern
+// RareFiAlphaCompoundingVault.algo.ts - Auto-compounding yield vault
+// Users deposit Alpha and earn yield in USDC which is auto-swapped back to Alpha
+// Uses share-based accounting: yield compounds automatically into deposits
+// When users withdraw, they receive original deposit + accumulated yield
 
 import {
   GlobalState,
@@ -19,10 +20,10 @@ import {
   Bytes,
   baremethod,
 } from '@algorandfoundation/algorand-typescript';
-import { mulw, divmodw, itob, AppGlobal, AppLocal } from '@algorandfoundation/algorand-typescript/op';
+import { mulw, divmodw, itob, AppLocal } from '@algorandfoundation/algorand-typescript/op';
 
 // Constants
-const SCALE: uint64 = Uint64(1_000_000_000);           // 1e9 for yield_per_token precision
+const SCALE: uint64 = Uint64(1_000_000_000_000);      // 1e12 for share price display precision
 const MAX_FEE_RATE: uint64 = Uint64(100);              // 100% max fee (basis is 100)
 const MIN_DEPOSIT_AMOUNT: uint64 = Uint64(1_000_000);  // Minimum deposit (1 token with 6 decimals)
 const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0.20 USDC)
@@ -31,39 +32,36 @@ const MAX_SLIPPAGE_BPS: uint64 = Uint64(1000);         // Max 10% slippage allow
 const CREATOR_SETUP_FEE: uint64 = Uint64(200_000_000); // 200 ALGO setup fee (in microALGO)
 const MBR_ASSET_OPTIN: uint64 = Uint64(100_000);       // 0.1 ALGO MBR per asset opt-in
 
-export class RareFiVault extends arc4.Contract {
+export class RareFiAlphaCompoundingVault extends arc4.Contract {
   // ============================================
   // GLOBAL STATE
   // ============================================
 
-  // Asset IDs
-  depositAsset = GlobalState<uint64>();      // Alpha ASA ID (what users deposit)
-  yieldAsset = GlobalState<uint64>();        // USDC ASA ID (what airdrops come in as)
-  swapAsset = GlobalState<uint64>();         // Project's ASA ID (what yield is swapped to)
+  // Asset IDs (only 2 assets needed for auto-compounding)
+  alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
+  usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
 
   // Creator/Fee settings
   creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
   rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
   creatorFeeRate = GlobalState<uint64>();    // 0-100, percentage of yield to creator
-  creatorUnclaimedYield = GlobalState<uint64>(); // Accumulated yield for creator to claim
+  creatorUnclaimedAlpha = GlobalState<uint64>(); // Accumulated Alpha for creator to claim
 
-  // Vault state
-  totalDeposits = GlobalState<uint64>();     // Total Alpha deposited in vault
-  yieldPerToken = GlobalState<uint64>();     // Accumulator for yield distribution (scaled by SCALE)
+  // Vault state - Share-based accounting
+  totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
+  totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
   minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
-  totalYieldGenerated = GlobalState<uint64>(); // Total yield generated from swaps (swap output in swapAsset)
+  totalYieldCompounded = GlobalState<uint64>(); // Total yield compounded (for stats)
 
-  // Tinyman V2 integration
-  tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
+  // Tinyman V2 integration (USDC/Alpha pool)
+  tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID
   tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
 
   // ============================================
   // LOCAL STATE (per user)
   // ============================================
 
-  depositedAmount = LocalState<uint64>();    // User's Alpha balance in vault
-  userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-  earnedYield = LocalState<uint64>();        // Accumulated yield not yet claimed
+  userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
 
   // ============================================
   // HELPER FUNCTIONS
@@ -81,49 +79,38 @@ export class RareFiVault extends arc4.Contract {
   }
 
   /**
-   * Update user's earned yield before any balance changes
-   * This implements the staking rewards accumulator pattern
+   * Convert Alpha amount to shares
+   * shares = (alphaAmount * totalShares) / totalAlpha
+   * If first deposit, 1:1 ratio (no scaling needed)
    */
-  private updateEarnedYield(user: Account): void {
-    const deposited = this.depositedAmount(user).value;
-
-    if (deposited > Uint64(0)) {
-      // pending = deposited * (current_yield_per_token - user_snapshot) / SCALE
-      const currentYPT = this.yieldPerToken.value;
-      const userYPT = this.userYieldPerToken(user).value;
-
-      if (currentYPT > userYPT) {
-        const pending = this.mulDivFloor(deposited, currentYPT - userYPT, SCALE);
-        this.earnedYield(user).value = this.earnedYield(user).value + pending;
-      }
+  private alphaToShares(alphaAmount: uint64): uint64 {
+    if (this.totalShares.value === Uint64(0)) {
+      // First depositor: 1:1 shares, no multiplication needed
+      return alphaAmount;
     }
+    return this.mulDivFloor(alphaAmount, this.totalShares.value, this.totalAlpha.value);
+  }
 
-    // Update snapshot to current value
-    this.userYieldPerToken(user).value = this.yieldPerToken.value;
+  /**
+   * Convert shares to Alpha amount
+   * alphaAmount = (shares * totalAlpha) / totalShares
+   */
+  private sharesToAlpha(shares: uint64): uint64 {
+    if (this.totalShares.value === Uint64(0)) {
+      return Uint64(0);
+    }
+    return this.mulDivFloor(shares, this.totalAlpha.value, this.totalShares.value);
   }
 
   /**
    * Calculate expected swap output by reading Tinyman V2 pool state
-   * Reads reserves and fee from pool's global state, then applies AMM formula
-   *
-   * NOTE: For testing with MockTinymanPool, we read from GlobalState.
-   * Real Tinyman V2 uses LocalState (pool address's local state in pool app).
-   * For mainnet deployment, this should be modified to use AppLocal.getExUint64.
-   *
-   * Pool state keys:
-   * - "asset_1_id": First asset ID
-   * - "asset_1_reserves": First asset reserves
-   * - "asset_2_reserves": Second asset reserves
-   * - "total_fee_share": Fee in basis points (e.g., 30 = 0.3%)
-   *
-   * @param inputAmount - Amount of yieldAsset (USDC) to swap
-   * @returns Expected output amount of swapAsset
+   * Pool is USDC/Alpha
    */
   private getExpectedSwapOutput(inputAmount: uint64): uint64 {
     const poolApp = this.tinymanPoolAppId.value;
     const poolAddr = this.tinymanPoolAddress.value;
 
-    // Read pool state from local state of pool address (Tinyman V2 stores pool data in local state)
+    // Read pool state from local state of pool address
     const [asset1Id, hasAsset1Id] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('asset_1_id'));
     assert(hasAsset1Id, 'Cannot read pool asset_1_id');
 
@@ -136,27 +123,25 @@ export class RareFiVault extends arc4.Contract {
     const [totalFeeShare, hasTotalFeeShare] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('total_fee_share'));
     assert(hasTotalFeeShare, 'Cannot read pool total_fee_share');
 
-    // Determine which asset is input and which is output based on asset_1_id
+    // Determine which asset is input (USDC) and which is output (Alpha)
     let inputReserves: uint64;
     let outputReserves: uint64;
 
-    if (asset1Id === this.yieldAsset.value) {
-      // USDC is asset_1, swapAsset is asset_2
+    if (asset1Id === this.usdcAsset.value) {
+      // USDC is asset_1, Alpha is asset_2
       inputReserves = asset1Reserves;
       outputReserves = asset2Reserves;
     } else {
-      // swapAsset is asset_1, USDC is asset_2
+      // Alpha is asset_1, USDC is asset_2
       inputReserves = asset2Reserves;
       outputReserves = asset1Reserves;
     }
 
     // Calculate net input after Tinyman fee
-    // net_input = input * (10000 - fee_bps) / 10000
     const feeBps = totalFeeShare;
     const netInput = this.mulDivFloor(inputAmount, FEE_BPS_BASE - feeBps, FEE_BPS_BASE);
 
     // Apply constant product AMM formula
-    // output = (outputReserves * netInput) / (inputReserves + netInput)
     const expectedOutput = this.mulDivFloor(outputReserves, netInput, inputReserves + netInput);
 
     return expectedOutput;
@@ -172,9 +157,8 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod({ onCreate: 'require' })
   createVault(
-    depositAssetId: uint64,
-    yieldAssetId: uint64,
-    swapAssetId: uint64,
+    alphaAssetId: uint64,
+    usdcAssetId: uint64,
     creatorFeeRate: uint64,
     minSwapThreshold: uint64,
     tinymanPoolAppId: uint64,
@@ -184,32 +168,26 @@ export class RareFiVault extends arc4.Contract {
     // Validate parameters
     assert(creatorFeeRate <= MAX_FEE_RATE, 'Creator fee rate exceeds maximum (100%)');
     assert(minSwapThreshold >= MIN_SWAP_AMOUNT, 'Swap threshold too low');
-    assert(depositAssetId !== Uint64(0), 'Invalid deposit asset');
-    assert(yieldAssetId !== Uint64(0), 'Invalid yield asset');
-    assert(swapAssetId !== Uint64(0), 'Invalid swap asset');
+    assert(alphaAssetId !== Uint64(0), 'Invalid Alpha asset');
+    assert(usdcAssetId !== Uint64(0), 'Invalid USDC asset');
+    assert(alphaAssetId !== usdcAssetId, 'Alpha and USDC must be different');
     assert(tinymanPoolAppId !== Uint64(0), 'Invalid Tinyman pool app ID');
 
-    // Ensure all assets are different to prevent logic errors
-    assert(depositAssetId !== yieldAssetId, 'Deposit and yield assets must be different');
-    assert(depositAssetId !== swapAssetId, 'Deposit and swap assets must be different');
-    assert(yieldAssetId !== swapAssetId, 'Yield and swap assets must be different');
-
     // Set asset IDs
-    this.depositAsset.value = depositAssetId;
-    this.yieldAsset.value = yieldAssetId;
-    this.swapAsset.value = swapAssetId;
+    this.alphaAsset.value = alphaAssetId;
+    this.usdcAsset.value = usdcAssetId;
 
     // Set creator/fee settings
     this.creatorAddress.value = Txn.sender;
     this.rarefiAddress.value = rarefiAddress;
     this.creatorFeeRate.value = creatorFeeRate;
-    this.creatorUnclaimedYield.value = Uint64(0);
+    this.creatorUnclaimedAlpha.value = Uint64(0);
 
     // Initialize vault state
-    this.totalDeposits.value = Uint64(0);
-    this.yieldPerToken.value = Uint64(0);
+    this.totalShares.value = Uint64(0);
+    this.totalAlpha.value = Uint64(0);
     this.minSwapThreshold.value = minSwapThreshold;
-    this.totalYieldGenerated.value = Uint64(0);
+    this.totalYieldCompounded.value = Uint64(0);
 
     // Tinyman integration
     this.tinymanPoolAppId.value = tinymanPoolAppId;
@@ -217,19 +195,19 @@ export class RareFiVault extends arc4.Contract {
   }
 
   /**
-   * Opt the contract into all required assets
+   * Opt the contract into required assets
    * Must be called by creator after deployment with:
    * - 200 ALGO setup fee (sent to RareFi)
-   * - 0.3 ALGO MBR for asset opt-ins (stays in contract)
-   * Total required: 200.3 ALGO
+   * - 0.2 ALGO MBR for asset opt-ins (stays in contract)
+   * Total required: 200.2 ALGO
    */
   @arc4.abimethod()
   optInAssets(): void {
     assert(Txn.sender === this.creatorAddress.value, 'Only creator can opt-in assets');
 
     const appAddr: Account = Global.currentApplicationAddress;
-    const totalMbr: uint64 = MBR_ASSET_OPTIN * Uint64(3); // 0.3 ALGO for 3 assets
-    const totalRequired: uint64 = CREATOR_SETUP_FEE + totalMbr; // 200.3 ALGO
+    const totalMbr: uint64 = MBR_ASSET_OPTIN * Uint64(2); // 0.2 ALGO for 2 assets
+    const totalRequired: uint64 = CREATOR_SETUP_FEE + totalMbr; // 200.2 ALGO
 
     // Verify payment covers setup fee + MBR
     const currentIndex = Txn.groupIndex;
@@ -237,7 +215,7 @@ export class RareFiVault extends arc4.Contract {
 
     const algoPayment = gtxn.PaymentTxn(currentIndex - Uint64(1));
     assert(algoPayment.receiver === appAddr, 'Payment must be to app');
-    assert(algoPayment.amount >= totalRequired, 'Insufficient ALGO (need 200.3 ALGO: 200 setup fee + 0.3 MBR)');
+    assert(algoPayment.amount >= totalRequired, 'Insufficient ALGO (need 200.2 ALGO: 200 setup fee + 0.2 MBR)');
     assert(algoPayment.sender === Txn.sender, 'Payment must be from caller');
 
     // Send setup fee to RareFi platform
@@ -247,26 +225,18 @@ export class RareFiVault extends arc4.Contract {
       fee: Uint64(0),
     }).submit();
 
-    // Opt-in to deposit asset (Alpha)
+    // Opt-in to Alpha asset
     itxn.assetTransfer({
       assetReceiver: appAddr,
-      xferAsset: Asset(this.depositAsset.value),
+      xferAsset: Asset(this.alphaAsset.value),
       assetAmount: Uint64(0),
       fee: Uint64(0),
     }).submit();
 
-    // Opt-in to yield asset (USDC)
+    // Opt-in to USDC asset
     itxn.assetTransfer({
       assetReceiver: appAddr,
-      xferAsset: Asset(this.yieldAsset.value),
-      assetAmount: Uint64(0),
-      fee: Uint64(0),
-    }).submit();
-
-    // Opt-in to swap asset (Project ASA)
-    itxn.assetTransfer({
-      assetReceiver: appAddr,
-      xferAsset: Asset(this.swapAsset.value),
+      xferAsset: Asset(this.usdcAsset.value),
       assetAmount: Uint64(0),
       fee: Uint64(0),
     }).submit();
@@ -282,40 +252,29 @@ export class RareFiVault extends arc4.Contract {
   @arc4.abimethod({ allowActions: 'OptIn' })
   optIn(): void {
     // Initialize local state for user
-    this.depositedAmount(Txn.sender).value = Uint64(0);
-    this.userYieldPerToken(Txn.sender).value = Uint64(0);
-    this.earnedYield(Txn.sender).value = Uint64(0);
+    this.userShares(Txn.sender).value = Uint64(0);
   }
 
   /**
-   * User closes out - claims all pending yield and withdraws all deposits first
+   * User closes out - withdraws all Alpha (deposit + yield)
    */
   @arc4.abimethod({ allowActions: 'CloseOut' })
   closeOut(): void {
-    // Update pending yield
-    this.updateEarnedYield(Txn.sender);
+    const shares = this.userShares(Txn.sender).value;
 
-    const userDeposit = this.depositedAmount(Txn.sender).value;
-    const userYield = this.earnedYield(Txn.sender).value;
+    if (shares > Uint64(0)) {
+      // Calculate Alpha amount for user's shares
+      const alphaAmount = this.sharesToAlpha(shares);
 
-    // Return deposit if any
-    if (userDeposit > Uint64(0)) {
-      this.totalDeposits.value = this.totalDeposits.value - userDeposit;
+      // Update global state
+      this.totalShares.value = this.totalShares.value - shares;
+      this.totalAlpha.value = this.totalAlpha.value - alphaAmount;
 
+      // Transfer Alpha to user
       itxn.assetTransfer({
         assetReceiver: Txn.sender,
-        xferAsset: Asset(this.depositAsset.value),
-        assetAmount: userDeposit,
-        fee: Uint64(0),
-      }).submit();
-    }
-
-    // Return yield if any
-    if (userYield > Uint64(0)) {
-      itxn.assetTransfer({
-        assetReceiver: Txn.sender,
-        xferAsset: Asset(this.swapAsset.value),
-        assetAmount: userYield,
+        xferAsset: Asset(this.alphaAsset.value),
+        assetAmount: alphaAmount,
         fee: Uint64(0),
       }).submit();
     }
@@ -327,168 +286,143 @@ export class RareFiVault extends arc4.Contract {
 
   /**
    * User deposits Alpha into the vault
-   * Expects an asset transfer in the group before this call
+   * Receives shares proportional to their deposit
    *
    * NOTE: Deposits are paused when USDC balance >= minSwapThreshold to prevent
-   * flash deposit attacks where users deposit right before yield is swapped.
-   * This ensures yield only goes to users who held deposits during the airdrop period.
+   * flash deposit attacks where users deposit right before yield is compounded.
    */
   @arc4.abimethod()
   deposit(): void {
     const appAddr: Account = Global.currentApplicationAddress;
 
     // Check if deposits are paused due to pending yield
-    // This prevents flash deposit attacks where users deposit right before swap
-    const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
-    assert(usdcBalance < this.minSwapThreshold.value, 'Deposits paused: yield pending swap');
+    const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
+    assert(usdcBalance < this.minSwapThreshold.value, 'Deposits paused: yield pending compound');
 
     const currentIndex = Txn.groupIndex;
     assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
 
     // Validate the deposit transfer
     const depositTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
-    assert(depositTransfer.xferAsset === Asset(this.depositAsset.value), 'Must transfer deposit asset');
+    assert(depositTransfer.xferAsset === Asset(this.alphaAsset.value), 'Must transfer Alpha asset');
     assert(depositTransfer.assetReceiver === appAddr, 'Must send to contract');
     assert(depositTransfer.sender === Txn.sender, 'Transfer must be from caller');
 
     const amount = depositTransfer.assetAmount;
     assert(amount >= MIN_DEPOSIT_AMOUNT, 'Deposit too small');
 
-    // Update pending yield first (if user has existing deposit)
-    this.updateEarnedYield(Txn.sender);
+    // Calculate shares to mint
+    const sharesToMint = this.alphaToShares(amount);
+    assert(sharesToMint > Uint64(0), 'Shares to mint is zero');
 
-    // Add deposit
-    this.depositedAmount(Txn.sender).value = this.depositedAmount(Txn.sender).value + amount;
-    this.totalDeposits.value = this.totalDeposits.value + amount;
+    // Update state
+    this.userShares(Txn.sender).value = this.userShares(Txn.sender).value + sharesToMint;
+    this.totalShares.value = this.totalShares.value + sharesToMint;
+    this.totalAlpha.value = this.totalAlpha.value + amount;
   }
 
   /**
    * User withdraws Alpha from the vault
-   * @param amount - Amount to withdraw (0 = withdraw all)
+   * Receives proportional share of vault's Alpha (original deposit + compounded yield)
+   * @param shareAmount - Shares to redeem (0 = withdraw all)
    */
   @arc4.abimethod()
-  withdraw(amount: uint64): void {
-    const userBalance = this.depositedAmount(Txn.sender).value;
-    let withdrawAmount = amount;
+  withdraw(shareAmount: uint64): void {
+    const userShareBalance = this.userShares(Txn.sender).value;
+    let sharesToRedeem = shareAmount;
 
     // If amount is 0, withdraw all
-    if (withdrawAmount === Uint64(0)) {
-      withdrawAmount = userBalance;
+    if (sharesToRedeem === Uint64(0)) {
+      sharesToRedeem = userShareBalance;
     }
 
-    assert(withdrawAmount > Uint64(0), 'Nothing to withdraw');
-    assert(withdrawAmount <= userBalance, 'Insufficient balance');
+    assert(sharesToRedeem > Uint64(0), 'Nothing to withdraw');
+    assert(sharesToRedeem <= userShareBalance, 'Insufficient shares');
 
-    // Update pending yield first
-    this.updateEarnedYield(Txn.sender);
+    // Calculate Alpha amount for shares
+    const alphaAmount = this.sharesToAlpha(sharesToRedeem);
+    assert(alphaAmount > Uint64(0), 'Alpha amount is zero');
 
-    // Remove deposit
-    this.depositedAmount(Txn.sender).value = userBalance - withdrawAmount;
-    this.totalDeposits.value = this.totalDeposits.value - withdrawAmount;
+    // Update state
+    this.userShares(Txn.sender).value = userShareBalance - sharesToRedeem;
+    this.totalShares.value = this.totalShares.value - sharesToRedeem;
+    this.totalAlpha.value = this.totalAlpha.value - alphaAmount;
 
-    // Transfer Alpha back to user
+    // Transfer Alpha to user
     itxn.assetTransfer({
       assetReceiver: Txn.sender,
-      xferAsset: Asset(this.depositAsset.value),
-      assetAmount: withdrawAmount,
+      xferAsset: Asset(this.alphaAsset.value),
+      assetAmount: alphaAmount,
       fee: Uint64(0),
     }).submit();
   }
 
   // ============================================
-  // YIELD CLAIMING
+  // CREATOR YIELD CLAIM
   // ============================================
 
   /**
-   * User claims their accumulated yield (in swap_asset)
-   */
-  @arc4.abimethod()
-  claim(): void {
-    // Update pending yield
-    this.updateEarnedYield(Txn.sender);
-
-    const claimable = this.earnedYield(Txn.sender).value;
-    assert(claimable > Uint64(0), 'Nothing to claim');
-
-    // Reset earned yield
-    this.earnedYield(Txn.sender).value = Uint64(0);
-
-    // Transfer swap_asset to user
-    itxn.assetTransfer({
-      assetReceiver: Txn.sender,
-      xferAsset: Asset(this.swapAsset.value),
-      assetAmount: claimable,
-      fee: Uint64(0),
-    }).submit();
-  }
-
-  /**
-   * Creator claims their accumulated yield
+   * Creator claims their accumulated Alpha from fees
    */
   @arc4.abimethod()
   claimCreator(): void {
     assert(Txn.sender === this.creatorAddress.value, 'Only creator can claim');
 
-    const claimable = this.creatorUnclaimedYield.value;
+    const claimable = this.creatorUnclaimedAlpha.value;
     assert(claimable > Uint64(0), 'Nothing to claim');
 
-    // Reset creator unclaimed yield
-    this.creatorUnclaimedYield.value = Uint64(0);
+    // Reset creator unclaimed
+    this.creatorUnclaimedAlpha.value = Uint64(0);
 
-    // Transfer swap_asset to creator
+    // Transfer Alpha to creator
     itxn.assetTransfer({
       assetReceiver: Txn.sender,
-      xferAsset: Asset(this.swapAsset.value),
+      xferAsset: Asset(this.alphaAsset.value),
       assetAmount: claimable,
       fee: Uint64(0),
     }).submit();
   }
 
   // ============================================
-  // YIELD SWAP (Tinyman V2 Integration)
+  // AUTO-COMPOUND (Tinyman V2 Integration)
   // ============================================
 
   /**
-   * Swaps accumulated USDC to project ASA via Tinyman V2
-   * Uses ON-CHAIN price calculation - reads pool reserves and fee dynamically
+   * Swaps accumulated USDC to Alpha and compounds into vault
+   * The Alpha is added to totalAlpha, increasing the value of all shares
    * Only callable by creator or RareFi platform to prevent sandwich attacks
-   *
-   * Tinyman V2 swap requires:
-   * - Inner txn 1: Asset transfer to pool address
-   * - Inner txn 2: App call to pool with "swap" method
    *
    * @param slippageBps - Slippage tolerance in basis points (e.g., 50 = 0.5%, 100 = 1%)
    */
   @arc4.abimethod()
-  swapYield(slippageBps: uint64): void {
+  compoundYield(slippageBps: uint64): void {
     const isCreator = Txn.sender === this.creatorAddress.value;
     const isRarefi = Txn.sender === this.rarefiAddress.value;
-    assert(isCreator || isRarefi, 'Only creator or RareFi can swap');
+    assert(isCreator || isRarefi, 'Only creator or RareFi can compound');
     assert(slippageBps <= MAX_SLIPPAGE_BPS, 'Slippage too high (max 10%)');
 
     const appAddr: Account = Global.currentApplicationAddress;
-    const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
+    const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
 
     assert(usdcBalance >= this.minSwapThreshold.value, 'Below minimum swap threshold');
-    assert(this.totalDeposits.value > Uint64(0), 'No depositors to distribute to');
+    assert(this.totalShares.value > Uint64(0), 'No depositors to compound for');
 
     // Calculate expected output ON-CHAIN by reading pool state
     const expectedOutput = this.getExpectedSwapOutput(usdcBalance);
     assert(expectedOutput > Uint64(0), 'Expected output is zero');
 
-    // Apply slippage tolerance: minAmountOut = expected * (10000 - slippageBps) / 10000
+    // Apply slippage tolerance
     const minAmountOut = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - slippageBps, FEE_BPS_BASE);
 
-    // Record swap_asset balance before swap
-    const swapAssetBefore = Asset(this.swapAsset.value).balance(appAddr);
+    // Record Alpha balance before swap
+    const alphaBefore = Asset(this.alphaAsset.value).balance(appAddr);
 
-    // Execute Tinyman V2 swap: USDC -> swap_asset
-    // Submit both transactions as a group so the pool can verify group index
+    // Execute Tinyman V2 swap: USDC -> Alpha
     itxn.submitGroup(
       // Transaction 1: Send USDC to pool
       itxn.assetTransfer({
         assetReceiver: this.tinymanPoolAddress.value,
-        xferAsset: Asset(this.yieldAsset.value),
+        xferAsset: Asset(this.usdcAsset.value),
         assetAmount: usdcBalance,
         fee: Uint64(0),
       }),
@@ -500,34 +434,31 @@ export class RareFiVault extends arc4.Contract {
           Bytes('fixed-input'),
           itob(minAmountOut),
         ],
-        assets: [Asset(this.swapAsset.value)],  // Only output asset needed
+        assets: [Asset(this.alphaAsset.value)],  // Output asset
         accounts: [this.tinymanPoolAddress.value],
-        fee: Uint64(0),  // Use fee pooling - outer txn covers fees
+        fee: Uint64(0),
       }),
     );
 
     // Calculate actual swap output
-    const swapAssetAfter: uint64 = Asset(this.swapAsset.value).balance(appAddr);
-    const swapOutput: uint64 = swapAssetAfter - swapAssetBefore;
+    const alphaAfter: uint64 = Asset(this.alphaAsset.value).balance(appAddr);
+    const swapOutput: uint64 = alphaAfter - alphaBefore;
 
     assert(swapOutput >= minAmountOut, 'Swap output below minimum');
 
-    // Track total yield generated from this swap
-    this.totalYieldGenerated.value = this.totalYieldGenerated.value + swapOutput;
-
-    // Split yield between creator and users
+    // Split yield between creator and vault
     const creatorCut: uint64 = this.mulDivFloor(swapOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
-    const userCut: uint64 = swapOutput - creatorCut;
+    const vaultCut: uint64 = swapOutput - creatorCut;
 
-    // Add to creator's claimable
-    this.creatorUnclaimedYield.value = this.creatorUnclaimedYield.value + creatorCut;
+    // Add creator's cut to their claimable balance
+    this.creatorUnclaimedAlpha.value = this.creatorUnclaimedAlpha.value + creatorCut;
 
-    // Distribute to users via accumulator
-    // yield_per_token += (user_cut * SCALE) / total_deposits
-    if (userCut > Uint64(0)) {
-      const yieldIncrease: uint64 = this.mulDivFloor(userCut, SCALE, this.totalDeposits.value);
-      this.yieldPerToken.value = this.yieldPerToken.value + yieldIncrease;
-    }
+    // Add vault's cut to totalAlpha (this increases share value for all depositors)
+    // This is the auto-compounding magic: totalShares stays the same, totalAlpha increases
+    this.totalAlpha.value = this.totalAlpha.value + vaultCut;
+
+    // Track total yield compounded for stats
+    this.totalYieldCompounded.value = this.totalYieldCompounded.value + swapOutput;
   }
 
   // ============================================
@@ -536,68 +467,78 @@ export class RareFiVault extends arc4.Contract {
 
   /**
    * Get vault statistics
+   * @returns [totalShares, totalAlpha, creatorUnclaimedAlpha, usdcBalance, totalYieldCompounded, sharePrice]
+   * Note: sharePrice is scaled by SCALE (1e12) for precision
    */
   @arc4.abimethod({ readonly: true })
   getVaultStats(): [uint64, uint64, uint64, uint64, uint64, uint64] {
     const appAddr: Account = Global.currentApplicationAddress;
-    const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
-    const swapAssetBalance = Asset(this.swapAsset.value).balance(appAddr);
+    const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
 
-    // Return [totalDeposits, yieldPerToken, creatorUnclaimedYield, usdcBalance, swapAssetBalance, totalYieldGenerated]
+    // Calculate share price (how much Alpha per share, scaled)
+    let sharePrice: uint64 = SCALE; // Default 1:1 if no shares
+    if (this.totalShares.value > Uint64(0)) {
+      sharePrice = this.mulDivFloor(this.totalAlpha.value, SCALE, this.totalShares.value);
+    }
+
     return [
-      this.totalDeposits.value,
-      this.yieldPerToken.value,
-      this.creatorUnclaimedYield.value,
+      this.totalShares.value,
+      this.totalAlpha.value,
+      this.creatorUnclaimedAlpha.value,
       usdcBalance,
-      swapAssetBalance,
-      this.totalYieldGenerated.value
+      this.totalYieldCompounded.value,
+      sharePrice
     ];
   }
 
   /**
-   * Get user's pending yield (without claiming)
+   * Get user's current Alpha balance (shares converted to Alpha)
+   * This includes their original deposit + all compounded yield
    */
   @arc4.abimethod({ readonly: true })
-  getPendingYield(user: Account): uint64 {
-    const deposited = this.depositedAmount(user).value;
-    let pending = this.earnedYield(user).value;
-
-    if (deposited > Uint64(0)) {
-      const currentYPT = this.yieldPerToken.value;
-      const userYPT = this.userYieldPerToken(user).value;
-
-      if (currentYPT > userYPT) {
-        pending = pending + this.mulDivFloor(deposited, currentYPT - userYPT, SCALE);
-      }
-    }
-
-    return pending;
+  getUserAlphaBalance(user: Account): uint64 {
+    const shares = this.userShares(user).value;
+    return this.sharesToAlpha(shares);
   }
 
   /**
-   * Get user's deposit balance
+   * Get user's share balance
    */
   @arc4.abimethod({ readonly: true })
-  getUserDeposit(user: Account): uint64 {
-    return this.depositedAmount(user).value;
+  getUserShares(user: Account): uint64 {
+    return this.userShares(user).value;
   }
 
   /**
-   * Preview swap output - shows expected ASA for current USDC balance
-   * Reads pool state on-chain to calculate expected output
-   * @returns [usdcBalance, expectedOutput, minOutputAt50bps]
+   * Preview how many shares a deposit would receive
    */
   @arc4.abimethod({ readonly: true })
-  getSwapQuote(): [uint64, uint64, uint64] {
+  previewDeposit(alphaAmount: uint64): uint64 {
+    return this.alphaToShares(alphaAmount);
+  }
+
+  /**
+   * Preview how much Alpha a share redemption would receive
+   */
+  @arc4.abimethod({ readonly: true })
+  previewWithdraw(shareAmount: uint64): uint64 {
+    return this.sharesToAlpha(shareAmount);
+  }
+
+  /**
+   * Preview compound - shows expected Alpha for current USDC balance
+   * @returns [usdcBalance, expectedAlphaOutput, minOutputAt50bps]
+   */
+  @arc4.abimethod({ readonly: true })
+  getCompoundQuote(): [uint64, uint64, uint64] {
     const appAddr: Account = Global.currentApplicationAddress;
-    const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
+    const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
 
     if (usdcBalance === Uint64(0)) {
       return [Uint64(0), Uint64(0), Uint64(0)];
     }
 
     const expectedOutput = this.getExpectedSwapOutput(usdcBalance);
-    // Show min output at 0.5% slippage as reference
     const minAt50Bps = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - Uint64(50), FEE_BPS_BASE);
 
     return [usdcBalance, expectedOutput, minAt50Bps];
