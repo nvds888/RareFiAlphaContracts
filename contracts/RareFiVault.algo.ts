@@ -19,7 +19,7 @@ import {
   Bytes,
   baremethod,
 } from '@algorandfoundation/algorand-typescript';
-import { mulw, divmodw, itob, AppGlobal, AppLocal } from '@algorandfoundation/algorand-typescript/op';
+import { mulw, divmodw, itob, AppLocal } from '@algorandfoundation/algorand-typescript/op';
 
 // Constants
 const SCALE: uint64 = Uint64(1_000_000_000);           // 1e9 for yield_per_token precision
@@ -28,8 +28,7 @@ const MIN_DEPOSIT_AMOUNT: uint64 = Uint64(1_000_000);  // Minimum deposit (1 tok
 const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0.20 USDC)
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
 const MAX_SLIPPAGE_BPS: uint64 = Uint64(1000);         // Max 10% slippage allowed
-const CREATOR_SETUP_FEE: uint64 = Uint64(200_000_000); // 200 ALGO setup fee (in microALGO)
-const MBR_ASSET_OPTIN: uint64 = Uint64(100_000);       // 0.1 ALGO MBR per asset opt-in
+const MAX_FARM_EMISSION_BPS: uint64 = Uint64(10_000);  // Max 100% farm emission rate
 
 export class RareFiVault extends arc4.Contract {
   // ============================================
@@ -56,6 +55,10 @@ export class RareFiVault extends arc4.Contract {
   // Tinyman V2 integration
   tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
   tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
+
+  // Farm feature - bonus yield distribution
+  farmBalance = GlobalState<uint64>();         // Total swapAsset available for farm bonus
+  farmEmissionRate = GlobalState<uint64>();    // Basis points of swap output to add from farm (e.g., 1000 = 10%)
 
   // ============================================
   // LOCAL STATE (per user)
@@ -104,11 +107,10 @@ export class RareFiVault extends arc4.Contract {
 
   /**
    * Calculate expected swap output by reading Tinyman V2 pool state
-   * Reads reserves and fee from pool's global state, then applies AMM formula
+   * Reads reserves and fee from pool's local state, then applies AMM formula
    *
-   * NOTE: For testing with MockTinymanPool, we read from GlobalState.
-   * Real Tinyman V2 uses LocalState (pool address's local state in pool app).
-   * For mainnet deployment, this should be modified to use AppLocal.getExUint64.
+   * Tinyman V2 stores pool data in the pool address's local state within the pool app.
+   * We use AppLocal.getExUint64 to read these values on-chain.
    *
    * Pool state keys:
    * - "asset_1_id": First asset ID
@@ -214,38 +216,32 @@ export class RareFiVault extends arc4.Contract {
     // Tinyman integration
     this.tinymanPoolAppId.value = tinymanPoolAppId;
     this.tinymanPoolAddress.value = tinymanPoolAddress;
+
+    // Initialize farm state
+    this.farmBalance.value = Uint64(0);
+    this.farmEmissionRate.value = Uint64(0); // Disabled by default
   }
 
   /**
    * Opt the contract into all required assets
    * Must be called by creator after deployment with:
-   * - 200 ALGO setup fee (sent to RareFi)
-   * - 0.3 ALGO MBR for asset opt-ins (stays in contract)
-   * Total required: 200.3 ALGO
+   * - 5.5 ALGO payment (stays in contract for MBR and operational fees)
    */
   @arc4.abimethod()
   optInAssets(): void {
     assert(Txn.sender === this.creatorAddress.value, 'Only creator can opt-in assets');
 
     const appAddr: Account = Global.currentApplicationAddress;
-    const totalMbr: uint64 = MBR_ASSET_OPTIN * Uint64(3); // 0.3 ALGO for 3 assets
-    const totalRequired: uint64 = CREATOR_SETUP_FEE + totalMbr; // 200.3 ALGO
+    const totalRequired: uint64 = Uint64(5_500_000); // 5.5 ALGO
 
-    // Verify payment covers setup fee + MBR
+    // Verify payment covers setup requirement
     const currentIndex = Txn.groupIndex;
     assert(currentIndex >= Uint64(1), 'App call must follow payment');
 
     const algoPayment = gtxn.PaymentTxn(currentIndex - Uint64(1));
     assert(algoPayment.receiver === appAddr, 'Payment must be to app');
-    assert(algoPayment.amount >= totalRequired, 'Insufficient ALGO (need 200.3 ALGO: 200 setup fee + 0.3 MBR)');
+    assert(algoPayment.amount >= totalRequired, 'Insufficient ALGO (need 5.5 ALGO)');
     assert(algoPayment.sender === Txn.sender, 'Payment must be from caller');
-
-    // Send setup fee to RareFi platform
-    itxn.payment({
-      receiver: this.rarefiAddress.value,
-      amount: CREATOR_SETUP_FEE,
-      fee: Uint64(0),
-    }).submit();
 
     // Opt-in to deposit asset (Alpha)
     itxn.assetTransfer({
@@ -515,9 +511,22 @@ export class RareFiVault extends arc4.Contract {
     // Track total yield generated from this swap
     this.totalYieldGenerated.value = this.totalYieldGenerated.value + swapOutput;
 
-    // Split yield between creator and users
-    const creatorCut: uint64 = this.mulDivFloor(swapOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
-    const userCut: uint64 = swapOutput - creatorCut;
+    // Calculate farm bonus: (swapOutput * farmEmissionRate) / 10000, capped at farmBalance
+    let farmBonus: uint64 = Uint64(0);
+    if (this.farmEmissionRate.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
+      const requestedBonus = this.mulDivFloor(swapOutput, this.farmEmissionRate.value, FEE_BPS_BASE);
+      // Cap at available farm balance
+      farmBonus = requestedBonus < this.farmBalance.value ? requestedBonus : this.farmBalance.value;
+      // Deduct from farm balance
+      this.farmBalance.value = this.farmBalance.value - farmBonus;
+    }
+
+    // Total output = swap output + farm bonus
+    const totalOutput: uint64 = swapOutput + farmBonus;
+
+    // Split yield between creator and users (creator fee applies to total output)
+    const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
+    const userCut: uint64 = totalOutput - creatorCut;
 
     // Add to creator's claimable
     this.creatorUnclaimedYield.value = this.creatorUnclaimedYield.value + creatorCut;
@@ -631,6 +640,91 @@ export class RareFiVault extends arc4.Contract {
     assert(newPoolAppId !== Uint64(0), 'Invalid pool app ID');
     this.tinymanPoolAppId.value = newPoolAppId;
     this.tinymanPoolAddress.value = newPoolAddress;
+  }
+
+  // ============================================
+  // FARM FEATURE - Bonus yield distribution
+  // ============================================
+
+  /**
+   * Anyone can contribute to the farm by sending swapAsset
+   * Farm bonus is distributed proportionally during yield swaps
+   * This allows projects/sponsors to boost yield for depositors
+   *
+   * Expects an asset transfer of swapAsset before this call
+   */
+  @arc4.abimethod()
+  contributeFarm(): void {
+    const appAddr: Account = Global.currentApplicationAddress;
+    const currentIndex = Txn.groupIndex;
+    assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
+
+    // Validate the contribution transfer
+    const farmTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
+    assert(farmTransfer.xferAsset === Asset(this.swapAsset.value), 'Must transfer swap asset');
+    assert(farmTransfer.assetReceiver === appAddr, 'Must send to contract');
+
+    const amount = farmTransfer.assetAmount;
+    assert(amount > Uint64(0), 'Contribution must be positive');
+
+    // Add to farm balance
+    this.farmBalance.value = this.farmBalance.value + amount;
+  }
+
+  /**
+   * Set the farm emission rate (percentage of swap output to add from farm)
+   * Only callable by creator or RareFi
+   *
+   * @param emissionRateBps - Emission rate in basis points (e.g., 1000 = 10%, 5000 = 50%)
+   *                          Maximum 10000 (100%) - matches swap output 1:1
+   */
+  @arc4.abimethod()
+  setFarmEmissionRate(emissionRateBps: uint64): void {
+    const isCreator = Txn.sender === this.creatorAddress.value;
+    const isRarefi = Txn.sender === this.rarefiAddress.value;
+    assert(isCreator || isRarefi, 'Only creator or RareFi can set farm rate');
+    assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 100%)');
+
+    this.farmEmissionRate.value = emissionRateBps;
+  }
+
+  /**
+   * Withdraw remaining farm balance (emergency/cleanup)
+   * Only callable by creator
+   *
+   * @param amount - Amount to withdraw (0 = withdraw all)
+   */
+  @arc4.abimethod()
+  withdrawFarm(amount: uint64): void {
+    assert(Txn.sender === this.creatorAddress.value, 'Only creator can withdraw farm');
+
+    let withdrawAmount = amount;
+    if (withdrawAmount === Uint64(0)) {
+      withdrawAmount = this.farmBalance.value;
+    }
+
+    assert(withdrawAmount > Uint64(0), 'Nothing to withdraw');
+    assert(withdrawAmount <= this.farmBalance.value, 'Insufficient farm balance');
+
+    // Update farm balance
+    this.farmBalance.value = this.farmBalance.value - withdrawAmount;
+
+    // Transfer to creator
+    itxn.assetTransfer({
+      assetReceiver: Txn.sender,
+      xferAsset: Asset(this.swapAsset.value),
+      assetAmount: withdrawAmount,
+      fee: Uint64(0),
+    }).submit();
+  }
+
+  /**
+   * Get farm statistics
+   * @returns [farmBalance, farmEmissionRate]
+   */
+  @arc4.abimethod({ readonly: true })
+  getFarmStats(): [uint64, uint64] {
+    return [this.farmBalance.value, this.farmEmissionRate.value];
   }
 
   // ============================================
