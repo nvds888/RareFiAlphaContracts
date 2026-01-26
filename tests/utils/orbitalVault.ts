@@ -245,10 +245,10 @@ export async function deployOrbitalVaultForTest(
     sender: creatorAddr,
     approvalProgram: poolCompiled.approvalProgram,
     clearProgram: poolCompiled.clearProgram,
-    numGlobalByteSlices: 0,
-    numGlobalInts: 6,
+    numGlobalByteSlices: 1, // stateHolder
+    numGlobalInts: 3, // asset1Id, asset2Id, initialized
     numLocalByteSlices: 0,
-    numLocalInts: 0,
+    numLocalInts: 4, // asset_1_id, asset_1_reserves, asset_2_reserves, total_fee_share
     extraPages: 0,
     suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
     appArgs: [
@@ -294,6 +294,38 @@ export async function deployOrbitalVaultForTest(
   const poolOptInTxID = await algod.sendRawTransaction(signedPoolOptInTxn).do();
   await algosdk.waitForConfirmation(algod, poolOptInTxID.txid, 5);
 
+  // Creator opts into pool app (to become state holder for local state)
+  suggestedParams = await algod.getTransactionParams().do();
+  const creatorOptInPoolTxn = algosdk.makeApplicationOptInTxnFromObject({
+    sender: creatorAddr,
+    appIndex: poolAppId,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+  const signedCreatorOptInPoolTxn = creatorOptInPoolTxn.signTxn(creator.sk);
+  const creatorOptInPoolTxID = await algod.sendRawTransaction(signedCreatorOptInPoolTxn).do();
+  await algosdk.waitForConfirmation(algod, creatorOptInPoolTxID.txid, 5);
+
+  // Initialize pool local state (creator is the state holder)
+  suggestedParams = await algod.getTransactionParams().do();
+  const initPoolTxn = algosdk.makeApplicationCallTxnFromObject({
+    sender: creatorAddr,
+    appIndex: poolAppId,
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [
+      new TextEncoder().encode('initializePool'),
+      encodeUint64(poolReserveUsdc),
+      encodeUint64(poolReserveProjectAsa),
+      encodeUint64(poolFeeBps),
+    ],
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+  const signedInitPoolTxn = initPoolTxn.signTxn(creator.sk);
+  const initPoolTxID = await algod.sendRawTransaction(signedInitPoolTxn).do();
+  await algosdk.waitForConfirmation(algod, initPoolTxID.txid, 5);
+
+  // IMPORTANT: The state holder address is the creator's address
+  const poolStateHolderAddress = creatorAddr;
+
   // Fund pool with project ASA liquidity
   suggestedParams = await algod.getTransactionParams().do();
   const fundPoolAsaTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
@@ -326,7 +358,7 @@ export async function deployOrbitalVaultForTest(
       projectAsaId,
       orbitalAppId,
       poolAppId,
-      poolAddress,
+      poolStateHolderAddress, // Use state holder address (where pool state is in local state)
       depositFeeBps,
       withdrawFeeBps,
       minHarvestThreshold,
@@ -395,7 +427,7 @@ export async function deployOrbitalVaultForTest(
     orbitalAppId,
     orbitalAddress,
     poolAppId,
-    poolAddress,
+    poolAddress: poolStateHolderAddress, // Return state holder address as poolAddress for tests
     usdcAssetId,
     cUsdcAssetId,
     projectAsaId,

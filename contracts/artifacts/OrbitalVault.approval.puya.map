@@ -392,7 +392,7 @@
       "op": "err // Contract updates disabled"
     },
     "563": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.createVault[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.createVault[routing]",
       "params": {},
       "block": "createVault",
       "stack_in": [],
@@ -3045,7 +3045,7 @@
       "stack_out": []
     },
     "789": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.optInAssets[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.optInAssets[routing]",
       "params": {},
       "block": "optInAssets",
       "stack_in": [],
@@ -3858,7 +3858,7 @@
       "op": "itxn_submit"
     },
     "925": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.fetchCurrentRate",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.fetchCurrentRate",
       "op": "callsub fetchCurrentRate",
       "defined_out": [
         "tmp%13#0"
@@ -3900,7 +3900,7 @@
       "stack_out": []
     },
     "933": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.optIn[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.optIn[routing]",
       "params": {},
       "block": "optIn",
       "stack_in": [],
@@ -4207,7 +4207,7 @@
       "stack_out": []
     },
     "1004": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.closeOut[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.closeOut[routing]",
       "params": {},
       "block": "closeOut",
       "stack_in": [],
@@ -4224,7 +4224,7 @@
       ]
     },
     "1007": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
       "op": "callsub updateUsdcYieldAccumulator"
     },
     "1010": {
@@ -4239,7 +4239,7 @@
       ]
     },
     "1012": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
       "op": "callsub updateUserUsdcYield",
       "stack_out": [
         "sharesToRedeem#0",
@@ -4258,7 +4258,7 @@
       ]
     },
     "1017": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
       "op": "callsub updateUserAsaYield",
       "stack_out": [
         "sharesToRedeem#0",
@@ -6760,7 +6760,7 @@
       "op": "b closeOut_after_if_else@4"
     },
     "1290": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.deposit[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.deposit[routing]",
       "params": {},
       "block": "deposit",
       "stack_in": [],
@@ -7221,7 +7221,7 @@
       ]
     },
     "1341": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
       "op": "callsub updateUsdcYieldAccumulator"
     },
     "1344": {
@@ -7238,7 +7238,7 @@
       ]
     },
     "1346": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
       "op": "callsub updateUserUsdcYield",
       "stack_out": [
         "appAddr#0",
@@ -7259,7 +7259,7 @@
       ]
     },
     "1351": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
       "op": "callsub updateUserAsaYield",
       "stack_out": [
         "appAddr#0",
@@ -8509,7 +8509,7 @@
       ]
     },
     "1497": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.withdraw[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.withdraw[routing]",
       "params": {},
       "block": "withdraw",
       "stack_in": [],
@@ -8715,7 +8715,7 @@
       ]
     },
     "1519": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
       "op": "callsub updateUsdcYieldAccumulator"
     },
     "1522": {
@@ -8734,7 +8734,7 @@
       ]
     },
     "1524": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
       "op": "callsub updateUserUsdcYield",
       "stack_out": [
         "cUsdcToRedeem#0",
@@ -8760,7 +8760,7 @@
       ]
     },
     "1529": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
       "op": "callsub updateUserAsaYield",
       "stack_out": [
         "cUsdcToRedeem#0",
@@ -9401,7 +9401,7 @@
       ]
     },
     "1584": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.mulDivCeil",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.mulDivCeil",
       "op": "callsub mulDivCeil",
       "defined_out": [
         "cUsdcToRedeem#0",
@@ -11911,7 +11911,7 @@
       "op": "b withdraw_after_if_else@3"
     },
     "1783": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.claimYield[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.claimYield[routing]",
       "params": {},
       "block": "claimYield",
       "stack_in": [],
@@ -11967,7 +11967,7 @@
       "stack_out": []
     },
     "1790": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
       "op": "callsub updateUsdcYieldAccumulator"
     },
     "1793": {
@@ -11980,7 +11980,7 @@
       ]
     },
     "1795": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
       "op": "callsub updateUserUsdcYield",
       "stack_out": []
     },
@@ -11994,7 +11994,7 @@
       ]
     },
     "1800": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
       "op": "callsub updateUserAsaYield",
       "stack_out": []
     },
@@ -12223,7 +12223,7 @@
       "stack_out": []
     },
     "1843": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.harvestAndSwap[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.harvestAndSwap[routing]",
       "params": {},
       "block": "harvestAndSwap",
       "stack_in": [],
@@ -12620,7 +12620,7 @@
       ]
     },
     "1886": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
       "op": "callsub updateUsdcYieldAccumulator"
     },
     "1889": {
@@ -13316,7 +13316,7 @@
       ]
     },
     "1943": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.mulDivCeil",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.mulDivCeil",
       "op": "callsub mulDivCeil",
       "defined_out": [
         "appAddr#0",
@@ -17163,7 +17163,7 @@
       "op": "b harvestAndSwap_after_if_else@4"
     },
     "2335": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.getVaultStats[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.getVaultStats[routing]",
       "params": {},
       "block": "getVaultStats",
       "stack_in": [],
@@ -17715,7 +17715,7 @@
       "stack_out": []
     },
     "2395": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.getUserPosition[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.getUserPosition[routing]",
       "params": {},
       "block": "getUserPosition",
       "stack_in": [],
@@ -19391,7 +19391,7 @@
       "op": "b getUserPosition_ternary_merge@4"
     },
     "2536": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.getPendingYield[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.getPendingYield[routing]",
       "params": {},
       "block": "getPendingYield",
       "stack_in": [],
@@ -20457,7 +20457,7 @@
       ]
     },
     "2641": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.setPaused[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.setPaused[routing]",
       "params": {},
       "block": "setPaused",
       "stack_in": [],
@@ -20651,7 +20651,7 @@
       "stack_out": []
     },
     "2666": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateMinHarvestThreshold[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.updateMinHarvestThreshold[routing]",
       "params": {},
       "block": "updateMinHarvestThreshold",
       "stack_in": [],
@@ -20974,7 +20974,7 @@
       "stack_out": []
     },
     "2704": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateTinymanPool[routing]",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.updateTinymanPool[routing]",
       "params": {},
       "block": "updateTinymanPool",
       "stack_in": [],
@@ -21400,7 +21400,7 @@
       "stack_out": []
     },
     "2755": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.mulDivCeil",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.mulDivCeil",
       "params": {
         "n1#0": "uint64",
         "n2#0": "uint64",
@@ -21641,7 +21641,7 @@
       "op": "retsub"
     },
     "2795": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.fetchCurrentRate",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.fetchCurrentRate",
       "params": {},
       "block": "fetchCurrentRate",
       "stack_in": [],
@@ -22379,14 +22379,14 @@
       ]
     },
     "2911": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.updateUsdcYieldAccumulator",
       "params": {},
       "block": "updateUsdcYieldAccumulator",
       "stack_in": [],
       "op": "proto 0 0"
     },
     "2914": {
-      "callsub": "contracts/OrbitalVault.algo.ts::OrbitalVault.fetchCurrentRate",
+      "callsub": "OrbitalVault.algo.ts::OrbitalVault.fetchCurrentRate",
       "op": "callsub fetchCurrentRate",
       "defined_out": [
         "currentRate#0"
@@ -22689,7 +22689,7 @@
       "op": "retsub"
     },
     "2956": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.updateUserUsdcYield",
       "params": {
         "user#0": "bytes"
       },
@@ -23444,7 +23444,7 @@
       "op": "retsub"
     },
     "3048": {
-      "subroutine": "contracts/OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
+      "subroutine": "OrbitalVault.algo.ts::OrbitalVault.updateUserAsaYield",
       "params": {
         "user#0": "bytes"
       },

@@ -4,9 +4,9 @@
   "description": "RareFi Vault - Permissionless yield vault contract for Algorand",
   "main": "scripts/deploy.js",
   "scripts": {
-    "compile": "npx puya-ts contracts/RareFiVault.algo.ts contracts/MockTinymanPool.algo.ts contracts/OrbitalVault.algo.ts contracts/MockOrbital.algo.ts --out-dir artifacts",
-    "compile:vault": "npx puya-ts contracts/RareFiVault.algo.ts contracts/MockTinymanPool.algo.ts --out-dir artifacts",
-    "compile:orbital": "npx puya-ts contracts/OrbitalVault.algo.ts contracts/MockOrbital.algo.ts contracts/MockTinymanPool.algo.ts --out-dir artifacts",
+    "compile": "cd contracts && npx puya-ts RareFiVault.algo.ts RareFiAlphaCompoundingVault.algo.ts MockTinymanPool.algo.ts OrbitalVault.algo.ts MockOrbital.algo.ts --out-dir artifacts",
+    "compile:vault": "cd contracts && npx puya-ts RareFiVault.algo.ts RareFiAlphaCompoundingVault.algo.ts MockTinymanPool.algo.ts --out-dir artifacts",
+    "compile:orbital": "cd contracts && npx puya-ts OrbitalVault.algo.ts MockOrbital.algo.ts MockTinymanPool.algo.ts --out-dir artifacts",
     "deploy": "node scripts/deploy.js",
     "test": "jest",
     "test:verbose": "jest --verbose",

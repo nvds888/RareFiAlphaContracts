@@ -3,11 +3,11 @@
   "sources": [
     "../MockTinymanPool.algo.ts"
   ],
-  "mappings": ";AA6GW;;AAAP",
+  "mappings": ";AAoIW;;AAAP",
   "op_pc_offset": 0,
   "pc_events": {
     "1": {
-      "subroutine": "contracts/MockTinymanPool.algo.ts::MockTinymanPool.clearStateProgram",
+      "subroutine": "MockTinymanPool.algo.ts::MockTinymanPool.clearStateProgram",
       "params": {},
       "block": "main",
       "stack_in": [],

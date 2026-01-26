@@ -7,7 +7,7 @@
   "op_pc_offset": 0,
   "pc_events": {
     "1": {
-      "subroutine": "contracts/MockOrbital.algo.ts::MockOrbital.approvalProgram",
+      "subroutine": "MockOrbital.algo.ts::MockOrbital.approvalProgram",
       "params": {},
       "block": "main",
       "stack_in": [],
@@ -278,7 +278,7 @@
       ]
     },
     "117": {
-      "callsub": "contracts/MockOrbital.algo.ts::MockOrbital.initialize",
+      "callsub": "MockOrbital.algo.ts::MockOrbital.initialize",
       "op": "callsub initialize",
       "stack_out": [
         "action#0"
@@ -472,7 +472,7 @@
       ]
     },
     "159": {
-      "callsub": "contracts/MockOrbital.algo.ts::MockOrbital.initialize",
+      "callsub": "MockOrbital.algo.ts::MockOrbital.initialize",
       "op": "callsub initialize",
       "stack_out": [
         "action#0"
@@ -1199,7 +1199,7 @@
       ]
     },
     "274": {
-      "callsub": "contracts/MockOrbital.algo.ts::MockOrbital.getCurrentRate",
+      "callsub": "MockOrbital.algo.ts::MockOrbital.getCurrentRate",
       "op": "callsub getCurrentRate",
       "defined_out": [
         "action#0",
@@ -2268,7 +2268,7 @@
       ]
     },
     "401": {
-      "callsub": "contracts/MockOrbital.algo.ts::MockOrbital.getCurrentRate",
+      "callsub": "MockOrbital.algo.ts::MockOrbital.getCurrentRate",
       "op": "callsub getCurrentRate",
       "defined_out": [
         "action#0",
@@ -3844,7 +3844,7 @@
       "defined_out": []
     },
     "607": {
-      "subroutine": "contracts/MockOrbital.algo.ts::MockOrbital.getCurrentRate",
+      "subroutine": "MockOrbital.algo.ts::MockOrbital.getCurrentRate",
       "params": {},
       "block": "getCurrentRate",
       "stack_in": [],
@@ -4097,7 +4097,7 @@
       "op": "retsub"
     },
     "641": {
-      "subroutine": "contracts/MockOrbital.algo.ts::MockOrbital.initialize",
+      "subroutine": "MockOrbital.algo.ts::MockOrbital.initialize",
       "params": {
         "usdcId#0": "uint64",
         "cUsdcId#0": "uint64"

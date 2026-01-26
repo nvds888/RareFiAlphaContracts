@@ -12,12 +12,12 @@ function safeToNumber(value: any): number {
   return parseInt(value) || 0;
 }
 
-async function compileVaultContract(algodClient: algosdk.Algodv2) {
+async function compileCompoundingVaultContract(algodClient: algosdk.Algodv2) {
   const artifactsDir = path.resolve(__dirname, '../../contracts/artifacts');
 
-  const approvalPath = path.join(artifactsDir, 'RareFiVault.approval.teal');
-  const clearPath = path.join(artifactsDir, 'RareFiVault.clear.teal');
-  const arc56Path = path.join(artifactsDir, 'RareFiVault.arc56.json');
+  const approvalPath = path.join(artifactsDir, 'RareFiAlphaCompoundingVault.approval.teal');
+  const clearPath = path.join(artifactsDir, 'RareFiAlphaCompoundingVault.clear.teal');
+  const arc56Path = path.join(artifactsDir, 'RareFiAlphaCompoundingVault.arc56.json');
 
   if (!fs.existsSync(approvalPath)) {
     throw new Error(`Approval program not found: ${approvalPath}. Run 'npm run compile' first.`);
@@ -62,19 +62,18 @@ async function compilePoolContract(algodClient: algosdk.Algodv2) {
   };
 }
 
-export interface VaultDeploymentResult {
+export interface CompoundingVaultDeploymentResult {
   vaultAppId: number;
   vaultAddress: string;
-  alphaAssetId: number;   // deposit asset
-  usdcAssetId: number;    // yield asset
-  ibusAssetId: number;    // swap asset (project token)
-  poolAppId: number;      // MockTinymanPool app ID
+  alphaAssetId: number;   // deposit & yield asset (Alpha)
+  usdcAssetId: number;    // USDC (airdrops come in as this)
+  poolAppId: number;      // MockTinymanPool app ID (USDC/Alpha)
   poolAddress: string;    // MockTinymanPool address
   arc56Spec: any;
   poolArc56Spec: any;
 }
 
-export async function deployVaultForTest(
+export async function deployCompoundingVaultForTest(
   algod: algosdk.Algodv2,
   creator: { addr: string | algosdk.Address; sk: Uint8Array },
   overrides?: {
@@ -82,12 +81,11 @@ export async function deployVaultForTest(
     minSwapThreshold?: number;
     alphaSupply?: number;
     usdcSupply?: number;
-    ibusSupply?: number;
     poolFeeBps?: number;        // Pool fee in basis points (default 30 = 0.3%)
     poolReserveUsdc?: number;   // Initial USDC reserve in pool
-    poolReserveIbus?: number;   // Initial IBUS reserve in pool
+    poolReserveAlpha?: number;  // Initial Alpha reserve in pool
   },
-): Promise<VaultDeploymentResult> {
+): Promise<CompoundingVaultDeploymentResult> {
   const creatorAddr = typeof creator.addr === 'string' ? creator.addr : creator.addr.toString();
   const creatorAccount = { addr: creatorAddr, sk: creator.sk };
 
@@ -108,23 +106,15 @@ export async function deployVaultForTest(
     overrides?.usdcSupply ?? TOKEN_SUPPLY,
   );
 
-  const ibusAssetId = await createTestAsset(
-    algod,
-    creatorAccount,
-    'IBUS-Test',
-    'IBUSt',
-    overrides?.ibusSupply ?? TOKEN_SUPPLY,
-  );
-
   // Parameters
   const creatorFeeRate = overrides?.creatorFeeRate ?? 20; // 20% default
   const minSwapThreshold = overrides?.minSwapThreshold ?? 2_000_000; // 2 USDC default
   const poolFeeBps = overrides?.poolFeeBps ?? 30; // 0.3% default
   const poolReserveUsdc = overrides?.poolReserveUsdc ?? 10_000_000_000; // 10,000 USDC
-  const poolReserveIbus = overrides?.poolReserveIbus ?? 10_000_000_000; // 10,000 IBUS
+  const poolReserveAlpha = overrides?.poolReserveAlpha ?? 10_000_000_000; // 10,000 Alpha
 
   // ========================================
-  // Step 1: Deploy MockTinymanPool
+  // Step 1: Deploy MockTinymanPool (USDC/Alpha)
   // ========================================
   const poolCompiled = await compilePoolContract(algod);
 
@@ -138,7 +128,6 @@ export async function deployVaultForTest(
   };
 
   // Create pool with raw app args (4-byte selector + uint64 args)
-  // The pool accepts ABI-style creation with 4-byte method selector
   const createPoolSelector = new Uint8Array([0x00, 0x00, 0x00, 0x00]); // Dummy 4-byte selector
   const createPoolTxn = algosdk.makeApplicationCreateTxnFromObject({
     sender: creatorAddr,
@@ -153,9 +142,9 @@ export async function deployVaultForTest(
     appArgs: [
       createPoolSelector,
       encodeUint64(usdcAssetId),
-      encodeUint64(ibusAssetId),
+      encodeUint64(alphaAssetId),
       encodeUint64(poolReserveUsdc),
-      encodeUint64(poolReserveIbus),
+      encodeUint64(poolReserveAlpha),
       encodeUint64(poolFeeBps),
     ],
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
@@ -186,7 +175,7 @@ export async function deployVaultForTest(
     appIndex: poolAppId,
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     appArgs: [new TextEncoder().encode('optInAssets')],
-    foreignAssets: [usdcAssetId, ibusAssetId],
+    foreignAssets: [usdcAssetId, alphaAssetId],
     suggestedParams: { ...suggestedParams, fee: 3000, flatFee: true },
   });
   const signedPoolOptInTxn = poolOptInTxn.signTxn(creator.sk);
@@ -194,7 +183,6 @@ export async function deployVaultForTest(
   await algosdk.waitForConfirmation(algod, poolOptInTxID.txid, 5);
 
   // Creator opts into pool app (to become state holder for local state)
-  // The vault will read pool state from creator's local state within the pool app
   suggestedParams = await algod.getTransactionParams().do();
   const creatorOptInPoolTxn = algosdk.makeApplicationOptInTxnFromObject({
     sender: creatorAddr,
@@ -214,7 +202,7 @@ export async function deployVaultForTest(
     appArgs: [
       new TextEncoder().encode('initializePool'),
       encodeUint64(poolReserveUsdc),
-      encodeUint64(poolReserveIbus),
+      encodeUint64(poolReserveAlpha),
       encodeUint64(poolFeeBps),
     ],
     suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
@@ -224,26 +212,25 @@ export async function deployVaultForTest(
   await algosdk.waitForConfirmation(algod, initPoolTxID.txid, 5);
 
   // IMPORTANT: The state holder address is the creator's address
-  // The vault reads pool state from this address's local state within the pool app
   const poolStateHolderAddress = creatorAddr;
 
-  // Fund pool with IBUS liquidity (so it can swap USDC -> IBUS)
+  // Fund pool with Alpha liquidity (so it can swap USDC -> Alpha)
   suggestedParams = await algod.getTransactionParams().do();
-  const fundPoolIbusTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+  const fundPoolAlphaTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
     sender: creatorAddr,
     receiver: poolAddress,
-    amount: poolReserveIbus,
-    assetIndex: ibusAssetId,
+    amount: poolReserveAlpha,
+    assetIndex: alphaAssetId,
     suggestedParams,
   });
-  const signedFundPoolIbusTxn = fundPoolIbusTxn.signTxn(creator.sk);
-  const fundPoolIbusTxID = await algod.sendRawTransaction(signedFundPoolIbusTxn).do();
-  await algosdk.waitForConfirmation(algod, fundPoolIbusTxID.txid, 5);
+  const signedFundPoolAlphaTxn = fundPoolAlphaTxn.signTxn(creator.sk);
+  const fundPoolAlphaTxID = await algod.sendRawTransaction(signedFundPoolAlphaTxn).do();
+  await algosdk.waitForConfirmation(algod, fundPoolAlphaTxID.txid, 5);
 
   // ========================================
-  // Step 2: Deploy RareFiVault
+  // Step 2: Deploy RareFiAlphaCompoundingVault
   // ========================================
-  const vaultCompiled = await compileVaultContract(algod);
+  const vaultCompiled = await compileCompoundingVaultContract(algod);
   const vaultContract = new algosdk.ABIContract(vaultCompiled.arc56Spec);
 
   suggestedParams = await algod.getTransactionParams().do();
@@ -256,7 +243,6 @@ export async function deployVaultForTest(
     methodArgs: [
       alphaAssetId,
       usdcAssetId,
-      ibusAssetId,
       creatorFeeRate,
       minSwapThreshold,
       poolAppId,
@@ -269,9 +255,9 @@ export async function deployVaultForTest(
     approvalProgram: vaultCompiled.approvalProgram,
     clearProgram: vaultCompiled.clearProgram,
     numGlobalByteSlices: 3, // creatorAddress, rarefiAddress, tinymanPoolAddress
-    numGlobalInts: 12, // depositAsset, yieldAsset, swapAsset, creatorFeeRate, creatorUnclaimedYield, totalDeposits, yieldPerToken, minSwapThreshold, totalYieldGenerated, tinymanPoolAppId, farmBalance, farmEmissionRate
+    numGlobalInts: 11, // alphaAsset, usdcAsset, creatorFeeRate, creatorUnclaimedAlpha, totalShares, totalAlpha, minSwapThreshold, totalYieldCompounded, tinymanPoolAppId, farmBalance, farmEmissionRate
     numLocalByteSlices: 0,
-    numLocalInts: 3, // depositedAmount, userYieldPerToken, earnedYield
+    numLocalInts: 1, // userShares
     extraPages: 1,
   });
 
@@ -297,7 +283,7 @@ export async function deployVaultForTest(
   const paymentTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
     sender: creatorAddr,
     receiver: vaultAddress,
-    amount: 200_300_000, // 200 ALGO setup fee + 0.3 ALGO for asset MBR
+    amount: 5_400_000, // 5.4 ALGO
     suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 1000, flatFee: true },
   });
 
@@ -313,8 +299,8 @@ export async function deployVaultForTest(
     methodArgs: [],
     sender: creatorAddr,
     signer: algosdk.makeBasicAccountTransactionSigner({ sk: creator.sk, addr: algosdk.decodeAddress(creatorAddr) }),
-    suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 5000, flatFee: true }, // 1 outer + 1 payment to rarefi + 3 asset opt-ins
-    appForeignAssets: [alphaAssetId, usdcAssetId, ibusAssetId],
+    suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 3000, flatFee: true },
+    appForeignAssets: [alphaAssetId, usdcAssetId],
   });
 
   await vaultOptInAtc.execute(algod, 5);
@@ -324,7 +310,6 @@ export async function deployVaultForTest(
     vaultAddress,
     alphaAssetId,
     usdcAssetId,
-    ibusAssetId,
     poolAppId,
     poolAddress: poolStateHolderAddress, // State holder address (where pool state is stored)
     arc56Spec: vaultCompiled.arc56Spec,
@@ -334,7 +319,7 @@ export async function deployVaultForTest(
 
 export async function performUserOptIn(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
   user: { addr: string | algosdk.Address; sk: Uint8Array },
 ) {
   const contract = new algosdk.ABIContract(deployment.arc56Spec);
@@ -361,7 +346,7 @@ export async function performUserOptIn(
 
 export async function performDeposit(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
   user: { addr: string | algosdk.Address; sk: Uint8Array },
   amount: number,
 ) {
@@ -386,8 +371,6 @@ export async function performDeposit(
   atc.addTransaction({ txn: alphaTransfer, signer });
 
   // Then deposit call
-  // Note: deposit now checks USDC balance for flash deposit protection,
-  // so we need to include both alphaAssetId and usdcAssetId in foreign assets
   atc.addMethodCall({
     appID: deployment.vaultAppId,
     method: contract.getMethodByName('deposit'),
@@ -403,9 +386,9 @@ export async function performDeposit(
 
 export async function performWithdraw(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
   user: { addr: string | algosdk.Address; sk: Uint8Array },
-  amount: number, // 0 = withdraw all
+  shareAmount: number, // 0 = withdraw all
 ) {
   const contract = new algosdk.ABIContract(deployment.arc56Spec);
   const suggestedParams = await algod.getTransactionParams().do();
@@ -419,7 +402,7 @@ export async function performWithdraw(
   atc.addMethodCall({
     appID: deployment.vaultAppId,
     method: contract.getMethodByName('withdraw'),
-    methodArgs: [amount],
+    methodArgs: [shareAmount],
     sender: userAddr,
     signer,
     suggestedParams: { ...suggestedParams, fee: 2000, flatFee: true },
@@ -430,13 +413,13 @@ export async function performWithdraw(
 }
 
 /**
- * Simulates yield coming in and being swapped to project ASA
+ * Simulates yield coming in and being compounded to Alpha
  * 1. Sends USDC to vault (simulating yield airdrop)
- * 2. Calls swapYield to swap USDC -> IBUS via MockTinymanPool
+ * 2. Calls compoundYield to swap USDC -> Alpha via MockTinymanPool
  */
-export async function performSwapYield(
+export async function performCompoundYield(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
   sender: { addr: string | algosdk.Address; sk: Uint8Array },
   usdcAmount: number,
   slippageBps: number = 50, // 0.5% default slippage
@@ -448,7 +431,7 @@ export async function performSwapYield(
     addr: algosdk.decodeAddress(senderAddr),
   });
 
-  // Step 1: Send USDC to vault (simulating yield airdrop from Alpha)
+  // Step 1: Send USDC to vault (simulating yield airdrop)
   let suggestedParams = await algod.getTransactionParams().do();
   const usdcTransfer = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
     sender: senderAddr,
@@ -461,17 +444,17 @@ export async function performSwapYield(
   const usdcTxID = await algod.sendRawTransaction(signedUsdcTransfer).do();
   await algosdk.waitForConfirmation(algod, usdcTxID.txid, 5);
 
-  // Step 2: Call swapYield to swap USDC -> IBUS
+  // Step 2: Call compoundYield to swap USDC -> Alpha
   suggestedParams = await algod.getTransactionParams().do();
   const atc = new algosdk.AtomicTransactionComposer();
   atc.addMethodCall({
     appID: deployment.vaultAppId,
-    method: contract.getMethodByName('swapYield'),
+    method: contract.getMethodByName('compoundYield'),
     methodArgs: [slippageBps],
     sender: senderAddr,
     signer,
     suggestedParams: { ...suggestedParams, fee: 5000, flatFee: true }, // Higher fee for inner txns
-    appForeignAssets: [deployment.usdcAssetId, deployment.ibusAssetId],
+    appForeignAssets: [deployment.usdcAssetId, deployment.alphaAssetId],
     appForeignApps: [deployment.poolAppId],
     appAccounts: [deployment.poolAddress],
   });
@@ -479,36 +462,9 @@ export async function performSwapYield(
   await atc.execute(algod, 5);
 }
 
-export async function performClaim(
-  algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
-  user: { addr: string | algosdk.Address; sk: Uint8Array },
-) {
-  const contract = new algosdk.ABIContract(deployment.arc56Spec);
-  const suggestedParams = await algod.getTransactionParams().do();
-  const userAddr = typeof user.addr === 'string' ? user.addr : user.addr.toString();
-  const signer = algosdk.makeBasicAccountTransactionSigner({
-    sk: user.sk,
-    addr: algosdk.decodeAddress(userAddr),
-  });
-
-  const atc = new algosdk.AtomicTransactionComposer();
-  atc.addMethodCall({
-    appID: deployment.vaultAppId,
-    method: contract.getMethodByName('claim'),
-    methodArgs: [],
-    sender: userAddr,
-    signer,
-    suggestedParams: { ...suggestedParams, fee: 2000, flatFee: true },
-    appForeignAssets: [deployment.ibusAssetId],
-  });
-
-  await atc.execute(algod, 5);
-}
-
 export async function performClaimCreator(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
   creator: { addr: string | algosdk.Address; sk: Uint8Array },
 ) {
   const contract = new algosdk.ABIContract(deployment.arc56Spec);
@@ -527,7 +483,7 @@ export async function performClaimCreator(
     sender: creatorAddr,
     signer,
     suggestedParams: { ...suggestedParams, fee: 2000, flatFee: true },
-    appForeignAssets: [deployment.ibusAssetId],
+    appForeignAssets: [deployment.alphaAssetId],
   });
 
   await atc.execute(algod, 5);
@@ -535,7 +491,7 @@ export async function performClaimCreator(
 
 export async function performCloseOut(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
   user: { addr: string | algosdk.Address; sk: Uint8Array },
 ) {
   const contract = new algosdk.ABIContract(deployment.arc56Spec);
@@ -553,8 +509,8 @@ export async function performCloseOut(
     methodArgs: [],
     sender: userAddr,
     signer,
-    suggestedParams: { ...suggestedParams, fee: 3000, flatFee: true },
-    appForeignAssets: [deployment.alphaAssetId, deployment.ibusAssetId],
+    suggestedParams: { ...suggestedParams, fee: 2000, flatFee: true },
+    appForeignAssets: [deployment.alphaAssetId],
     onComplete: algosdk.OnApplicationComplete.CloseOutOC,
   });
 
@@ -563,13 +519,14 @@ export async function performCloseOut(
 
 export async function getVaultStats(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
 ): Promise<{
-  totalDeposits: number;
-  yieldPerToken: number;
-  creatorUnclaimedYield: number;
+  totalShares: number;
+  totalAlpha: number;
+  creatorUnclaimedAlpha: number;
   usdcBalance: number;
-  swapAssetBalance: number;
+  totalYieldCompounded: number;
+  sharePrice: number;
 }> {
   // Read from global state directly
   const appInfo = await algod.getApplicationByID(deployment.vaultAppId).do();
@@ -587,62 +544,62 @@ export async function getVaultStats(
     }
   }
 
-  // Get asset balances
+  // Get USDC balance
   const appAddr = algosdk.getApplicationAddress(deployment.vaultAppId).toString();
   const accountInfo = await algod.accountInformation(appAddr).do();
 
   let usdcBalance = 0;
-  let swapAssetBalance = 0;
 
   for (const asset of accountInfo.assets || []) {
     const assetId = safeToNumber(asset.assetId);
     if (assetId === deployment.usdcAssetId) {
       usdcBalance = safeToNumber(asset.amount);
-    } else if (assetId === deployment.ibusAssetId) {
-      swapAssetBalance = safeToNumber(asset.amount);
     }
+  }
+
+  const totalShares = globalState['totalShares'] || 0;
+  const totalAlpha = globalState['totalAlpha'] || 0;
+  const SCALE = 1_000_000_000_000; // 1e12
+
+  // Calculate share price
+  let sharePrice = SCALE; // Default 1:1
+  if (totalShares > 0) {
+    sharePrice = Math.floor((totalAlpha * SCALE) / totalShares);
   }
 
   return {
-    totalDeposits: globalState['totalDeposits'] || 0,
-    yieldPerToken: globalState['yieldPerToken'] || 0,
-    creatorUnclaimedYield: globalState['creatorUnclaimedYield'] || 0,
+    totalShares,
+    totalAlpha,
+    creatorUnclaimedAlpha: globalState['creatorUnclaimedAlpha'] || 0,
     usdcBalance,
-    swapAssetBalance,
+    totalYieldCompounded: globalState['totalYieldCompounded'] || 0,
+    sharePrice,
   };
 }
 
-export async function getPendingYield(
+export async function getUserShares(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
   userAddr: string,
 ): Promise<number> {
-  // Read local state and calculate pending yield
   const localState = await getUserLocalState(algod, deployment.vaultAppId, userAddr);
-  const globalState = await getVaultStats(algod, deployment);
-
-  const deposited = localState.depositedAmount;
-  let pending = localState.earnedYield;
-
-  if (deposited > 0) {
-    const currentYPT = globalState.yieldPerToken;
-    const userYPT = localState.userYieldPerToken;
-
-    if (currentYPT > userYPT) {
-      pending = pending + Math.floor((deposited * (currentYPT - userYPT)) / 1_000_000_000);
-    }
-  }
-
-  return pending;
+  return localState.userShares;
 }
 
-export async function getUserDeposit(
+export async function getUserAlphaBalance(
   algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
+  deployment: CompoundingVaultDeploymentResult,
   userAddr: string,
 ): Promise<number> {
   const localState = await getUserLocalState(algod, deployment.vaultAppId, userAddr);
-  return localState.depositedAmount;
+  const stats = await getVaultStats(algod, deployment);
+
+  if (stats.totalShares === 0) {
+    return 0;
+  }
+
+  // alphaAmount = (shares * totalAlpha) / totalShares
+  return Math.floor((localState.userShares * stats.totalAlpha) / stats.totalShares);
 }
 
 async function getUserLocalState(
@@ -650,9 +607,7 @@ async function getUserLocalState(
   appId: number,
   userAddr: string,
 ): Promise<{
-  depositedAmount: number;
-  userYieldPerToken: number;
-  earnedYield: number;
+  userShares: number;
 }> {
   const accountInfo = await algod.accountInformation(userAddr).do();
 
@@ -661,7 +616,7 @@ async function getUserLocalState(
   );
 
   if (!appLocalState) {
-    return { depositedAmount: 0, userYieldPerToken: 0, earnedYield: 0 };
+    return { userShares: 0 };
   }
 
   const localState: Record<string, number> = {};
@@ -678,12 +633,106 @@ async function getUserLocalState(
   }
 
   return {
-    depositedAmount: localState['depositedAmount'] || 0,
-    userYieldPerToken: localState['userYieldPerToken'] || 0,
-    earnedYield: localState['earnedYield'] || 0,
+    userShares: localState['userShares'] || 0,
   };
 }
 
-export function getContract(deployment: VaultDeploymentResult): algosdk.ABIContract {
+export function getContract(deployment: CompoundingVaultDeploymentResult): algosdk.ABIContract {
   return new algosdk.ABIContract(deployment.arc56Spec);
+}
+
+// Farm functions
+export async function performContributeFarm(
+  algod: algosdk.Algodv2,
+  deployment: CompoundingVaultDeploymentResult,
+  contributor: { addr: string | algosdk.Address; sk: Uint8Array },
+  alphaAmount: number,
+) {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const contributorAddr = typeof contributor.addr === 'string' ? contributor.addr : contributor.addr.toString();
+  const signer = algosdk.makeBasicAccountTransactionSigner({
+    sk: contributor.sk,
+    addr: algosdk.decodeAddress(contributorAddr),
+  });
+
+  const atc = new algosdk.AtomicTransactionComposer();
+
+  // Asset transfer first
+  const alphaTransfer = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+    sender: contributorAddr,
+    receiver: deployment.vaultAddress,
+    amount: alphaAmount,
+    assetIndex: deployment.alphaAssetId,
+    suggestedParams,
+  });
+  atc.addTransaction({ txn: alphaTransfer, signer });
+
+  // Then contributeFarm call
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('contributeFarm'),
+    methodArgs: [],
+    sender: contributorAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+    appForeignAssets: [deployment.alphaAssetId],
+  });
+
+  await atc.execute(algod, 5);
+}
+
+export async function performSetFarmEmissionRate(
+  algod: algosdk.Algodv2,
+  deployment: CompoundingVaultDeploymentResult,
+  sender: { addr: string | algosdk.Address; sk: Uint8Array },
+  emissionRateBps: number,
+) {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const senderAddr = typeof sender.addr === 'string' ? sender.addr : sender.addr.toString();
+  const signer = algosdk.makeBasicAccountTransactionSigner({
+    sk: sender.sk,
+    addr: algosdk.decodeAddress(senderAddr),
+  });
+
+  const atc = new algosdk.AtomicTransactionComposer();
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('setFarmEmissionRate'),
+    methodArgs: [emissionRateBps],
+    sender: senderAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+
+  await atc.execute(algod, 5);
+}
+
+export async function getFarmStats(
+  algod: algosdk.Algodv2,
+  deployment: CompoundingVaultDeploymentResult,
+): Promise<{
+  farmBalance: number;
+  farmEmissionRate: number;
+}> {
+  const appInfo = await algod.getApplicationByID(deployment.vaultAppId).do();
+  const globalState: Record<string, number> = {};
+
+  for (const kv of appInfo.params?.globalState || []) {
+    let key: string;
+    if (kv.key instanceof Uint8Array) {
+      key = new TextDecoder().decode(kv.key);
+    } else {
+      key = Buffer.from(kv.key as string, 'base64').toString('utf8');
+    }
+    if (kv.value.type === 2) {
+      globalState[key] = safeToNumber(kv.value.uint);
+    }
+  }
+
+  return {
+    farmBalance: globalState['farmBalance'] || 0,
+    farmEmissionRate: globalState['farmEmissionRate'] || 0,
+  };
 }

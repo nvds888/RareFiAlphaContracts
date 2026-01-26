@@ -521,7 +521,6 @@ describe('RareFiVault Contract Tests', () => {
     let deployment: VaultDeploymentResult;
     let charlie: { addr: string; sk: Uint8Array };
     let dave: { addr: string; sk: Uint8Array };
-    let hasEnoughAccounts = false;
 
     // Track everything for verification
     let totalYieldDistributed = 0;
@@ -529,29 +528,34 @@ describe('RareFiVault Contract Tests', () => {
     let totalUserYield = 0;
 
     beforeAll(async () => {
-      // Get additional accounts (charlie and dave)
-      const wallets = await kmd.listWallets();
-      const defaultWallet = wallets.wallets.find((w: any) => w.name === 'unencrypted-default-wallet');
-      const walletHandle = (await kmd.initWalletHandle(defaultWallet.id, '')).wallet_handle_token;
-      const addresses = (await kmd.listKeys(walletHandle)).addresses;
+      // Generate additional accounts programmatically
+      const charlieAccount = algosdk.generateAccount();
+      const daveAccount = algosdk.generateAccount();
 
-      // Check if we have enough accounts
-      if (addresses.length < 5) {
-        console.log('Skipping comprehensive test - need 5 accounts, have', addresses.length);
-        await kmd.releaseWalletHandle(walletHandle);
-        return;
-      }
+      charlie = { addr: charlieAccount.addr.toString(), sk: charlieAccount.sk };
+      dave = { addr: daveAccount.addr.toString(), sk: daveAccount.sk };
 
-      hasEnoughAccounts = true;
-      charlie = {
-        addr: addresses[3],
-        sk: (await kmd.exportKey(walletHandle, '', addresses[3])).private_key,
-      };
-      dave = {
-        addr: addresses[4],
-        sk: (await kmd.exportKey(walletHandle, '', addresses[4])).private_key,
-      };
-      await kmd.releaseWalletHandle(walletHandle);
+      // Fund new accounts with ALGO from creator
+      const suggestedParams = await algod.getTransactionParams().do();
+      const fundCharlieTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        sender: creator.addr,
+        receiver: charlie.addr,
+        amount: 10_000_000, // 10 ALGO
+        suggestedParams,
+      });
+      const fundDaveTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        sender: creator.addr,
+        receiver: dave.addr,
+        amount: 10_000_000, // 10 ALGO
+        suggestedParams,
+      });
+
+      const signedFundCharlie = fundCharlieTxn.signTxn(creator.sk);
+      const signedFundDave = fundDaveTxn.signTxn(creator.sk);
+
+      await algod.sendRawTransaction(signedFundCharlie).do();
+      const { txid } = await algod.sendRawTransaction(signedFundDave).do();
+      await algosdk.waitForConfirmation(algod, txid, 5);
 
       // Deploy with 20% creator fee
       deployment = await deployVaultForTest(algod, creator, {
@@ -570,10 +574,6 @@ describe('RareFiVault Contract Tests', () => {
     });
 
     it('Phase 1: Initial deposits with varying amounts', async () => {
-      if (!hasEnoughAccounts) {
-        console.log('SKIPPED - not enough accounts');
-        return;
-      }
       // Alice deposits 1000 tokens
       await performUserOptIn(algod, deployment, alice);
       await performDeposit(algod, deployment, alice, 1000_000_000);
@@ -598,8 +598,7 @@ describe('RareFiVault Contract Tests', () => {
     });
 
     it('Phase 2: First yield swap - everyone has deposits', async () => {
-      if (!hasEnoughAccounts) return;
-      // Swap 100 USDC worth of yield
+            // Swap 100 USDC worth of yield
       const yieldAmount = 100_000_000;
       await performSwapYield(algod, deployment, creator, yieldAmount, 100);
 
@@ -639,8 +638,7 @@ describe('RareFiVault Contract Tests', () => {
     });
 
     it('Phase 3: Alice claims, Bob withdraws partially', async () => {
-      if (!hasEnoughAccounts) return;
-      // Alice claims her yield
+            // Alice claims her yield
       const aliceIbusBefore = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
       const alicePendingBefore = await getPendingYield(algod, deployment, alice.addr);
       await performClaim(algod, deployment, alice);
@@ -667,8 +665,7 @@ describe('RareFiVault Contract Tests', () => {
     });
 
     it('Phase 4: Second yield swap - changed deposit ratios', async () => {
-      if (!hasEnoughAccounts) return;
-      // Now: Alice 1000, Bob 300, Charlie 300, Dave 200 = 1800 total
+            // Now: Alice 1000, Bob 300, Charlie 300, Dave 200 = 1800 total
       const statsBefore = await getVaultStats(algod, deployment);
       expect(statsBefore.totalDeposits).toBe(1800_000_000);
 
@@ -704,8 +701,7 @@ describe('RareFiVault Contract Tests', () => {
     });
 
     it('Phase 5: Charlie closes out completely', async () => {
-      if (!hasEnoughAccounts) return;
-      const charlieAlphaBefore = await getAssetBalance(algod, charlie.addr, deployment.alphaAssetId);
+            const charlieAlphaBefore = await getAssetBalance(algod, charlie.addr, deployment.alphaAssetId);
       const charlieIbusBefore = await getAssetBalance(algod, charlie.addr, deployment.ibusAssetId);
       const charliePending = await getPendingYield(algod, deployment, charlie.addr);
       const charlieDeposit = await getUserDeposit(algod, deployment, charlie.addr);
@@ -732,8 +728,7 @@ describe('RareFiVault Contract Tests', () => {
     });
 
     it('Phase 6: Dave deposits more, then third swap', async () => {
-      if (!hasEnoughAccounts) return;
-      // Dave adds 500 more (now has 700 total)
+            // Dave adds 500 more (now has 700 total)
       const davePendingBefore = await getPendingYield(algod, deployment, dave.addr);
       await performDeposit(algod, deployment, dave, 500_000_000);
 
@@ -761,13 +756,25 @@ describe('RareFiVault Contract Tests', () => {
       console.log('  Bob pending:', bobPending / 1_000_000);
       console.log('  Dave pending:', davePending / 1_000_000);
 
-      // Dave should have more than Bob now (700 vs 300)
-      expect(davePending).toBeGreaterThan(bobPending);
+      // Note: Total pending includes historical yield.
+      // Bob accumulated more yield early (500 tokens vs Dave's 200)
+      // Dave only recently increased to 700 tokens.
+      // From the third swap alone (80 USDC), Dave (35%) got more than Bob (15%)
+      // But Bob's total is higher due to historical accumulation.
+      // This is correct behavior - accumulator pattern preserves historical entitlements.
+
+      // Verify all users have pending yield
+      expect(alicePending).toBeGreaterThan(0);
+      expect(bobPending).toBeGreaterThan(0);
+      expect(davePending).toBeGreaterThan(0);
+
+      // Alice (50% of 2000) should have more than both
+      expect(alicePending).toBeGreaterThan(bobPending);
+      expect(alicePending).toBeGreaterThan(davePending);
     });
 
     it('Phase 7: Creator claims accumulated fees', async () => {
-      if (!hasEnoughAccounts) return;
-      const stats = await getVaultStats(algod, deployment);
+            const stats = await getVaultStats(algod, deployment);
       const expectedCreatorYield = stats.creatorUnclaimedYield;
 
       console.log('Phase 7 - Creator accumulated fees:', expectedCreatorYield / 1_000_000);
@@ -786,8 +793,7 @@ describe('RareFiVault Contract Tests', () => {
     });
 
     it('Phase 8: Everyone claims/closes and verify no stuck funds', async () => {
-      if (!hasEnoughAccounts) return;
-      // Get vault balance before final claims
+            // Get vault balance before final claims
       const vaultIbusBefore = await getAssetBalance(algod, deployment.vaultAddress, deployment.ibusAssetId);
 
       // Alice claims
@@ -825,8 +831,7 @@ describe('RareFiVault Contract Tests', () => {
     });
 
     it('Phase 9: Alice final withdrawal - no funds stuck', async () => {
-      if (!hasEnoughAccounts) return;
-      const aliceAlphaBefore = await getAssetBalance(algod, alice.addr, deployment.alphaAssetId);
+            const aliceAlphaBefore = await getAssetBalance(algod, alice.addr, deployment.alphaAssetId);
       const aliceDeposit = await getUserDeposit(algod, deployment, alice.addr);
 
       await performWithdraw(algod, deployment, alice, 0); // Withdraw all

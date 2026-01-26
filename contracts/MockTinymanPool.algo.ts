@@ -1,10 +1,11 @@
-// MockTinymanPool.algo.ts - Simple mock for testing swapYield
+// MockTinymanPool.algo.ts - Mock for testing swapYield
 // This simulates Tinyman V2 pool behavior for localnet testing
-// Uses GlobalState for simplicity (real Tinyman uses LocalState)
+// Uses LocalState to match real Tinyman V2 (vaults read via AppLocal.getExUint64)
 // Uses Contract (not arc4.Contract) to support raw app args like real Tinyman
 
 import {
   GlobalState,
+  LocalState,
   itxn,
   Global,
   assert,
@@ -17,6 +18,8 @@ import {
   Txn,
   Bytes,
   gtxn,
+  Application,
+  OnCompleteAction,
 } from '@algorandfoundation/algorand-typescript';
 import { mulw, divmodw, btoi } from '@algorandfoundation/algorand-typescript/op';
 
@@ -25,16 +28,23 @@ const DEFAULT_FEE_BPS: uint64 = Uint64(30);
 const FEE_BPS_BASE: uint64 = Uint64(10_000);
 
 export class MockTinymanPool extends Contract {
-  // Pool assets
+  // Pool assets (global state for internal tracking)
   asset1Id = GlobalState<uint64>();  // e.g., USDC
   asset2Id = GlobalState<uint64>();  // e.g., Project token
 
-  // Pool state - using GlobalState with same key names as Tinyman LocalState
-  // This allows the vault to read state via AppGlobal instead of AppLocal
-  asset_1_id = GlobalState<uint64>();
-  asset_1_reserves = GlobalState<uint64>();
-  asset_2_reserves = GlobalState<uint64>();
-  total_fee_share = GlobalState<uint64>();  // Fee in basis points
+  // Pool state - using LocalState to match real Tinyman V2
+  // Stored in the pool address's local state within this app
+  // Vaults read this via AppLocal.getExUint64(poolAddr, poolAppId, key)
+  asset_1_id = LocalState<uint64>();
+  asset_1_reserves = LocalState<uint64>();
+  asset_2_reserves = LocalState<uint64>();
+  total_fee_share = LocalState<uint64>();  // Fee in basis points
+
+  // Track if pool has been initialized
+  initialized = GlobalState<uint64>();
+
+  // The account that holds the pool's local state (for vault to read)
+  stateHolder = GlobalState<Account>();
 
   /**
    * Safe multiplication and division: floor(n1 * n2 / d)
@@ -55,9 +65,14 @@ export class MockTinymanPool extends Contract {
       return this.onCreate();
     }
 
+    // Handle OptIn - allow any account to opt in (needed for state holder)
+    if (Txn.onCompletion === OnCompleteAction.OptIn) {
+      return true;
+    }
+
     // Route based on first app arg
     if (Txn.numAppArgs === Uint64(0)) {
-      return false; // No bare calls supported (except create)
+      return false; // No bare calls supported (except create and opt-in)
     }
 
     const action = Txn.applicationArgs(0);
@@ -70,6 +85,14 @@ export class MockTinymanPool extends Contract {
       const initialReserve2 = btoi(Txn.applicationArgs(4));
       const feeBps = btoi(Txn.applicationArgs(5));
       this.createPool(asset1Id, asset2Id, initialReserve1, initialReserve2, feeBps);
+      return true;
+    }
+
+    if (action === Bytes('initializePool')) {
+      const reserve1 = btoi(Txn.applicationArgs(1));
+      const reserve2 = btoi(Txn.applicationArgs(2));
+      const feeBps = btoi(Txn.applicationArgs(3));
+      this.initializePool(reserve1, reserve2, feeBps);
       return true;
     }
 
@@ -141,14 +164,40 @@ export class MockTinymanPool extends Contract {
     initialReserve2: uint64,
     feeBps: uint64
   ): void {
+    // Store asset IDs in global state for internal tracking
     this.asset1Id.value = asset1Id;
     this.asset2Id.value = asset2Id;
+    this.initialized.value = Uint64(0);
 
-    // Initialize pool state in global state
-    this.asset_1_id.value = asset1Id;
-    this.asset_1_reserves.value = initialReserve1;
-    this.asset_2_reserves.value = initialReserve2;
-    this.total_fee_share.value = feeBps > Uint64(0) ? feeBps : DEFAULT_FEE_BPS;
+    // Store initial reserves and fee in global state temporarily
+    // These will be moved to local state after initializePool is called
+    // We can't access local state during creation because the app isn't opted in yet
+  }
+
+  /**
+   * Initialize pool local state - must be called after an account has opted in
+   * The caller (stateHolder) must have already opted into this pool
+   * Stores pool data in the stateHolder's local state within this app
+   * Vaults read this via AppLocal.getExUint64(stateHolder, poolAppId, key)
+   */
+  private initializePool(
+    initialReserve1: uint64,
+    initialReserve2: uint64,
+    feeBps: uint64
+  ): void {
+    assert(this.initialized.value === Uint64(0), 'Pool already initialized');
+
+    // The sender must have opted into this app (they become the state holder)
+    // Store the state holder address for later use
+    this.stateHolder.value = Txn.sender;
+
+    // Store pool data in sender's local state
+    this.asset_1_id(Txn.sender).value = this.asset1Id.value;
+    this.asset_1_reserves(Txn.sender).value = initialReserve1;
+    this.asset_2_reserves(Txn.sender).value = initialReserve2;
+    this.total_fee_share(Txn.sender).value = feeBps > Uint64(0) ? feeBps : DEFAULT_FEE_BPS;
+
+    this.initialized.value = Uint64(1);
   }
 
   private optInAssets(): void {
@@ -173,36 +222,46 @@ export class MockTinymanPool extends Contract {
    * Mock swap - simulates Tinyman V2 swap using constant product AMM
    * Uses raw app args like real Tinyman V2
    * Expects: asset transfer in previous txn, then this app call
+   *
+   * In testing, the vault sends assets to the state holder (who holds local state).
+   * The pool reads reserves from state holder's local state and sends output from its own balance.
    */
   private swap(swapType: bytes, minAmountOut: uint64): void {
     assert(swapType === Bytes('fixed-input'), 'Only fixed-input supported');
 
     const appAddr: Account = Global.currentApplicationAddress;
+    const stateHolder: Account = this.stateHolder.value;
     const currentIndex = Txn.groupIndex;
     assert(currentIndex >= Uint64(1), 'Must follow asset transfer');
 
     // Check the incoming asset transfer
+    // In testing, vault sends to state holder (poolAddress in vault config)
     const incomingTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
     const incomingAsset = incomingTransfer.xferAsset;
     const incomingAmount = incomingTransfer.assetAmount;
-    assert(incomingTransfer.assetReceiver === appAddr, 'Must send to pool');
+    // Accept assets sent to either pool app or state holder
+    const validReceiver = incomingTransfer.assetReceiver === appAddr || incomingTransfer.assetReceiver === stateHolder;
+    assert(validReceiver, 'Must send to pool or state holder');
 
-    // Get pool state from global storage
-    const feeBps = this.total_fee_share.value;
+    // Get pool state from local storage (stored in stateHolder's local state)
+    const feeBps = this.total_fee_share(stateHolder).value;
+    const asset1Reserves = this.asset_1_reserves(stateHolder).value;
+    const asset2Reserves = this.asset_2_reserves(stateHolder).value;
+
     let inputReserves: uint64;
     let outputReserves: uint64;
     let outAsset: Asset;
 
     if (incomingAsset === Asset(this.asset1Id.value)) {
       // Swapping asset1 -> asset2
-      inputReserves = this.asset_1_reserves.value;
-      outputReserves = this.asset_2_reserves.value;
+      inputReserves = asset1Reserves;
+      outputReserves = asset2Reserves;
       outAsset = Asset(this.asset2Id.value);
     } else {
       // Swapping asset2 -> asset1
       assert(incomingAsset === Asset(this.asset2Id.value), 'Unknown asset');
-      inputReserves = this.asset_2_reserves.value;
-      outputReserves = this.asset_1_reserves.value;
+      inputReserves = asset2Reserves;
+      outputReserves = asset1Reserves;
       outAsset = Asset(this.asset1Id.value);
     }
 
@@ -215,13 +274,13 @@ export class MockTinymanPool extends Contract {
 
     assert(outAmount >= minAmountOut, 'Slippage exceeded');
 
-    // Update reserves in global state
+    // Update reserves in local state
     if (incomingAsset === Asset(this.asset1Id.value)) {
-      this.asset_1_reserves.value = inputReserves + incomingAmount;
-      this.asset_2_reserves.value = outputReserves - outAmount;
+      this.asset_1_reserves(stateHolder).value = inputReserves + incomingAmount;
+      this.asset_2_reserves(stateHolder).value = outputReserves - outAmount;
     } else {
-      this.asset_2_reserves.value = inputReserves + incomingAmount;
-      this.asset_1_reserves.value = outputReserves - outAmount;
+      this.asset_2_reserves(stateHolder).value = inputReserves + incomingAmount;
+      this.asset_1_reserves(stateHolder).value = outputReserves - outAmount;
     }
 
     // Send output to the caller (which is the vault contract)
@@ -234,11 +293,13 @@ export class MockTinymanPool extends Contract {
   }
 
   private updateFee(newFeeBps: uint64): void {
-    this.total_fee_share.value = newFeeBps;
+    const stateHolder: Account = this.stateHolder.value;
+    this.total_fee_share(stateHolder).value = newFeeBps;
   }
 
   private addLiquidity(amount1: uint64, amount2: uint64): void {
-    this.asset_1_reserves.value = this.asset_1_reserves.value + amount1;
-    this.asset_2_reserves.value = this.asset_2_reserves.value + amount2;
+    const stateHolder: Account = this.stateHolder.value;
+    this.asset_1_reserves(stateHolder).value = this.asset_1_reserves(stateHolder).value + amount1;
+    this.asset_2_reserves(stateHolder).value = this.asset_2_reserves(stateHolder).value + amount2;
   }
 }
