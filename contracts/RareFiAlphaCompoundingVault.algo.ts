@@ -631,36 +631,6 @@ export class RareFiAlphaCompoundingVault extends arc4.Contract {
   }
 
   /**
-   * Withdraw remaining farm balance (emergency/cleanup)
-   * Only callable by creator
-   *
-   * @param amount - Amount to withdraw (0 = withdraw all)
-   */
-  @arc4.abimethod()
-  withdrawFarm(amount: uint64): void {
-    assert(Txn.sender === this.creatorAddress.value, 'Only creator can withdraw farm');
-
-    let withdrawAmount = amount;
-    if (withdrawAmount === Uint64(0)) {
-      withdrawAmount = this.farmBalance.value;
-    }
-
-    assert(withdrawAmount > Uint64(0), 'Nothing to withdraw');
-    assert(withdrawAmount <= this.farmBalance.value, 'Insufficient farm balance');
-
-    // Update farm balance
-    this.farmBalance.value = this.farmBalance.value - withdrawAmount;
-
-    // Transfer to creator
-    itxn.assetTransfer({
-      assetReceiver: Txn.sender,
-      xferAsset: Asset(this.alphaAsset.value),
-      assetAmount: withdrawAmount,
-      fee: Uint64(0),
-    }).submit();
-  }
-
-  /**
    * Get farm statistics
    * @returns [farmBalance, farmEmissionRate]
    */

@@ -508,9 +508,6 @@ export class RareFiVault extends arc4.Contract {
 
     assert(swapOutput >= minAmountOut, 'Swap output below minimum');
 
-    // Track total yield generated from this swap
-    this.totalYieldGenerated.value = this.totalYieldGenerated.value + swapOutput;
-
     // Calculate farm bonus: (swapOutput * farmEmissionRate) / 10000, capped at farmBalance
     let farmBonus: uint64 = Uint64(0);
     if (this.farmEmissionRate.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
@@ -523,6 +520,9 @@ export class RareFiVault extends arc4.Contract {
 
     // Total output = swap output + farm bonus
     const totalOutput: uint64 = swapOutput + farmBonus;
+
+    // Track total yield generated (includes farm bonus)
+    this.totalYieldGenerated.value = this.totalYieldGenerated.value + totalOutput;
 
     // Split yield between creator and users (creator fee applies to total output)
     const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
@@ -686,36 +686,6 @@ export class RareFiVault extends arc4.Contract {
     assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 100%)');
 
     this.farmEmissionRate.value = emissionRateBps;
-  }
-
-  /**
-   * Withdraw remaining farm balance (emergency/cleanup)
-   * Only callable by creator
-   *
-   * @param amount - Amount to withdraw (0 = withdraw all)
-   */
-  @arc4.abimethod()
-  withdrawFarm(amount: uint64): void {
-    assert(Txn.sender === this.creatorAddress.value, 'Only creator can withdraw farm');
-
-    let withdrawAmount = amount;
-    if (withdrawAmount === Uint64(0)) {
-      withdrawAmount = this.farmBalance.value;
-    }
-
-    assert(withdrawAmount > Uint64(0), 'Nothing to withdraw');
-    assert(withdrawAmount <= this.farmBalance.value, 'Insufficient farm balance');
-
-    // Update farm balance
-    this.farmBalance.value = this.farmBalance.value - withdrawAmount;
-
-    // Transfer to creator
-    itxn.assetTransfer({
-      assetReceiver: Txn.sender,
-      xferAsset: Asset(this.swapAsset.value),
-      assetAmount: withdrawAmount,
-      fee: Uint64(0),
-    }).submit();
   }
 
   /**
