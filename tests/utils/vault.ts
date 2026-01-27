@@ -364,6 +364,7 @@ export async function performDeposit(
   deployment: VaultDeploymentResult,
   user: { addr: string | algosdk.Address; sk: Uint8Array },
   amount: number,
+  slippageBps: number = 100, // 1% default slippage for auto-swap
 ) {
   const contract = new algosdk.ABIContract(deployment.arc56Spec);
   const suggestedParams = await algod.getTransactionParams().do();
@@ -385,17 +386,18 @@ export async function performDeposit(
   });
   atc.addTransaction({ txn: alphaTransfer, signer });
 
-  // Then deposit call
-  // Note: deposit now checks USDC balance for flash deposit protection,
-  // so we need to include both alphaAssetId and usdcAssetId in foreign assets
+  // Then deposit call with slippageBps for potential auto-swap
+  // Include pool references in case auto-swap is triggered
   atc.addMethodCall({
     appID: deployment.vaultAppId,
     method: contract.getMethodByName('deposit'),
-    methodArgs: [],
+    methodArgs: [slippageBps],
     sender: userAddr,
     signer,
-    suggestedParams: { ...suggestedParams, fee: 2000, flatFee: true },
-    appForeignAssets: [deployment.alphaAssetId, deployment.usdcAssetId],
+    suggestedParams: { ...suggestedParams, fee: 5000, flatFee: true }, // Higher fee for potential inner txns
+    appForeignAssets: [deployment.alphaAssetId, deployment.usdcAssetId, deployment.ibusAssetId],
+    appForeignApps: [deployment.poolAppId],
+    appAccounts: [deployment.poolAddress],
   });
 
   await atc.execute(algod, 5);

@@ -444,21 +444,24 @@ describe('RareFiVault Contract Tests', () => {
       expect(pending).toBe(0);
     });
 
-    it('should reject non-creator/rarefi from calling swapYield', async () => {
+    it('should allow anyone to call swapYield (permissionless)', async () => {
       const deployment = await deployVaultForTest(algod, creator);
 
       await optInToAsset(algod, alice, deployment.alphaAssetId);
       await optInToAsset(algod, alice, deployment.usdcAssetId);
+      await optInToAsset(algod, alice, deployment.ibusAssetId);
       await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 100_000_000);
       await fundAsset(algod, creator, alice.addr, deployment.usdcAssetId, 100_000_000);
 
       await performUserOptIn(algod, deployment, alice);
       await performDeposit(algod, deployment, alice, 100_000_000);
 
-      // Alice tries to call swapYield (should fail - only creator/rarefi allowed)
-      await expect(
-        performSwapYield(algod, deployment, alice, 10_000_000, 100)
-      ).rejects.toThrow();
+      // Alice calls swapYield - should succeed (permissionless)
+      await performSwapYield(algod, deployment, alice, 10_000_000, 100);
+
+      const stats = await getVaultStats(algod, deployment);
+      expect(stats.usdcBalance).toBe(0); // USDC was swapped
+      expect(stats.yieldPerToken).toBeGreaterThan(0);
     });
   });
 
@@ -1033,11 +1036,11 @@ describe('RareFiVault Contract Tests', () => {
   });
 
   /**
-   * FLASH DEPOSIT PROTECTION
-   * Tests that deposits are paused when USDC balance >= minSwapThreshold
-   * to prevent users from depositing right before yield is swapped.
+   * AUTO-SWAP ON DEPOSIT
+   * Tests that deposits automatically trigger a swap when USDC balance >= minSwapThreshold
+   * This protects against flash deposits by swapping BEFORE the new deposit is credited.
    */
-  describe('Flash Deposit Protection', () => {
+  describe('Auto-Swap on Deposit', () => {
     let deployment: VaultDeploymentResult;
     const MIN_SWAP_THRESHOLD = 10_000_000; // 10 USDC threshold for testing
 
@@ -1057,7 +1060,7 @@ describe('RareFiVault Contract Tests', () => {
       await performDeposit(algod, deployment, alice, 100_000_000);
     });
 
-    it('should allow deposits when USDC balance is below threshold', async () => {
+    it('should allow deposits when USDC balance is below threshold (no auto-swap)', async () => {
       // Send USDC below threshold (5 USDC, threshold is 10 USDC)
       const belowThreshold = MIN_SWAP_THRESHOLD - 5_000_000; // 5 USDC
       await fundAsset(algod, creator, deployment.vaultAddress, deployment.usdcAssetId, belowThreshold);
@@ -1067,16 +1070,20 @@ describe('RareFiVault Contract Tests', () => {
       expect(stats.usdcBalance).toBe(belowThreshold);
       expect(stats.usdcBalance).toBeLessThan(MIN_SWAP_THRESHOLD);
 
-      // Deposit should succeed
+      // Deposit should succeed without triggering swap
       await performDeposit(algod, deployment, alice, 10_000_000);
 
       const deposit = await getUserDeposit(algod, deployment, alice.addr);
       expect(deposit).toBe(110_000_000); // 100 + 10
 
-      console.log('Below threshold: Deposit succeeded with USDC balance:', belowThreshold / 1_000_000);
+      // USDC should still be there (no swap triggered)
+      const statsAfter = await getVaultStats(algod, deployment);
+      expect(statsAfter.usdcBalance).toBe(belowThreshold);
+
+      console.log('Below threshold: Deposit succeeded without auto-swap, USDC balance:', belowThreshold / 1_000_000);
     });
 
-    it('should REJECT deposits when USDC balance equals threshold', async () => {
+    it('should AUTO-SWAP when USDC balance meets threshold on deposit', async () => {
       // Add more USDC to reach exactly the threshold
       const currentStats = await getVaultStats(algod, deployment);
       const toAdd = MIN_SWAP_THRESHOLD - currentStats.usdcBalance;
@@ -1085,119 +1092,94 @@ describe('RareFiVault Contract Tests', () => {
       }
 
       // Verify USDC is at threshold
-      const stats = await getVaultStats(algod, deployment);
-      expect(stats.usdcBalance).toBe(MIN_SWAP_THRESHOLD);
+      const statsBefore = await getVaultStats(algod, deployment);
+      expect(statsBefore.usdcBalance).toBe(MIN_SWAP_THRESHOLD);
+      const yieldPerTokenBefore = statsBefore.yieldPerToken;
 
-      console.log('At threshold: USDC balance is exactly', stats.usdcBalance / 1_000_000);
+      console.log('At threshold: USDC balance is exactly', statsBefore.usdcBalance / 1_000_000);
 
-      // Deposit should be rejected
-      await expect(
-        performDeposit(algod, deployment, alice, 10_000_000)
-      ).rejects.toThrow();
+      // Deposit should trigger auto-swap THEN process deposit
+      await performDeposit(algod, deployment, alice, 10_000_000);
 
-      console.log('At threshold: Deposit correctly rejected');
+      const statsAfter = await getVaultStats(algod, deployment);
+
+      // USDC should be 0 after auto-swap
+      expect(statsAfter.usdcBalance).toBe(0);
+
+      // yieldPerToken should increase (yield distributed to existing holders before new deposit)
+      expect(statsAfter.yieldPerToken).toBeGreaterThan(yieldPerTokenBefore);
+
+      console.log('Auto-swap triggered: USDC balance now', statsAfter.usdcBalance);
+      console.log('yieldPerToken increased from', yieldPerTokenBefore / SCALE, 'to', statsAfter.yieldPerToken / SCALE);
     });
 
-    it('should REJECT deposits when USDC balance is above threshold', async () => {
-      // Add more USDC to go above threshold
-      await fundAsset(algod, creator, deployment.vaultAddress, deployment.usdcAssetId, 5_000_000);
+    it('should allow withdrawals when USDC balance is at threshold', async () => {
+      // Add USDC to reach threshold
+      await fundAsset(algod, creator, deployment.vaultAddress, deployment.usdcAssetId, MIN_SWAP_THRESHOLD);
 
-      // Verify USDC is above threshold
-      const stats = await getVaultStats(algod, deployment);
-      expect(stats.usdcBalance).toBeGreaterThan(MIN_SWAP_THRESHOLD);
-
-      console.log('Above threshold: USDC balance is', stats.usdcBalance / 1_000_000);
-
-      // Deposit should be rejected
-      await expect(
-        performDeposit(algod, deployment, alice, 10_000_000)
-      ).rejects.toThrow();
-
-      console.log('Above threshold: Deposit correctly rejected');
-    });
-
-    it('should allow withdrawals while deposits are paused', async () => {
-      // Verify we're still in paused state
       const stats = await getVaultStats(algod, deployment);
       expect(stats.usdcBalance).toBeGreaterThanOrEqual(MIN_SWAP_THRESHOLD);
 
-      // Withdrawal should succeed
+      // Withdrawal should succeed (no swap needed)
       const depositBefore = await getUserDeposit(algod, deployment, alice.addr);
       await performWithdraw(algod, deployment, alice, 10_000_000);
       const depositAfter = await getUserDeposit(algod, deployment, alice.addr);
 
       expect(depositAfter).toBe(depositBefore - 10_000_000);
-      console.log('During pause: Withdrawal succeeded');
+      console.log('At threshold: Withdrawal succeeded');
     });
 
-    it('should allow deposits again after swap clears the USDC', async () => {
-      // Perform swap to clear the USDC
-      const statsBefore = await getVaultStats(algod, deployment);
-      console.log('Before swap: USDC balance', statsBefore.usdcBalance / 1_000_000);
-
-      await performSwapYield(algod, deployment, creator, 0, 100); // 0 = use existing balance
-
-      // Verify USDC is cleared
-      const statsAfter = await getVaultStats(algod, deployment);
-      expect(statsAfter.usdcBalance).toBe(0);
-      console.log('After swap: USDC balance', statsAfter.usdcBalance);
-
-      // Deposit should now succeed
-      await performDeposit(algod, deployment, alice, 20_000_000);
-
-      const deposit = await getUserDeposit(algod, deployment, alice.addr);
-      expect(deposit).toBe(120_000_000); // previous balance + 20
-
-      console.log('After swap: Deposit succeeded');
-    });
-
-    it('should still allow claiming yield while deposits are paused', async () => {
-      // Setup fresh deployment for this test
+    it('should give new depositor correct yield (not capturing pre-existing yield)', async () => {
+      // Setup fresh deployment
       const deployment2 = await deployVaultForTest(algod, creator, {
         creatorFeeRate: 0,
         minSwapThreshold: MIN_SWAP_THRESHOLD,
       });
 
-      // Setup Bob
+      // Setup Alice (existing depositor)
+      await optInToAsset(algod, alice, deployment2.alphaAssetId);
+      await optInToAsset(algod, alice, deployment2.ibusAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment2.alphaAssetId, 5_000_000_000);
+
+      await performUserOptIn(algod, deployment2, alice);
+      await performDeposit(algod, deployment2, alice, 100_000_000);
+
+      // USDC yield arrives at threshold
+      await fundAsset(algod, creator, deployment2.vaultAddress, deployment2.usdcAssetId, MIN_SWAP_THRESHOLD);
+
+      // Setup Bob (new depositor who will trigger auto-swap)
       await optInToAsset(algod, bob, deployment2.alphaAssetId);
       await optInToAsset(algod, bob, deployment2.ibusAssetId);
       await fundAsset(algod, creator, bob.addr, deployment2.alphaAssetId, 1_000_000_000);
-
-      // Bob deposits
       await performUserOptIn(algod, deployment2, bob);
+
+      // Get Alice's pending yield before Bob's deposit
+      const alicePendingBefore = await getPendingYield(algod, deployment2, alice.addr);
+
+      // Bob deposits - should trigger auto-swap first, then process his deposit
       await performDeposit(algod, deployment2, bob, 100_000_000);
 
-      // First yield distribution (gets Bob some yield to claim)
-      await performSwapYield(algod, deployment2, creator, 20_000_000, 100);
+      // Alice should have received all the yield (she was the only depositor when swap happened)
+      const alicePendingAfter = await getPendingYield(algod, deployment2, alice.addr);
+      expect(alicePendingAfter).toBeGreaterThan(alicePendingBefore);
 
-      // Bob has pending yield
-      const pendingBefore = await getPendingYield(algod, deployment2, bob.addr);
-      expect(pendingBefore).toBeGreaterThan(0);
+      // Bob should have 0 pending yield (he wasn't deposited during the swap)
+      const bobPending = await getPendingYield(algod, deployment2, bob.addr);
+      expect(bobPending).toBe(0);
 
-      // Now send USDC to trigger pause
-      await fundAsset(algod, creator, deployment2.vaultAddress, deployment2.usdcAssetId, MIN_SWAP_THRESHOLD);
-
-      // Verify deposits are paused
-      await expect(
-        performDeposit(algod, deployment2, bob, 10_000_000)
-      ).rejects.toThrow();
-
-      // But claiming should still work
-      const ibusBalanceBefore = await getAssetBalance(algod, bob.addr, deployment2.ibusAssetId);
-      await performClaim(algod, deployment2, bob);
-      const ibusBalanceAfter = await getAssetBalance(algod, bob.addr, deployment2.ibusAssetId);
-
-      expect(ibusBalanceAfter - ibusBalanceBefore).toBeCloseTo(pendingBefore, -3);
-      console.log('During pause: Claim succeeded, received', (ibusBalanceAfter - ibusBalanceBefore) / 1_000_000, 'IBUS');
+      console.log('Alice pending yield: before', alicePendingBefore / 1_000_000, 'after', alicePendingAfter / 1_000_000);
+      console.log('Bob pending yield:', bobPending / 1_000_000);
+      console.log('Flash deposit protected: Bob did not capture pre-existing yield');
     });
   });
 
   /**
    * FLASH DEPOSIT ATTACK SCENARIO
-   * Demonstrates that the protection actually prevents yield theft
+   * Demonstrates that auto-swap on deposit prevents yield theft by
+   * distributing yield to existing depositors BEFORE the new deposit is credited.
    */
   describe('Flash Deposit Attack Prevention', () => {
-    it('should prevent attacker from stealing yield via flash deposit', async () => {
+    it('should prevent attacker from stealing yield via flash deposit (auto-swap protection)', async () => {
       const deployment = await deployVaultForTest(algod, creator, {
         creatorFeeRate: 0,
         minSwapThreshold: 10_000_000, // 10 USDC
@@ -1225,43 +1207,37 @@ describe('RareFiVault Contract Tests', () => {
 
       console.log('Airdrop: 50 USDC arrived at vault');
 
-      // Bob (attacker) sees the USDC and tries to deposit right before swap
+      // Bob (attacker) opts in
       await performUserOptIn(algod, deployment, bob);
 
-      // ATTACK ATTEMPT: Bob tries to flash deposit
-      await expect(
-        performDeposit(algod, deployment, bob, 100_000_000)
-      ).rejects.toThrow();
+      // ATTACK ATTEMPT: Bob tries to deposit when yield is pending
+      // With auto-swap, this will succeed BUT the swap happens FIRST
+      // So Alice gets all the yield, THEN Bob's deposit is credited
+      await performDeposit(algod, deployment, bob, 100_000_000);
 
-      console.log('Attack blocked: Bob cannot deposit while yield is pending');
-
-      // Now the legitimate swap happens
-      await performSwapYield(algod, deployment, creator, 0, 100);
-
-      console.log('Swap executed');
+      console.log('Bob deposited - auto-swap executed first');
 
       // Check yield distribution
       const alicePending = await getPendingYield(algod, deployment, alice.addr);
+      const bobPending = await getPendingYield(algod, deployment, bob.addr);
 
-      // Alice gets 100% of the yield (Bob was blocked)
+      // Alice gets 100% of the yield (she was the only depositor when swap happened)
       // With 50 USDC swapped at ~1:1 rate minus 0.3% fee = ~49.85 IBUS
       expect(alicePending).toBeGreaterThan(49_000_000);
 
-      console.log('Result: Alice receives all yield:', alicePending / 1_000_000, 'IBUS');
-      console.log('Attack prevented: Bob got nothing');
-
-      // NOW Bob can deposit (after yield is distributed)
-      await performDeposit(algod, deployment, bob, 100_000_000);
-      const bobDeposit = await getUserDeposit(algod, deployment, bob.addr);
-      expect(bobDeposit).toBe(100_000_000);
-
-      console.log('Post-swap: Bob can now deposit normally');
-
-      // Bob has 0 pending yield from the previous distribution
-      const bobPending = await getPendingYield(algod, deployment, bob.addr);
+      // Bob has 0 pending yield (he wasn't deposited when swap happened)
       expect(bobPending).toBe(0);
 
-      console.log('Correct: Bob has 0 pending yield from past distribution');
+      console.log('Result: Alice receives all yield:', alicePending / 1_000_000, 'IBUS');
+      console.log('Attack prevented: Bob got 0 from pre-existing yield');
+
+      // Verify both have correct deposits
+      const aliceDeposit = await getUserDeposit(algod, deployment, alice.addr);
+      const bobDeposit = await getUserDeposit(algod, deployment, bob.addr);
+      expect(aliceDeposit).toBe(100_000_000);
+      expect(bobDeposit).toBe(100_000_000);
+
+      console.log('Both users have their deposits:', aliceDeposit / 1_000_000, 'and', bobDeposit / 1_000_000);
     });
   });
 });

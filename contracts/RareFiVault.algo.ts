@@ -27,7 +27,7 @@ const MAX_FEE_RATE: uint64 = Uint64(100);              // 100% max fee (basis is
 const MIN_DEPOSIT_AMOUNT: uint64 = Uint64(1_000_000);  // Minimum deposit (1 token with 6 decimals)
 const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0.20 USDC)
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
-const MAX_SLIPPAGE_BPS: uint64 = Uint64(1000);         // Max 10% slippage allowed
+const MAX_SLIPPAGE_BPS: uint64 = Uint64(10_000);        // Max 100% slippage allowed
 const MAX_FARM_EMISSION_BPS: uint64 = Uint64(10_000);  // Max 100% farm emission rate
 
 export class RareFiVault extends arc4.Contract {
@@ -325,23 +325,86 @@ export class RareFiVault extends arc4.Contract {
    * User deposits Alpha into the vault
    * Expects an asset transfer in the group before this call
    *
-   * NOTE: Deposits are paused when USDC balance >= minSwapThreshold to prevent
-   * flash deposit attacks where users deposit right before yield is swapped.
-   * This ensures yield only goes to users who held deposits during the airdrop period.
+   * If USDC balance >= threshold and has existing depositors, automatically
+   * swaps yield BEFORE processing deposit. This ensures yield goes to
+   * existing depositors, not the new one.
+   *
+   * @param slippageBps - Slippage tolerance for auto-swap (ignored if no swap needed)
    */
   @arc4.abimethod()
-  deposit(): void {
+  deposit(slippageBps: uint64): void {
+    assert(slippageBps <= MAX_SLIPPAGE_BPS, 'Slippage too high');
+
     const appAddr: Account = Global.currentApplicationAddress;
-
-    // Check if deposits are paused due to pending yield
-    // This prevents flash deposit attacks where users deposit right before swap
     const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);
-    assert(usdcBalance < this.minSwapThreshold.value, 'Deposits paused: yield pending swap');
 
+    // Auto-swap if threshold met and has existing depositors
+    // This distributes yield to EXISTING depositors before new deposit is added
+    if (usdcBalance >= this.minSwapThreshold.value && this.totalDeposits.value > Uint64(0)) {
+      // Calculate expected output ON-CHAIN by reading pool state
+      const expectedOutput = this.getExpectedSwapOutput(usdcBalance);
+      assert(expectedOutput > Uint64(0), 'Expected output is zero');
+
+      // Apply slippage tolerance
+      const minAmountOut = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - slippageBps, FEE_BPS_BASE);
+
+      // Record swap_asset balance before swap
+      const swapAssetBefore = Asset(this.swapAsset.value).balance(appAddr);
+
+      // Execute Tinyman V2 swap: USDC -> swap_asset
+      itxn.submitGroup(
+        itxn.assetTransfer({
+          assetReceiver: this.tinymanPoolAddress.value,
+          xferAsset: Asset(this.yieldAsset.value),
+          assetAmount: usdcBalance,
+          fee: Uint64(0),
+        }),
+        itxn.applicationCall({
+          appId: Application(this.tinymanPoolAppId.value),
+          appArgs: [Bytes('swap'), Bytes('fixed-input'), itob(minAmountOut)],
+          assets: [Asset(this.swapAsset.value)],
+          accounts: [this.tinymanPoolAddress.value],
+          fee: Uint64(0),
+        }),
+      );
+
+      // Calculate actual swap output
+      const swapAssetAfter: uint64 = Asset(this.swapAsset.value).balance(appAddr);
+      const swapOutput: uint64 = swapAssetAfter - swapAssetBefore;
+      assert(swapOutput >= minAmountOut, 'Swap output below minimum');
+
+      // Calculate farm bonus
+      let farmBonus: uint64 = Uint64(0);
+      if (this.farmEmissionRate.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
+        const requestedBonus = this.mulDivFloor(swapOutput, this.farmEmissionRate.value, FEE_BPS_BASE);
+        farmBonus = requestedBonus < this.farmBalance.value ? requestedBonus : this.farmBalance.value;
+        this.farmBalance.value = this.farmBalance.value - farmBonus;
+      }
+
+      // Total output = swap output + farm bonus
+      const totalOutput: uint64 = swapOutput + farmBonus;
+
+      // Track total yield generated
+      this.totalYieldGenerated.value = this.totalYieldGenerated.value + totalOutput;
+
+      // Split yield between creator and users
+      const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
+      const userCut: uint64 = totalOutput - creatorCut;
+
+      // Add to creator's claimable
+      this.creatorUnclaimedYield.value = this.creatorUnclaimedYield.value + creatorCut;
+
+      // Distribute to users via accumulator
+      if (userCut > Uint64(0)) {
+        const yieldIncrease: uint64 = this.mulDivFloor(userCut, SCALE, this.totalDeposits.value);
+        this.yieldPerToken.value = this.yieldPerToken.value + yieldIncrease;
+      }
+    }
+
+    // Process the deposit
     const currentIndex = Txn.groupIndex;
     assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
 
-    // Validate the deposit transfer
     const depositTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
     assert(depositTransfer.xferAsset === Asset(this.depositAsset.value), 'Must transfer deposit asset');
     assert(depositTransfer.assetReceiver === appAddr, 'Must send to contract');
@@ -457,10 +520,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   swapYield(slippageBps: uint64): void {
-    const isCreator = Txn.sender === this.creatorAddress.value;
-    const isRarefi = Txn.sender === this.rarefiAddress.value;
-    assert(isCreator || isRarefi, 'Only creator or RareFi can swap');
-    assert(slippageBps <= MAX_SLIPPAGE_BPS, 'Slippage too high (max 10%)');
+    assert(slippageBps <= MAX_SLIPPAGE_BPS, 'Slippage too high');
 
     const appAddr: Account = Global.currentApplicationAddress;
     const usdcBalance = Asset(this.yieldAsset.value).balance(appAddr);

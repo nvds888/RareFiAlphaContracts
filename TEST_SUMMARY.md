@@ -3,7 +3,7 @@
 **Date:** January 2025
 **Contracts Tested:** RareFiVault, RareFiAlphaCompoundingVault
 **Test Framework:** Jest + Algorand Localnet
-**Total Tests:** 76 passing
+**Total Tests:** 74 passing
 
 ---
 
@@ -21,18 +21,37 @@ This document provides a comprehensive summary of the test coverage for the Rare
 - USDC is swapped to project token (IBUS) via Tinyman
 - Yield distributed proportionally using `yieldPerToken` accumulator pattern
 - Creator receives configurable fee percentage
+- **Auto-swap on deposit** when threshold met
 
 ### RareFiAlphaCompoundingVault (Share-Based Auto-Compounding)
 - Users deposit Alpha tokens, receive shares
 - USDC airdrops are compounded back into Alpha via Tinyman
 - Share price increases over time as yield compounds
 - Creator receives configurable fee percentage
+- **Auto-compound on deposit** when threshold met
+
+---
+
+## Recent Changes (January 2025)
+
+### Permissionless Swaps
+- `swapYield()` and `compoundYield()` are now **permissionless** - anyone can call them
+- Max slippage increased to **100%** (was 10%) to handle illiquid pools
+- Removes need for cronjobs - users can trigger swaps if needed
+
+### Auto-Swap on Deposit
+- `deposit(slippageBps)` now takes a slippage parameter
+- When USDC balance >= threshold AND existing depositors exist:
+  - Swap executes **BEFORE** deposit is credited
+  - Yield goes to existing depositors only
+  - New depositor cannot capture pre-existing yield
+- This replaces the previous "pause deposits" mechanism
 
 ---
 
 ## Test Results
 
-### RareFiVault Tests (46 tests)
+### RareFiVault Tests (41 tests)
 
 #### Deployment (2 tests)
 | Test | Status | Description |
@@ -87,22 +106,27 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 | should handle multiple deposit-claim cycles | PASS | Round 1: 9.96 IBUS, Round 2: 19.86 IBUS |
 | should accumulate creator fees correctly over multiple swaps | PASS | 5 swaps: Creator ratio exactly 20.00% |
 
-#### Flash Deposit Protection (4 tests)
+#### Auto-Swap on Deposit (4 tests)
 | Test | Status | Description |
 |------|--------|-------------|
-| should allow deposits when USDC below threshold | PASS | Deposit succeeds with USDC balance: 5 |
-| should block deposits when USDC at threshold | PASS | Deposit rejected at threshold (10 USDC) |
-| should block deposits when USDC above threshold | PASS | Deposit rejected above threshold (15 USDC) |
-| should still allow claiming yield while deposits are paused | PASS | Claim succeeds: 19.90 IBUS during pause |
+| should allow deposits when USDC below threshold (no auto-swap) | PASS | Deposit succeeds, USDC balance unchanged |
+| should AUTO-SWAP when USDC balance meets threshold | PASS | yieldPerToken increased from 0 to 0.090546081 |
+| should allow withdrawals when USDC at threshold | PASS | Withdrawals always succeed |
+| should give new depositor correct yield (not capturing pre-existing) | PASS | Alice: 9.96 IBUS, Bob (new): 0 IBUS |
 
 #### Flash Deposit Attack Prevention (1 test)
 | Test | Status | Description |
 |------|--------|-------------|
-| should prevent attacker from stealing yield via flash deposit | PASS | Alice receives 100% (49.60 IBUS), Bob (attacker) receives 0 |
+| should prevent attacker from stealing yield via auto-swap | PASS | Alice receives 100% (49.60 IBUS), Bob triggers swap but gets 0 |
+
+#### Permissionless Swap (1 test)
+| Test | Status | Description |
+|------|--------|-------------|
+| should allow anyone to call swapYield | PASS | Non-creator can trigger swap successfully |
 
 ---
 
-### RareFiAlphaCompoundingVault Tests (30 tests)
+### RareFiAlphaCompoundingVault Tests (33 tests)
 
 #### Deployment (2 tests)
 | Test | Status | Description |
@@ -134,12 +158,12 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 | should handle withdrawal that leaves dust | PASS | Dust amounts handled correctly |
 | should reject deposit of 0 | PASS | Zero deposit rejected |
 
-#### Flash Deposit Protection (3 tests)
+#### Auto-Compound on Deposit (3 tests)
 | Test | Status | Description |
 |------|--------|-------------|
-| should allow deposits when USDC below threshold | PASS | Deposit succeeds below threshold |
-| should block deposits at/above threshold | PASS | Deposit rejected at threshold |
-| should allow deposits after compound clears USDC | PASS | Deposit succeeds post-compound |
+| should allow deposits when USDC below threshold (no auto-compound) | PASS | Deposit succeeds, USDC unchanged |
+| should AUTO-COMPOUND when USDC balance meets threshold | PASS | Share price increased from 1 to 1.090546 |
+| should give new depositor correct shares (not capturing pre-existing yield) | PASS | Alice Alpha: 109.96, Bob Alpha: 100 (deposited 100) |
 
 #### Farm Feature (3 tests)
 | Test | Status | Description |
@@ -147,6 +171,11 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 | should allow creator to fund farm | PASS | Farm balance: 50 Alpha |
 | should allow setting farm emission rate | PASS | Emission rate: 1000 bps (10%) |
 | should apply farm bonus on compound | PASS | Farm balance before: 50, after: 49.00 (bonus applied) |
+
+#### Permissionless Compound (1 test)
+| Test | Status | Description |
+|------|--------|-------------|
+| should allow anyone to call compoundYield | PASS | Non-creator can trigger compound successfully |
 
 #### Comprehensive Integration Test (6 tests)
 | Phase | Status | Description |
@@ -162,30 +191,31 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 
 ## Security Features Tested
 
-### 1. Flash Deposit Protection
+### 1. Auto-Swap/Compound on Deposit (Flash Protection)
 **Purpose:** Prevent attackers from depositing right before a known yield distribution.
 
-**Mechanism:** When vault's USDC balance >= `minSwapThreshold`, deposits are paused.
+**Mechanism:** When vault's USDC balance >= `minSwapThreshold`, the deposit triggers an automatic swap BEFORE the deposit is credited.
 
 **Test Results:**
-- Deposits blocked at threshold: PASS
-- Deposits blocked above threshold: PASS
-- Withdrawals still allowed during pause: PASS
-- Claims still allowed during pause: PASS
-- Deposits resume after swap clears USDC: PASS
+- Auto-swap triggers at threshold: PASS
+- Yield distributed to existing holders only: PASS
+- New depositor receives 0 from pre-existing yield: PASS
+- Withdrawals always allowed: PASS
+- Claims always allowed: PASS
 
 ### 2. Flash Deposit Attack Prevention
 **Purpose:** Ensure attackers cannot steal yield from existing depositors.
 
 **Scenario Tested:**
 1. Alice deposits 100 tokens
-2. 50 USDC airdrop arrives
-3. Bob attempts to deposit (BLOCKED - threshold reached)
-4. Swap executes
-5. Alice receives 100% of yield (49.60 IBUS)
-6. Bob receives 0
+2. 50 USDC airdrop arrives (at threshold)
+3. Bob attempts to deposit
+4. **Auto-swap executes FIRST** - Alice gets all yield
+5. **Then** Bob's deposit is credited
+6. Alice receives 100% of yield (49.60 IBUS)
+7. Bob receives 0 from that distribution
 
-**Result:** Attack fully prevented.
+**Result:** Attack fully prevented via auto-swap mechanism.
 
 ### 3. Yield Distribution Fairness
 **Tests Verified:**
@@ -194,12 +224,18 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 - Historical yield preserved through deposit/withdrawal cycles
 - Creator fee deducted before user distribution
 
-### 4. Farm Feature Bounds
+### 4. Permissionless Swaps
+**Tests Verified:**
+- Anyone can call `swapYield()` / `compoundYield()`
+- Slippage up to 100% allowed (for illiquid pools)
+- On-chain price calculation prevents fake quotes
+- No admin bottleneck for yield processing
+
+### 5. Farm Feature Bounds
 **Tests Verified:**
 - `farmEmissionRate` capped at 100% (10000 bps) via `MAX_FARM_EMISSION_BPS`
 - Farm bonus correctly calculated and deducted from balance
 - **`contributeFarm()`**: Anyone can fund the farm (permissionless)
-- **`withdrawFarm()`**: Only creator can withdraw from farm
 - **`setFarmEmissionRate()`**: Only creator or RareFi can set emission rate
 
 ---
@@ -221,18 +257,39 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 
 ---
 
+## API Changes
+
+### deposit() Method
+```typescript
+// Old signature
+deposit(): void
+
+// New signature
+deposit(slippageBps: uint64): void
+```
+
+**Frontend changes required:**
+- Pass slippage parameter (e.g., 100 = 1%)
+- Include foreign references for Tinyman pool when USDC >= threshold:
+  - `appForeignApps: [tinymanPoolAppId]`
+  - `appForeignAssets: [outputAsset]`
+  - `appAccounts: [poolStateHolderAddress]`
+- Higher transaction fee (5000 micro-ALGO) to cover potential inner transactions
+
+---
+
 ## State Transitions Verified
 
 ### RareFiVault
 ```
 User States: optIn -> deposit -> (claim/withdraw)* -> closeOut
-Vault States: created -> (deposits/withdrawals/swaps)* -> empty
+Vault States: created -> (deposits/auto-swaps/withdrawals)* -> empty
 ```
 
 ### RareFiAlphaCompoundingVault
 ```
-User States: optIn -> deposit (receive shares) -> (compound)* -> withdraw (burn shares)
-Vault States: created -> (deposits/compounds/withdrawals)* -> empty
+User States: optIn -> deposit (receive shares) -> (auto-compound)* -> withdraw (burn shares)
+Vault States: created -> (deposits/auto-compounds/withdrawals)* -> empty
 Share Price: 1.0 -> increases with each compound
 ```
 
@@ -253,8 +310,8 @@ The tests use `MockTinymanPool` which simulates Tinyman V2 behavior:
 
 ### Running Tests
 ```bash
-# Run all vault tests (recommended: sequential to avoid tx conflicts)
-npm test -- --runInBand tests/vault.test.ts tests/compoundingVault.test.ts
+# Run all vault tests
+npm test
 
 # Run specific test file
 npm test -- tests/vault.test.ts
@@ -264,9 +321,9 @@ npm test -- --verbose
 ```
 
 ### Prerequisites
-- Docker running with Algorand localnet
+- Docker running with Algorand localnet (`algokit localnet start`)
 - Node.js >= 18
-- Contracts compiled: `npm run compile`
+- Contracts compiled: `npm run compile:vault`
 
 ---
 
@@ -275,20 +332,25 @@ npm test -- --verbose
 ### Areas Requiring Special Attention
 
 1. **Tinyman Integration**
-   - Slippage parameter handling in `swapYield`/`compoundYield`
+   - Slippage parameter handling in `swapYield`/`compoundYield`/`deposit`
    - Pool state reading via `AppLocal.getExUint64`
    - MEV/sandwich attack vectors on mainnet
 
-2. **Integer Arithmetic**
+2. **Auto-Swap Timing**
+   - Verify swap executes before deposit crediting
+   - Confirm existing shareholders receive full yield
+   - Check edge case: first depositor (no auto-swap since totalShares=0)
+
+3. **Integer Arithmetic**
    - `mulDivFloor` implementation using `mulw`/`divmodw`
    - SCALE constant (1e9) usage
    - Edge cases with very small or very large values
 
-3. **Access Control**
-   - Creator vs RareFi address permissions
-   - `setFarmEmissionRate` bounded by `MAX_FARM_EMISSION_BPS`
+4. **Access Control**
+   - Permissionless: `swapYield`, `compoundYield`, `deposit`, `withdraw`, `claim`, `contributeFarm`
+   - Creator/RareFi only: `setFarmEmissionRate`, `claimCreator`
 
-4. **State Consistency**
+5. **State Consistency**
    - `yieldPerToken` accumulator updates
    - Share minting/burning calculations
    - Total deposit/share tracking
@@ -303,15 +365,16 @@ npm test -- --verbose
 
 ## Conclusion
 
-All 76 tests pass with correct behavior verified for:
+All 74 tests pass with correct behavior verified for:
 - Core deposit/withdraw/claim operations
 - Proportional yield distribution
 - Share-based accounting and compounding
-- Flash deposit attack prevention
+- **Auto-swap on deposit** (flash protection)
+- Permissionless swap triggering
 - Creator fee calculations
 - Farm bonus mechanics
 - Edge cases and rounding
 
-The contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (flash protection, attack prevention) function as designed.
+The contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (auto-swap protection, attack prevention) function as designed.
 
 **Recommendation:** Proceed to senior developer review focusing on Tinyman integration, slippage handling, and mainnet-specific attack vectors.

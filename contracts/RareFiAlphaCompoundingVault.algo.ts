@@ -28,7 +28,7 @@ const MAX_FEE_RATE: uint64 = Uint64(100);              // 100% max fee (basis is
 const MIN_DEPOSIT_AMOUNT: uint64 = Uint64(1_000_000);  // Minimum deposit (1 token with 6 decimals)
 const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0.20 USDC)
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
-const MAX_SLIPPAGE_BPS: uint64 = Uint64(1000);         // Max 10% slippage allowed
+const MAX_SLIPPAGE_BPS: uint64 = Uint64(10_000);        // Max 100% slippage allowed
 const MAX_FARM_EMISSION_BPS: uint64 = Uint64(10_000);  // Max 100% farm emission rate
 
 export class RareFiAlphaCompoundingVault extends arc4.Contract {
@@ -285,21 +285,83 @@ export class RareFiAlphaCompoundingVault extends arc4.Contract {
    * User deposits Alpha into the vault
    * Receives shares proportional to their deposit
    *
-   * NOTE: Deposits are paused when USDC balance >= minSwapThreshold to prevent
-   * flash deposit attacks where users deposit right before yield is compounded.
+   * If USDC balance >= threshold and has existing depositors, automatically
+   * compounds yield BEFORE processing deposit. This ensures yield goes to
+   * existing depositors, not the new one.
+   *
+   * @param slippageBps - Slippage tolerance for auto-compound (ignored if no compound needed)
    */
   @arc4.abimethod()
-  deposit(): void {
+  deposit(slippageBps: uint64): void {
+    assert(slippageBps <= MAX_SLIPPAGE_BPS, 'Slippage too high');
+
     const appAddr: Account = Global.currentApplicationAddress;
-
-    // Check if deposits are paused due to pending yield
     const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
-    assert(usdcBalance < this.minSwapThreshold.value, 'Deposits paused: yield pending compound');
 
+    // Auto-compound if threshold met and has existing depositors
+    // This distributes yield to EXISTING shareholders before new deposit is added
+    if (usdcBalance >= this.minSwapThreshold.value && this.totalShares.value > Uint64(0)) {
+      // Calculate expected output ON-CHAIN by reading pool state
+      const expectedOutput = this.getExpectedSwapOutput(usdcBalance);
+      assert(expectedOutput > Uint64(0), 'Expected output is zero');
+
+      // Apply slippage tolerance
+      const minAmountOut = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - slippageBps, FEE_BPS_BASE);
+
+      // Record Alpha balance before swap
+      const alphaBefore = Asset(this.alphaAsset.value).balance(appAddr);
+
+      // Execute Tinyman V2 swap: USDC -> Alpha
+      itxn.submitGroup(
+        itxn.assetTransfer({
+          assetReceiver: this.tinymanPoolAddress.value,
+          xferAsset: Asset(this.usdcAsset.value),
+          assetAmount: usdcBalance,
+          fee: Uint64(0),
+        }),
+        itxn.applicationCall({
+          appId: Application(this.tinymanPoolAppId.value),
+          appArgs: [Bytes('swap'), Bytes('fixed-input'), itob(minAmountOut)],
+          assets: [Asset(this.alphaAsset.value)],
+          accounts: [this.tinymanPoolAddress.value],
+          fee: Uint64(0),
+        }),
+      );
+
+      // Calculate actual swap output
+      const alphaAfter: uint64 = Asset(this.alphaAsset.value).balance(appAddr);
+      const swapOutput: uint64 = alphaAfter - alphaBefore;
+      assert(swapOutput >= minAmountOut, 'Swap output below minimum');
+
+      // Calculate farm bonus
+      let farmBonus: uint64 = Uint64(0);
+      if (this.farmEmissionRate.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
+        const requestedBonus = this.mulDivFloor(swapOutput, this.farmEmissionRate.value, FEE_BPS_BASE);
+        farmBonus = requestedBonus < this.farmBalance.value ? requestedBonus : this.farmBalance.value;
+        this.farmBalance.value = this.farmBalance.value - farmBonus;
+      }
+
+      // Total output = swap output + farm bonus
+      const totalOutput: uint64 = swapOutput + farmBonus;
+
+      // Split yield between creator and vault
+      const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
+      const vaultCut: uint64 = totalOutput - creatorCut;
+
+      // Add creator's cut to their claimable balance
+      this.creatorUnclaimedAlpha.value = this.creatorUnclaimedAlpha.value + creatorCut;
+
+      // Add vault's cut to totalAlpha (increases share value for existing depositors)
+      this.totalAlpha.value = this.totalAlpha.value + vaultCut;
+
+      // Track total yield compounded
+      this.totalYieldCompounded.value = this.totalYieldCompounded.value + totalOutput;
+    }
+
+    // Process the deposit
     const currentIndex = Txn.groupIndex;
     assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
 
-    // Validate the deposit transfer
     const depositTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
     assert(depositTransfer.xferAsset === Asset(this.alphaAsset.value), 'Must transfer Alpha asset');
     assert(depositTransfer.assetReceiver === appAddr, 'Must send to contract');
@@ -393,10 +455,7 @@ export class RareFiAlphaCompoundingVault extends arc4.Contract {
    */
   @arc4.abimethod()
   compoundYield(slippageBps: uint64): void {
-    const isCreator = Txn.sender === this.creatorAddress.value;
-    const isRarefi = Txn.sender === this.rarefiAddress.value;
-    assert(isCreator || isRarefi, 'Only creator or RareFi can compound');
-    assert(slippageBps <= MAX_SLIPPAGE_BPS, 'Slippage too high (max 10%)');
+    assert(slippageBps <= MAX_SLIPPAGE_BPS, 'Slippage too high');
 
     const appAddr: Account = Global.currentApplicationAddress;
     const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);

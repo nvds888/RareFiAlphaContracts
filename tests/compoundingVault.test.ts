@@ -456,7 +456,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       expect(stats.sharePrice).toBe(SCALE);
     });
 
-    it('should reject non-creator/rarefi from calling compoundYield', async () => {
+    it('should allow anyone to call compoundYield (permissionless)', async () => {
       const deployment = await deployCompoundingVaultForTest(algod, creator);
 
       await optInToAsset(algod, alice, deployment.alphaAssetId);
@@ -467,10 +467,12 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       await performUserOptIn(algod, deployment, alice);
       await performDeposit(algod, deployment, alice, 100_000_000);
 
-      // Alice tries to call compoundYield (should fail - only creator/rarefi allowed)
-      await expect(
-        performCompoundYield(algod, deployment, alice, 10_000_000, 100)
-      ).rejects.toThrow();
+      // Alice calls compoundYield - should succeed (permissionless)
+      await performCompoundYield(algod, deployment, alice, 10_000_000, 100);
+
+      const stats = await getVaultStats(algod, deployment);
+      expect(stats.usdcBalance).toBe(0); // USDC was swapped
+      expect(stats.totalYieldCompounded).toBeGreaterThan(0);
     });
   });
 
@@ -541,7 +543,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
   });
 
-  describe('Flash Deposit Protection', () => {
+  describe('Auto-Compound on Deposit', () => {
     let deployment: CompoundingVaultDeploymentResult;
     const MIN_SWAP_THRESHOLD = 10_000_000; // 10 USDC threshold for testing
 
@@ -560,7 +562,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       await performDeposit(algod, deployment, alice, 100_000_000);
     });
 
-    it('should allow deposits when USDC balance is below threshold', async () => {
+    it('should allow deposits when USDC balance is below threshold (no auto-compound)', async () => {
       // Send USDC below threshold (5 USDC, threshold is 10 USDC)
       const belowThreshold = MIN_SWAP_THRESHOLD - 5_000_000; // 5 USDC
       await fundAsset(algod, creator, deployment.vaultAddress, deployment.usdcAssetId, belowThreshold);
@@ -570,16 +572,20 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       expect(stats.usdcBalance).toBe(belowThreshold);
       expect(stats.usdcBalance).toBeLessThan(MIN_SWAP_THRESHOLD);
 
-      // Deposit should succeed
+      // Deposit should succeed without triggering compound
       await performDeposit(algod, deployment, alice, 10_000_000);
 
       const shares = await getUserShares(algod, deployment, alice.addr);
       expect(shares).toBe(110_000_000); // 100 + 10
 
-      console.log('Below threshold: Deposit succeeded with USDC balance:', belowThreshold / 1_000_000);
+      // USDC should still be there (no compound triggered)
+      const statsAfter = await getVaultStats(algod, deployment);
+      expect(statsAfter.usdcBalance).toBe(belowThreshold);
+
+      console.log('Below threshold: Deposit succeeded without auto-compound, USDC balance:', belowThreshold / 1_000_000);
     });
 
-    it('should REJECT deposits when USDC balance equals threshold', async () => {
+    it('should AUTO-COMPOUND when USDC balance meets threshold on deposit', async () => {
       // Add more USDC to reach exactly the threshold
       const currentStats = await getVaultStats(algod, deployment);
       const toAdd = MIN_SWAP_THRESHOLD - currentStats.usdcBalance;
@@ -588,38 +594,66 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       }
 
       // Verify USDC is at threshold
-      const stats = await getVaultStats(algod, deployment);
-      expect(stats.usdcBalance).toBe(MIN_SWAP_THRESHOLD);
+      const statsBefore = await getVaultStats(algod, deployment);
+      expect(statsBefore.usdcBalance).toBe(MIN_SWAP_THRESHOLD);
+      const sharePriceBefore = statsBefore.sharePrice;
 
-      console.log('At threshold: USDC balance is exactly', stats.usdcBalance / 1_000_000);
+      console.log('At threshold: USDC balance is exactly', statsBefore.usdcBalance / 1_000_000);
 
-      // Deposit should be rejected
-      await expect(
-        performDeposit(algod, deployment, alice, 10_000_000)
-      ).rejects.toThrow();
+      // Deposit should trigger auto-compound THEN process deposit
+      await performDeposit(algod, deployment, alice, 10_000_000);
 
-      console.log('At threshold: Deposit correctly rejected');
+      const statsAfter = await getVaultStats(algod, deployment);
+
+      // USDC should be 0 after auto-compound
+      expect(statsAfter.usdcBalance).toBe(0);
+
+      // Share price should increase (yield compounded to existing holders before new deposit)
+      expect(statsAfter.sharePrice).toBeGreaterThan(sharePriceBefore);
+
+      console.log('Auto-compound triggered: USDC balance now', statsAfter.usdcBalance);
+      console.log('Share price increased from', sharePriceBefore / SCALE, 'to', statsAfter.sharePrice / SCALE);
     });
 
-    it('should allow deposits again after compound clears the USDC', async () => {
-      // Perform compound to clear the USDC
-      const statsBefore = await getVaultStats(algod, deployment);
-      console.log('Before compound: USDC balance', statsBefore.usdcBalance / 1_000_000);
+    it('should give new depositor correct shares (not capturing pre-existing yield)', async () => {
+      // Setup fresh deployment
+      const deployment2 = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: MIN_SWAP_THRESHOLD,
+      });
 
-      await performCompoundYield(algod, deployment, creator, 0, 100); // 0 = use existing balance
+      // Setup Alice (existing depositor)
+      await optInToAsset(algod, alice, deployment2.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment2.alphaAssetId, 5_000_000_000);
 
-      // Verify USDC is cleared
-      const statsAfter = await getVaultStats(algod, deployment);
-      expect(statsAfter.usdcBalance).toBe(0);
-      console.log('After compound: USDC balance', statsAfter.usdcBalance);
+      await performUserOptIn(algod, deployment2, alice);
+      await performDeposit(algod, deployment2, alice, 100_000_000);
 
-      // Deposit should now succeed
-      await performDeposit(algod, deployment, alice, 20_000_000);
+      // USDC yield arrives at threshold
+      await fundAsset(algod, creator, deployment2.vaultAddress, deployment2.usdcAssetId, MIN_SWAP_THRESHOLD);
 
-      const shares = await getUserShares(algod, deployment, alice.addr);
-      expect(shares).toBeGreaterThan(0);
+      // Setup Bob (new depositor who will trigger auto-compound)
+      await optInToAsset(algod, bob, deployment2.alphaAssetId);
+      await fundAsset(algod, creator, bob.addr, deployment2.alphaAssetId, 1_000_000_000);
+      await performUserOptIn(algod, deployment2, bob);
 
-      console.log('After compound: Deposit succeeded');
+      // Get Alice's balance before Bob's deposit
+      const aliceAlphaBefore = await getUserAlphaBalance(algod, deployment2, alice.addr);
+
+      // Bob deposits - should trigger auto-compound first, then process his deposit
+      await performDeposit(algod, deployment2, bob, 100_000_000);
+
+      // Alice should have received all the yield (she was the only depositor when compound happened)
+      const aliceAlphaAfter = await getUserAlphaBalance(algod, deployment2, alice.addr);
+      expect(aliceAlphaAfter).toBeGreaterThan(aliceAlphaBefore);
+
+      // Bob's Alpha balance should be close to his deposit (he didn't capture pre-existing yield)
+      const bobAlpha = await getUserAlphaBalance(algod, deployment2, bob.addr);
+      expect(bobAlpha).toBeCloseTo(100_000_000, -3); // Within 1000 units
+
+      console.log('Alice Alpha balance: before', aliceAlphaBefore / 1_000_000, 'after', aliceAlphaAfter / 1_000_000);
+      console.log('Bob Alpha balance:', bobAlpha / 1_000_000, '(deposited 100)');
+      console.log('Flash deposit protected: Bob did not capture pre-existing yield');
     });
   });
 

@@ -92,6 +92,10 @@ export async function createTestAsset(
 ): Promise<number> {
   const suggestedParams = await algodClient.getTransactionParams().do();
 
+  // Add random note to ensure unique transaction IDs
+  const randomNote = new Uint8Array(8);
+  crypto.getRandomValues(randomNote);
+
   const txn = algosdk.makeAssetCreateTxnWithSuggestedParamsFromObject({
     sender: creator.addr,
     assetName: name,
@@ -101,6 +105,7 @@ export async function createTestAsset(
     defaultFrozen: false,
     manager: creator.addr,
     reserve: creator.addr,
+    note: randomNote,
     suggestedParams,
   });
 
