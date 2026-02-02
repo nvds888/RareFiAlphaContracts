@@ -11,8 +11,9 @@ The protocol creates a win-win: users get exposure to tokens they believe in whi
 ## The Problem
 
 **For Users:**
-- Holding yield-bearing assets (like Alpha from Alpha Arcade, or USDC in lending protocols) generates yield in underlying yield asset
+- Holding yield-bearing assets (like Alpha from Alpha Arcade) generates yield in USDC
 - Users who want exposure to specific project tokens must manually swap their yield
+- Auto-compounding back into the yield-bearing asset requires manual management
 
 **For Projects:**
 - Getting sustainable buying pressure for your ASA is difficult
@@ -26,61 +27,68 @@ The protocol creates a win-win: users get exposure to tokens they believe in whi
 RareFi vaults act as a bridge:
 
 ```
-User deposits yield-bearing asset
+User deposits yield-bearing asset (Alpha)
          |
          v
     [RareFi Vault]
          |
          v
-Yield accrues
+Yield accrues (USDC airdrops)
          |
          v
-RareFi swaps Yield -> Project Token
+RareFi swaps Yield -> Target Asset
          |
          v
-User claims Project Token as yield
+User receives Target Asset as yield
 ```
 
-Users keep their principal intact and withdraw anytime. The yield is automatically converted to project tokens.
+Users keep their principal intact and withdraw anytime. The yield is automatically converted to the target asset.
 
 ---
 
 ## Two Vault Types
 
-### 1. Alpha Arcade Vault (RareFiVault)
+### 1. RareFiVault (Project Token Yield)
 
-For users holding **Alpha** tokens from Alpha Arcade.
+For users who want to earn **project tokens** from their Alpha holdings.
 
 **How it works:**
 - Alpha Arcade periodically airdrops USDC to Alpha holders
 - Users deposit Alpha into a RareFi vault for a specific project
-- When USDC airdrops arrive at the vault, RareFi swaps it to the project's token
+- When USDC airdrops arrive at the vault, it's swapped to the project's token via Tinyman
 - Users claim their share of project tokens proportional to their Alpha deposit
 
-**Yield source:** Alpha Arcade USDC airdrops (external, periodic)
+**Yield flow:** Alpha -> USDC airdrop -> Swap to Project Token -> Claim
 
-**Key characteristic:** Passive yield - airdrops arrive without any action needed
+**Key features:**
+- Yield-per-token accumulator pattern (fair distribution)
+- Auto-swap on deposit (flash deposit protection)
+- Permissionless swaps (anyone can trigger)
+- Farm bonus (optional boosted yields)
+
+**Use case:** Earn your favorite project's token while holding Alpha
 
 
-### 2. Orbital Lending Vault (OrbitalVault)
+### 2. RareFiAlphaCompoundingVault (Auto-Compounding)
 
-For users who want lending yield paid in project tokens instead of the underlying asset.
+For users who want to **grow their Alpha position** automatically.
 
 **How it works:**
-- Users deposit an asset (starting with USDC) into the vault
-- Vault deposits into Orbital Lending protocol, receives the corresponding LST (cUSDC)
-- As interest accrues, the LST exchange rate appreciates
-- Periodically, RareFi harvests the accumulated yield and swaps to project tokens
-- Users claim their share of project tokens
+- Users deposit Alpha into the compounding vault
+- When USDC airdrops arrive, they're automatically swapped back to Alpha via Tinyman
+- The Alpha compounds into the vault, increasing the share price
+- Users withdraw more Alpha than they deposited
 
-**Yield source:** Orbital Lending interest (continuous, compounding)
+**Yield flow:** Alpha -> USDC airdrop -> Swap back to Alpha -> Compounds automatically
 
-**Key characteristic:** Active yield generation through DeFi lending
+**Key features:**
+- Share-based accounting (similar to ERC4626)
+- Auto-compound on deposit (flash deposit protection)
+- Permissionless compounding (anyone can trigger)
+- Farm bonus (optional boosted yields)
+- Share price increases over time
 
-**Asset roadmap:**
-- Phase 1: USDC/cUSDC (current implementation)
-- Phase 2: Other Orbital assets (ALGO, goBTC, goETH, etc.)
-- Phase 3: Isolated lending pools Folks
+**Use case:** Maximize Alpha holdings through automatic compounding
 
 ---
 
@@ -90,12 +98,12 @@ For users who want lending yield paid in project tokens instead of the underlyin
 
 | Benefit | Description |
 |---------|-------------|
-| **Keep your principal** | Deposit Alpha or USDC, withdraw anytime with full amount |
-| **Automatic yield conversion** | No manual swapping needed |
-| **Project exposure** | Get tokens of projects you believe in |
+| **Keep your principal** | Deposit Alpha, withdraw anytime with full amount (plus yield for compounding vault) |
+| **Automatic yield handling** | No manual swapping needed |
+| **Choice of yield type** | Earn project tokens OR compound back to Alpha |
 | **Fair distribution** | Yield is proportional to deposit amount and time |
 | **No lock-up** | Withdraw principal whenever you want |
-| **Protected from snipers** | Flash deposit protection ensures yield goes to loyal holders, not opportunistic latecomers |
+| **Protected from snipers** | Auto-swap/compound on deposit ensures yield goes to existing holders |
 
 ### For Projects
 
@@ -103,22 +111,22 @@ For users who want lending yield paid in project tokens instead of the underlyin
 |---------|-------------|
 | **Organic buying pressure** | Real yield is swapped into your ASA continuously |
 | **Yield routing** | Redirect ecosystem yield flows toward your token |
-| **Community earning** | Your supporters earn your token seamlessly, no manual swapping |
-| **Engaged holders** | Users actively chose your project's vault - they believe in you |
+| **Community earning** | Your supporters earn your token seamlessly |
+| **Engaged holders** | Users actively chose your project's vault |
 | **Configurable fees** | Take a percentage of swapped yield as project revenue |
 
 ### For RareFi
 
 | Revenue Stream | Description |
 |----------------|-------------|
-| **Setup fee** | 200 ALGO per vault deployment |
-| **Swap execution** | Platform/Vault Creator controls swap timing and execution |
+| **Setup fee** | 5.4-5.5 ALGO per vault deployment (MBR + operational) |
+| **Swap execution** | Platform controls swap timing for optimal execution |
 
 ---
 
 ## Technical Architecture
 
-### RareFiVault (Alpha Arcade)
+### RareFiVault (Project Token Yield)
 
 **Yield Distribution Model: yieldPerToken Accumulator**
 
@@ -136,73 +144,50 @@ When user claims:
 This ensures:
 - Fair distribution based on deposit amount
 - Users can claim anytime
+- Gas-efficient (O(1) per user action)
 
-**Contract Methods:**
-
-| Method | Access | Description |
-|--------|--------|-------------|
-| `createVault()` | Deploy only | Initialize vault with asset IDs and configuration |
-| `optInAssets()` | Creator | Opt vault into required ASAs (requires 200.3 ALGO) |
-| `optIn()` | Any user | User opts into vault to enable deposits |
-| `deposit()` | Opted-in users | Deposit Alpha tokens (paused when yield pending) |
-| `withdraw(amount)` | Depositors | Withdraw Alpha (0 = withdraw all) |
-| `claim()` | Depositors | Claim accumulated project tokens |
-| `swapYield(slippageBps)` | Creator/RareFi | Swap USDC yield to project tokens |
-| `closeOut()` | Depositors | Withdraw all + claim all + leave vault |
-| `claimCreator()` | Creator | Claim creator's fee portion |
-| `getVaultStats()` | Anyone | Read total deposits, yield info, balances |
-| `getPendingYield(user)` | Anyone | Read user's claimable amount |
+**Contract State:**
+- 3 assets: depositAsset (Alpha), yieldAsset (USDC), swapAsset (Project Token)
+- 3 local state variables per user: depositedAmount, userYieldPerToken, earnedYield
 
 
-### OrbitalVault (Orbital Lending)
+### RareFiAlphaCompoundingVault (Auto-Compounding)
 
-**Two-Stage Yield Model:**
+**Yield Distribution Model: Share-Based Accounting**
 
-Stage 1 - Yield Tracking via Rate Appreciation:
+Similar to ERC4626 vaults:
+
 ```
-LST exchange rate increases over time (e.g., 1.0 -> 1.05)
-yieldPerShare tracks this appreciation
-User's unrealized yield = shares * rate_increase
+Share price = totalAlpha / totalShares
+
+On deposit:
+  shares = alphaAmount * totalShares / totalAlpha
+
+On compound:
+  totalAlpha += compoundedAmount (shares stay same)
+  share price increases
+
+On withdraw:
+  alphaAmount = shares * totalAlpha / totalShares
 ```
 
-Stage 2 - Harvest and Convert:
-```
-On harvest:
-  1. Calculate total unrealized yield (in underlying asset)
-  2. Redeem that portion of LST from Orbital
-  3. Swap underlying to project ASA via Tinyman
-  4. Store conversion rate (ASA per underlying)
+This ensures:
+- Automatic compounding without user action
+- Late depositors pay fair share price
+- Simple accounting (1 local state variable)
 
-When user interacts:
-  Convert their unrealized yield to ASA using stored rate
-```
-
-**Contract Methods:**
-
-| Method | Access | Description |
-|--------|--------|-------------|
-| `createVault()` | Deploy only | Initialize with underlying asset, LST, project ASA, protocols |
-| `optInAssets()` | Creator | Opt into assets (requires 200.3 ALGO) |
-| `optIn()` | Any user | User opts into vault |
-| `deposit()` | Opted-in users | Deposit underlying asset (forwarded to Orbital) |
-| `withdraw(amount)` | Depositors | Withdraw underlying (redeemed from Orbital) |
-| `claimYield()` | Depositors | Claim accumulated project tokens |
-| `harvestAndSwap(slippageBps)` | Creator/RareFi | Harvest yield from Orbital, swap to project token |
-| `closeOut()` | Depositors | Full exit (note: unharvested yield may be lost) |
-| `setPaused(bool)` | Creator | Emergency pause |
-| `getVaultStats()` | Anyone | Read vault state |
-| `getUserPosition(user)` | Anyone | Read user's shares, value, pending yield |
+**Contract State:**
+- 2 assets: alphaAsset (Alpha), usdcAsset (USDC)
+- 1 local state variable per user: userShares
 
 ---
 
-## Protocol Integrations
+## Protocol Integration: Tinyman V2
 
-### Tinyman V2 (AMM)
+Both vaults use Tinyman V2 for swaps.
 
-Both vaults use Tinyman V2 for -> Project Token swaps.
-
-**Swap execution:**
-1. Read pool reserves on-chain
+**On-Chain Price Calculation:**
+1. Read pool reserves directly from Tinyman local state
 2. Calculate expected output using AMM formula
 3. Apply slippage tolerance
 4. Execute swap via inner transactions
@@ -212,23 +197,7 @@ Both vaults use Tinyman V2 for -> Project Token swaps.
 - No oracle dependency
 - No off-chain price feeds to trust
 - Swap fails if slippage exceeded
-
-### Orbital Lending (OrbitalVault only)
-
-Orbital is a Compound-style lending protocol on Algorand.
-
-**Integration:**
-- Deposit asset -> Receive LST (e.g., cUSDC, cALGO) at current exchange rate
-- Rate appreciates as interest accrues
-- Redeem LST -> Receive underlying at new (higher) rate
-- Yield = (new_rate - old_rate) * shares
-
-**Supported assets (planned):**
-- USDC/cUSDC (v1)
-- ALGO/cALGO
-- goBTC/cgoBTC
-- goETH/cgoETH
-- Isolated pools (future)
+- Prevents fake quote attacks
 
 ---
 
@@ -240,9 +209,10 @@ Orbital is a Compound-style lending protocol on Algorand.
 |--------|---------------|
 | Deploy vault | Anyone (permissionless) |
 | Configure vault | Creator at deployment only |
-| Trigger swaps/harvests | Creator or RareFi platform |
+| Trigger swaps/compounds | Anyone (permissionless) |
 | Deposit/withdraw | Any opted-in user |
 | Claim yield | Any user with pending yield |
+| Set farm emission rate | Creator or RareFi |
 | Upgrade contract | Nobody (disabled) |
 | Delete contract | Nobody (disabled) |
 
@@ -253,69 +223,64 @@ Orbital is a Compound-style lending protocol on Algorand.
 - **Slippage protection:** Swaps revert if output below minimum
 - **Minimum thresholds:** Prevents dust attacks and unprofitable swaps
 - **Safe math:** 128-bit multiplication prevents overflow
-- **Flash deposit protection:** Prevents yield sniping attacks (see below)
+- **Auto-swap on deposit:** Prevents flash deposit attacks
 
-### Flash Deposit Protection (RareFiVault)
+### Flash Deposit Protection
 
-A critical security feature that prevents "yield sniping" attacks where opportunistic users deposit right before a yield swap to capture rewards they didn't earn.
+A critical security feature that prevents "yield sniping" attacks.
 
 **The Problem:**
-Without protection, when a USDC airdrop arrives at the vault, there's a window before the swap happens. An attacker could:
+Without protection, when a USDC airdrop arrives at the vault, an attacker could:
 1. Monitor the vault for incoming USDC
 2. Deposit a large amount right before the swap
 3. Capture a share of yield they didn't earn
 4. Withdraw immediately after
 
-This dilutes rewards for legitimate long-term depositors.
-
 **The Solution:**
-Deposits are automatically paused when the vault's USDC balance reaches the swap threshold:
-
-```
-On deposit():
-  if (usdcBalance >= minSwapThreshold):
-    REJECT "Deposits paused: yield pending swap"
-```
-
-**How it works:**
-1. USDC airdrop arrives at vault (balance now >= threshold)
-2. New deposits are blocked
-3. RareFi cron job detects pending yield and executes swap
-4. USDC balance returns to 0
-5. Deposits are automatically re-enabled
+When deposit is called and USDC balance >= threshold:
+1. Swap executes FIRST (yield goes to existing depositors)
+2. THEN the new deposit is credited
+3. New depositor cannot capture pre-existing yield
 
 **Benefits:**
-| Benefit | Description |
-|---------|-------------|
-| **Fair yield distribution** | Only users who held during the airdrop period receive yield |
-| **No lock-ups needed** | Protection without requiring time-locked deposits |
-| **Minimal disruption** | Pause is brief (cron job runs frequently), users can still withdraw/claim |
-| **Self-penalizing attack** | If someone sends USDC to trigger pause, it becomes yield for existing depositors |
+- Fair yield distribution to loyal holders
+- No lock-ups needed
+- Minimal disruption (deposit still succeeds)
+- Self-penalizing if attacker sends USDC (becomes yield for others)
 
-**What still works during pause:**
-- Withdrawals (users can always exit)
-- Claiming yield (users can claim anytime)
-- All read operations
+---
 
-### Known Considerations
+## Farm Feature
 
-**Orbital Vault - Unharvested yield on closeOut:**
-If a user closes out before a harvest, any USDC yield accumulated since the last harvest is not converted to ASA. The UI should warn users about this.
+Both vaults support an optional farm bonus that sponsors can fund.
+
+**How it works:**
+1. Anyone can contribute tokens to the farm via `contributeFarm()`
+2. Creator/RareFi sets emission rate (e.g., 10% = 1000 bps)
+3. On each swap/compound, farm bonus is added proportionally:
+   ```
+   farmBonus = min(swapOutput * emissionRate / 10000, farmBalance)
+   totalOutput = swapOutput + farmBonus
+   ```
+4. Farm depletes over time as bonuses are paid out
+
+**Use cases:**
+- Projects can boost yields for their vault
+- Marketing campaigns with enhanced APY
+- Community incentives
 
 ---
 
 ## Fees
 
 ### Vault Creation
-- **Setup fee:** 200 ALGO (paid to RareFi)
-- **MBR:** 0.3 ALGO (stays in contract for asset opt-ins)
+- **MBR:** 5.4-5.5 ALGO (stays in contract for asset opt-ins and operations)
 
 ### Yield Fees
 - **Creator fee:** 0-100% of yield (set at deployment)
-- **Example:** If creator fee is 10% and 1000 USDC yield is swapped:
-  - 100 USDC worth of project tokens -> Creator
-  - 900 USDC worth of project tokens -> Users
-
+- **Example:** If creator fee is 20% and 100 USDC yield is swapped:
+  - 20 USDC worth of output -> Creator
+  - 80 USDC worth of output -> Users
 
 ---
 
@@ -324,9 +289,9 @@ If a user closes out before a harvest, any USDC yield accumulated since the last
 ### For Projects (Vault Creators)
 
 1. **Prepare:**
-   - Have your project ASA created
-   - Ensure Tinyman pool exists (IBT/YourToken)
-   - Prepare 200.3 ALGO for setup
+   - Have your project ASA created (for RareFiVault)
+   - Ensure Tinyman pool exists (USDC/YourToken or USDC/Alpha)
+   - Prepare 5.5 ALGO for setup
 
 2. **Deploy:**
    - Call `createVault()` with configuration
@@ -334,23 +299,23 @@ If a user closes out before a harvest, any USDC yield accumulated since the last
 
 3. **Operate:**
    - Monitor for yield accumulation
-   - Call `swapYield()` / `harvestAndSwap()` when threshold met
+   - Call `swapYield()` / `compoundYield()` when threshold met
    - Claim creator fees periodically
 
 ### For Users
 
-1. **Choose a vault** for a project you like
+1. **Choose a vault** for a project you like (or compounding vault)
 2. **Opt in** to the vault contract
-3. **Deposit** Alpha or USDC
+3. **Deposit** Alpha tokens
 4. **Wait** for yield to accumulate
-5. **Claim** project tokens whenever you want
+5. **Claim** tokens (RareFiVault) or **withdraw** with gains (Compounding)
 6. **Withdraw** principal whenever you want
 
 ---
 
-## Example Scenario
+## Example Scenarios
 
-**Alpha Arcade Vault for ProjectX:**
+### Scenario 1: RareFiVault for ProjectX
 
 1. Alice deposits 10,000 Alpha (worth $1,000)
 2. Bob deposits 40,000 Alpha (worth $4,000)
@@ -368,40 +333,60 @@ If a user closes out before a harvest, any USDC yield accumulated since the last
      - Bob (80%): 360 ProjectX
 
 7. Alice and Bob claim their tokens whenever convenient
-8. Next week, another airdrop arrives - cycle repeats
 
-**Result:** ProjectX gets recurring buy pressure from Alpha Arcade yield. Users earn ProjectX without selling anything.
+**Result:** ProjectX gets recurring buy pressure from Alpha Arcade yield.
+
+
+### Scenario 2: RareFiAlphaCompoundingVault
+
+1. Alice deposits 1,000 Alpha
+   - Receives 1,000 shares (1:1 initial ratio)
+   - Share price: 1.0
+
+2. Alpha Arcade airdrops 100 USDC to the vault
+
+3. Compound triggered: 100 USDC -> 95 Alpha (after fees)
+   - Creator fee (20%): 19 Alpha
+   - Vault receives: 76 Alpha
+   - New totalAlpha: 1,076
+   - Share price: 1.076
+
+4. Bob deposits 500 Alpha
+   - Receives: 500 / 1.076 = 464.7 shares
+   - Bob did NOT capture Alice's yield
+
+5. More compounds happen, share price rises to 1.2
+
+6. Alice withdraws all 1,000 shares
+   - Receives: 1,000 * 1.2 = 1,200 Alpha
+   - Profit: 200 Alpha from compounding
+
+**Result:** Alice grew her Alpha position by 20% through automatic compounding.
 
 ---
 
-## Roadmap
+## Comparison: RareFiVault vs RareFiAlphaCompoundingVault
 
-### Current (v1)
-- Alpha Arcade vault (RareFiVault)
-- Orbital Lending vault for USDC (OrbitalVault) - more complex
-- Tinyman V2 swap integration 
-
-### Near-term
-- Orbital vaults for other assets (ALGO, goBTC, goETH)
-- Isolated lending pool Folks
-
-### Future
-- Additional yield sources 
-- Multi-project vaults (yield split across multiple tokens)
+| Feature | RareFiVault | RareFiAlphaCompoundingVault |
+|---------|-------------|----------------------------|
+| **Assets** | 3 (Alpha, USDC, Project) | 2 (Alpha, USDC) |
+| **Yield Token** | Project's ASA | Alpha (same as deposit) |
+| **Accounting** | Yield-per-token accumulator | Share-based |
+| **Yield Collection** | Manual claim required | Auto-compounded |
+| **Share Price** | N/A | Increases over time |
+| **Local State** | 3 variables | 1 variable |
+| **Use Case** | Earn project tokens | Grow Alpha position |
 
 ---
 
-## Summary
+## Contracts
 
-RareFi routes yield into project tokens. Users keep their principal safe while automatically earning tokens from projects they support. Projects get continuous, organic buying pressure for their ASA - funded by real yield flowing through the Algorand ecosystem.
-
-**Contracts:**
-- `RareFiVault.algo.ts` - Alpha Arcade yield -> Project tokens
-- `OrbitalVault.algo.ts` - Orbital lending yield -> Project tokens (USDC first, then other assets)
+- `RareFiVault.algo.ts` - Alpha yield -> Project tokens
+- `RareFiAlphaCompoundingVault.algo.ts` - Alpha yield -> More Alpha (auto-compound)
+- `MockTinymanPool.algo.ts` - Test mock for Tinyman V2
 
 **Integrations:**
 - Tinyman V2 (swaps)
-- Orbital Lending (OrbitalVault)
-- Alpha Arcade (RareFiVault)
+- Alpha Arcade (yield source)
 
 **Status:** Smart contracts complete and tested on localnet. Ready for testnet deployment.

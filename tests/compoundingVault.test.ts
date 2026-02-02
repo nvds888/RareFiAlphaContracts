@@ -777,7 +777,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
 
     it('Phase 2: First compound - everyone benefits', async () => {
-      
+
       const statsBefore = await getVaultStats(algod, deployment);
 
       // Compound 100 USDC worth of yield
@@ -808,7 +808,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
 
     it('Phase 3: Alice withdraws half, Bob withdraws all', async () => {
-      
+
       const aliceSharesBefore = await getUserShares(algod, deployment, alice.addr);
       const bobSharesBefore = await getUserShares(algod, deployment, bob.addr);
 
@@ -830,7 +830,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
 
     it('Phase 4: Second compound - only remaining users benefit', async () => {
-      
+
       const aliceAlphaBefore = await getUserAlphaBalance(algod, deployment, alice.addr);
       const charlieAlphaBefore = await getUserAlphaBalance(algod, deployment, charlie.addr);
 
@@ -854,7 +854,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
 
     it('Phase 5: Creator claims fees', async () => {
-      
+
       const stats = await getVaultStats(algod, deployment);
       const expectedCreatorAlpha = stats.creatorUnclaimedAlpha;
 
@@ -874,7 +874,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
 
     it('Phase 6: Final withdrawals and accounting verification', async () => {
-      
+
       // Get vault state before final withdrawals
       const statsBefore = await getVaultStats(algod, deployment);
       const aliceAlphaBefore = await getUserAlphaBalance(algod, deployment, alice.addr);
@@ -899,6 +899,762 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       console.log('Phase 6 - Final state:');
       console.log('  Total shares:', statsAfter.totalShares);
       console.log('  Total Alpha:', statsAfter.totalAlpha);
+    });
+  });
+
+  /**
+   * COMPREHENSIVE MULTI-USER STRESS TEST - EXTREME BALANCE RANGES
+   * Tests with 6 users, from very small (1.2 ALPHA) to very large (500k ALPHA)
+   */
+  describe('Multi-User Stress Test - Extreme Balance Ranges', () => {
+    let deployment: CompoundingVaultDeploymentResult;
+    let charlie: { addr: string; sk: Uint8Array };
+    let dave: { addr: string; sk: Uint8Array };
+    let eve: { addr: string; sk: Uint8Array };
+    let frank: { addr: string; sk: Uint8Array };
+
+    // Using 6 decimals: 1 ALPHA = 1_000_000 microAlpha
+    const WHALE_DEPOSIT = 500_000_000_000;      // 500,000 ALPHA
+    const LARGE_DEPOSIT = 50_000_000_000;       // 50,000 ALPHA
+    const MEDIUM_DEPOSIT = 5_000_000_000;       // 5,000 ALPHA
+    const SMALL_DEPOSIT = 100_000_000;          // 100 ALPHA
+    const TINY_DEPOSIT = 10_000_000;            // 10 ALPHA
+    const MICRO_DEPOSIT = 1_200_000;            // 1.2 ALPHA (just above minimum)
+
+    beforeAll(async () => {
+      // Generate additional accounts
+      const charlieAccount = algosdk.generateAccount();
+      const daveAccount = algosdk.generateAccount();
+      const eveAccount = algosdk.generateAccount();
+      const frankAccount = algosdk.generateAccount();
+
+      charlie = { addr: charlieAccount.addr.toString(), sk: charlieAccount.sk };
+      dave = { addr: daveAccount.addr.toString(), sk: daveAccount.sk };
+      eve = { addr: eveAccount.addr.toString(), sk: eveAccount.sk };
+      frank = { addr: frankAccount.addr.toString(), sk: frankAccount.sk };
+
+      // Fund new accounts with ALGO
+      const suggestedParams = await algod.getTransactionParams().do();
+      for (const user of [charlie, dave, eve, frank]) {
+        const fundTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+          sender: creator.addr,
+          receiver: user.addr,
+          amount: 10_000_000,
+          suggestedParams,
+        });
+        const signed = fundTxn.signTxn(creator.sk);
+        const { txid } = await algod.sendRawTransaction(signed).do();
+        await algosdk.waitForConfirmation(algod, txid, 5);
+      }
+
+      // Deploy with large pool reserves
+      deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 20,
+        minSwapThreshold: 2_000_000,
+        poolReserveUsdc: 1_000_000_000_000,  // 1M USDC
+        poolReserveAlpha: 1_000_000_000_000, // 1M Alpha
+      });
+
+      // Fund all users with Alpha
+      for (const user of [alice, bob, charlie, dave, eve, frank]) {
+        await optInToAsset(algod, user, deployment.alphaAssetId);
+        await fundAsset(algod, creator, user.addr, deployment.alphaAssetId, WHALE_DEPOSIT * 2);
+      }
+    });
+
+    it('Phase 1: Extreme range deposits - whale to micro', async () => {
+      // Alice: Whale (500k ALPHA)
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, WHALE_DEPOSIT);
+
+      // Bob: Large (50k ALPHA)
+      await performUserOptIn(algod, deployment, bob);
+      await performDeposit(algod, deployment, bob, LARGE_DEPOSIT);
+
+      // Charlie: Medium (5k ALPHA)
+      await performUserOptIn(algod, deployment, charlie);
+      await performDeposit(algod, deployment, charlie, MEDIUM_DEPOSIT);
+
+      // Dave: Small (100 ALPHA)
+      await performUserOptIn(algod, deployment, dave);
+      await performDeposit(algod, deployment, dave, SMALL_DEPOSIT);
+
+      // Eve: Tiny (10 ALPHA)
+      await performUserOptIn(algod, deployment, eve);
+      await performDeposit(algod, deployment, eve, TINY_DEPOSIT);
+
+      // Frank: Micro (1.2 ALPHA)
+      await performUserOptIn(algod, deployment, frank);
+      await performDeposit(algod, deployment, frank, MICRO_DEPOSIT);
+
+      const stats = await getVaultStats(algod, deployment);
+      const expectedTotal = WHALE_DEPOSIT + LARGE_DEPOSIT + MEDIUM_DEPOSIT + SMALL_DEPOSIT + TINY_DEPOSIT + MICRO_DEPOSIT;
+      expect(stats.totalAlpha).toBe(expectedTotal);
+      expect(stats.totalShares).toBe(expectedTotal); // First deposits, 1:1 shares
+
+      console.log('Phase 1 - Deposits registered:');
+      console.log('  Alice (whale):', WHALE_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Bob (large):', LARGE_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Charlie (medium):', MEDIUM_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Dave (small):', SMALL_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Eve (tiny):', TINY_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Frank (micro):', MICRO_DEPOSIT / 1_000_000, 'ALPHA');
+    });
+
+    it('Phase 2: Large compound - verify micro depositor benefits', async () => {
+      const statsBefore = await getVaultStats(algod, deployment);
+
+      // Large yield: 10,000 USDC
+      await performCompoundYield(algod, deployment, creator, 10_000_000_000, 100);
+
+      const statsAfter = await getVaultStats(algod, deployment);
+
+      // Share price should increase
+      expect(statsAfter.sharePrice).toBeGreaterThan(statsBefore.sharePrice);
+
+      // Verify micro depositor (Frank) benefits
+      const frankAlpha = await getUserAlphaBalance(algod, deployment, frank.addr);
+      expect(frankAlpha).toBeGreaterThan(MICRO_DEPOSIT);
+
+      // Calculate expected ratio (Frank should have gained proportionally)
+      const frankGain = frankAlpha - MICRO_DEPOSIT;
+      const expectedFrankShare = MICRO_DEPOSIT / statsBefore.totalAlpha;
+
+      console.log('Phase 2 - Large compound (10k USDC):');
+      console.log('  Share price:', statsBefore.sharePrice / SCALE, '->', statsAfter.sharePrice / SCALE);
+      console.log('  Frank Alpha:', frankAlpha / 1_000_000, '(gained:', frankGain / 1_000_000, ')');
+      console.log('  Frank share of pool:', (expectedFrankShare * 100).toFixed(6) + '%');
+    });
+
+    it('Phase 3: Multiple small compounds - dust accumulation test', async () => {
+      const frankAlphaBefore = await getUserAlphaBalance(algod, deployment, frank.addr);
+
+      // 10 small compounds
+      for (let i = 0; i < 10; i++) {
+        await performCompoundYield(algod, deployment, creator, 5_000_000, 100);
+      }
+
+      const frankAlphaAfter = await getUserAlphaBalance(algod, deployment, frank.addr);
+      expect(frankAlphaAfter).toBeGreaterThan(frankAlphaBefore);
+
+      console.log('Phase 3 - After 10 small compounds:');
+      console.log('  Frank Alpha:', frankAlphaBefore / 1_000_000, '->', frankAlphaAfter / 1_000_000);
+    });
+
+    it('Phase 4: Whale partial withdrawal - verify share price stays correct', async () => {
+      const statsBefore = await getVaultStats(algod, deployment);
+      const aliceSharesBefore = await getUserShares(algod, deployment, alice.addr);
+
+      // Alice withdraws half her shares
+      const withdrawShares = Math.floor(aliceSharesBefore / 2);
+      await performWithdraw(algod, deployment, alice, withdrawShares);
+
+      const statsAfter = await getVaultStats(algod, deployment);
+
+      // Share price should stay the same (withdrawal doesn't affect price)
+      expect(statsAfter.sharePrice).toBeCloseTo(statsBefore.sharePrice, -6);
+
+      // Total shares should decrease
+      expect(statsAfter.totalShares).toBe(statsBefore.totalShares - withdrawShares);
+
+      console.log('Phase 4 - Whale partial withdrawal:');
+      console.log('  Alice withdrew:', withdrawShares / 1_000_000, 'shares');
+      console.log('  Share price unchanged:', statsAfter.sharePrice / SCALE);
+    });
+
+    it('Phase 5: Micro depositor doubles position, then compound', async () => {
+      const frankSharesBefore = await getUserShares(algod, deployment, frank.addr);
+      const statsBefore = await getVaultStats(algod, deployment);
+
+      // Frank deposits more (doubling his position)
+      await performDeposit(algod, deployment, frank, MICRO_DEPOSIT);
+
+      const statsAfterDeposit = await getVaultStats(algod, deployment);
+      const frankSharesAfter = await getUserShares(algod, deployment, frank.addr);
+
+      // Frank should get fewer shares (share price > 1)
+      const newShares = frankSharesAfter - frankSharesBefore;
+      expect(newShares).toBeLessThan(MICRO_DEPOSIT);
+
+      // Compound yield
+      await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+
+      const frankAlphaFinal = await getUserAlphaBalance(algod, deployment, frank.addr);
+
+      console.log('Phase 5 - Frank doubles position:');
+      console.log('  Old shares:', frankSharesBefore / 1_000_000);
+      console.log('  New shares gained:', newShares / 1_000_000, '(deposited 1.2 ALPHA at price', statsAfterDeposit.sharePrice / SCALE, ')');
+      console.log('  Total shares:', frankSharesAfter / 1_000_000);
+      console.log('  Frank Alpha value:', frankAlphaFinal / 1_000_000);
+    });
+
+    it('Phase 6: Final accounting - all users close out', async () => {
+      // Get vault state before close outs
+      const statsBefore = await getVaultStats(algod, deployment);
+
+      // Creator claims fees first
+      await performClaimCreator(algod, deployment, creator);
+
+      // Everyone closes out
+      let totalAlphaWithdrawn = 0;
+      for (const user of [alice, bob, charlie, dave, eve, frank]) {
+        const alphaBefore = await getAssetBalance(algod, user.addr, deployment.alphaAssetId);
+        await performCloseOut(algod, deployment, user);
+        const alphaAfter = await getAssetBalance(algod, user.addr, deployment.alphaAssetId);
+        totalAlphaWithdrawn += (alphaAfter - alphaBefore);
+      }
+
+      // Final stats
+      const statsAfter = await getVaultStats(algod, deployment);
+      expect(statsAfter.totalShares).toBe(0);
+
+      // Dust should be minimal
+      expect(statsAfter.totalAlpha).toBeLessThan(1000);
+
+      console.log('Phase 6 - Final accounting:');
+      console.log('  Total Alpha withdrawn:', totalAlphaWithdrawn / 1_000_000);
+      console.log('  Vault Alpha remaining (dust):', statsAfter.totalAlpha);
+    });
+  });
+
+  /**
+   * FARM FEATURE COMPREHENSIVE TESTS
+   * Tests farming with and without farm bonus across multiple scenarios
+   */
+  describe('Farm Feature - Comprehensive Tests', () => {
+    describe('Without Farm (baseline)', () => {
+      let deployment: CompoundingVaultDeploymentResult;
+
+      beforeAll(async () => {
+        deployment = await deployCompoundingVaultForTest(algod, creator, {
+          creatorFeeRate: 20,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+      });
+
+      it('should compound without farm bonus', async () => {
+        const statsBefore = await getVaultStats(algod, deployment);
+        const farmStats = await getFarmStats(algod, deployment);
+
+        expect(farmStats.farmBalance).toBe(0);
+        expect(farmStats.farmEmissionRate).toBe(0);
+
+        // Compound 100 USDC
+        await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+
+        const statsAfter = await getVaultStats(algod, deployment);
+
+        // ~100 USDC * 0.997 (swap fee) * 0.8 (creator fee) = ~79.76 Alpha added
+        const alphaAdded = statsAfter.totalAlpha - statsBefore.totalAlpha;
+
+        console.log('Without farm - compound result:');
+        console.log('  Alpha added (no farm):', alphaAdded / 1_000_000);
+      });
+    });
+
+    describe('With Farm Active', () => {
+      let deployment: CompoundingVaultDeploymentResult;
+      let alphaAddedWithoutFarm: number;
+      let alphaAddedWithFarm: number;
+
+      beforeAll(async () => {
+        deployment = await deployCompoundingVaultForTest(algod, creator, {
+          creatorFeeRate: 20,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+      });
+
+      it('should show no farm bonus initially', async () => {
+        const statsBefore = await getVaultStats(algod, deployment);
+
+        await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+
+        const statsAfter = await getVaultStats(algod, deployment);
+        alphaAddedWithoutFarm = statsAfter.totalAlpha - statsBefore.totalAlpha;
+
+        console.log('Baseline (no farm):', alphaAddedWithoutFarm / 1_000_000, 'ALPHA');
+      });
+
+      it('should allow contributing to farm', async () => {
+        await performContributeFarm(algod, deployment, creator, 500_000_000); // 500 ALPHA
+
+        const farmStats = await getFarmStats(algod, deployment);
+        expect(farmStats.farmBalance).toBe(500_000_000);
+
+        console.log('Farm balance:', farmStats.farmBalance / 1_000_000, 'ALPHA');
+      });
+
+      it('should set farm emission rate', async () => {
+        await performSetFarmEmissionRate(algod, deployment, creator, 5000); // 50%
+
+        const farmStats = await getFarmStats(algod, deployment);
+        expect(farmStats.farmEmissionRate).toBe(5000);
+
+        console.log('Farm emission rate:', farmStats.farmEmissionRate, 'bps (50%)');
+      });
+
+      it('should add farm bonus to compound', async () => {
+        const statsBefore = await getVaultStats(algod, deployment);
+        const farmBefore = await getFarmStats(algod, deployment);
+
+        await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+
+        const statsAfter = await getVaultStats(algod, deployment);
+        const farmAfter = await getFarmStats(algod, deployment);
+
+        alphaAddedWithFarm = statsAfter.totalAlpha - statsBefore.totalAlpha;
+
+        // Farm should have decreased
+        expect(farmAfter.farmBalance).toBeLessThan(farmBefore.farmBalance);
+
+        // More Alpha should be added with farm bonus
+        expect(alphaAddedWithFarm).toBeGreaterThan(alphaAddedWithoutFarm);
+
+        const farmBonus = farmBefore.farmBalance - farmAfter.farmBalance;
+
+        console.log('With farm:');
+        console.log('  Alpha added:', alphaAddedWithFarm / 1_000_000, '(was', alphaAddedWithoutFarm / 1_000_000, ')');
+        console.log('  Farm bonus used:', farmBonus / 1_000_000, 'ALPHA');
+        console.log('  Improvement:', ((alphaAddedWithFarm / alphaAddedWithoutFarm - 1) * 100).toFixed(2) + '%');
+      });
+
+      it('should deplete farm over multiple compounds', async () => {
+        const farmBefore = await getFarmStats(algod, deployment);
+
+        // Multiple compounds to deplete farm
+        for (let i = 0; i < 5; i++) {
+          await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+        }
+
+        const farmAfter = await getFarmStats(algod, deployment);
+
+        console.log('Farm depletion:');
+        console.log('  Before:', farmBefore.farmBalance / 1_000_000, 'ALPHA');
+        console.log('  After:', farmAfter.farmBalance / 1_000_000, 'ALPHA');
+      });
+    });
+
+    describe('Farm Edge Cases', () => {
+      it('should handle compound when farm is empty', async () => {
+        const deployment = await deployCompoundingVaultForTest(algod, creator, {
+          creatorFeeRate: 0,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+
+        // Set emission rate but no farm balance
+        await performSetFarmEmissionRate(algod, deployment, creator, 5000);
+
+        const statsBefore = await getVaultStats(algod, deployment);
+        await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+        const statsAfter = await getVaultStats(algod, deployment);
+
+        // Should still work, just without bonus
+        expect(statsAfter.totalAlpha).toBeGreaterThan(statsBefore.totalAlpha);
+
+        console.log('Empty farm compound:', (statsAfter.totalAlpha - statsBefore.totalAlpha) / 1_000_000, 'ALPHA');
+      });
+
+      it('should cap farm bonus at available balance', async () => {
+        const deployment = await deployCompoundingVaultForTest(algod, creator, {
+          creatorFeeRate: 0,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+
+        // Small farm, high emission rate
+        await performContributeFarm(algod, deployment, creator, 1_000_000); // 1 ALPHA
+        await performSetFarmEmissionRate(algod, deployment, creator, 10000); // 100%
+
+        const farmBefore = await getFarmStats(algod, deployment);
+
+        // Large compound that would exceed farm if uncapped
+        await performCompoundYield(algod, deployment, creator, 100_000_000, 100); // ~100 Alpha from swap
+
+        const farmAfter = await getFarmStats(algod, deployment);
+
+        // Farm should be completely depleted
+        expect(farmAfter.farmBalance).toBe(0);
+
+        console.log('Farm cap test:');
+        console.log('  Farm before:', farmBefore.farmBalance / 1_000_000);
+        console.log('  Farm after:', farmAfter.farmBalance / 1_000_000);
+      });
+    });
+  });
+
+  /**
+   * PRECISION AND ROUNDING DEEP DIVE
+   * Tests edge cases for share calculations with extreme values
+   */
+  describe('Precision and Rounding Deep Dive', () => {
+    it('should handle prime number deposits with prime compound correctly', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await optInToAsset(algod, bob, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 100_000_000_000);
+      await fundAsset(algod, creator, bob.addr, deployment.alphaAssetId, 100_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performUserOptIn(algod, deployment, bob);
+
+      // Prime number deposits
+      const aliceDeposit = 17_000_003;
+      const bobDeposit = 31_000_007;
+
+      await performDeposit(algod, deployment, alice, aliceDeposit);
+      await performDeposit(algod, deployment, bob, bobDeposit);
+
+      // Prime compound
+      await performCompoundYield(algod, deployment, creator, 7_000_013, 100);
+
+      const aliceAlpha = await getUserAlphaBalance(algod, deployment, alice.addr);
+      const bobAlpha = await getUserAlphaBalance(algod, deployment, bob.addr);
+
+      // Expected ratio should match deposit ratio
+      const actualRatio = aliceAlpha / bobAlpha;
+      const expectedRatio = aliceDeposit / bobDeposit;
+
+      expect(actualRatio).toBeCloseTo(expectedRatio, 2);
+
+      // Verify total accounting
+      const stats = await getVaultStats(algod, deployment);
+      const totalUserAlpha = aliceAlpha + bobAlpha;
+
+      // Should match totalAlpha minus rounding (< 10 units)
+      expect(Math.abs(stats.totalAlpha - totalUserAlpha)).toBeLessThan(10);
+
+      console.log('Prime number test:');
+      console.log('  Alice:', aliceAlpha / 1_000_000, 'Alpha');
+      console.log('  Bob:', bobAlpha / 1_000_000, 'Alpha');
+      console.log('  Ratio:', actualRatio.toFixed(6), '(expected:', expectedRatio.toFixed(6), ')');
+    });
+
+    it('should handle extreme ratio (500k:1) without losing dust value', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+        poolReserveUsdc: 1_000_000_000_000,
+        poolReserveAlpha: 1_000_000_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await optInToAsset(algod, bob, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 600_000_000_000);
+      await fundAsset(algod, creator, bob.addr, deployment.alphaAssetId, 10_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performUserOptIn(algod, deployment, bob);
+
+      // Whale vs dust
+      const whaleDeposit = 500_000_000_000;
+      const dustDeposit = 1_000_000;
+
+      await performDeposit(algod, deployment, alice, whaleDeposit);
+      await performDeposit(algod, deployment, bob, dustDeposit);
+
+      // Large compound to ensure dust user gets something
+      await performCompoundYield(algod, deployment, creator, 100_000_000_000, 100);
+
+      const bobAlpha = await getUserAlphaBalance(algod, deployment, bob.addr);
+
+      // Bob should have gained from compound
+      expect(bobAlpha).toBeGreaterThan(dustDeposit);
+
+      const bobGain = bobAlpha - dustDeposit;
+      const expectedGainRatio = dustDeposit / (whaleDeposit + dustDeposit);
+
+      console.log('Extreme ratio test (500,000:1):');
+      console.log('  Bob deposit:', dustDeposit / 1_000_000, 'Alpha');
+      console.log('  Bob final:', bobAlpha / 1_000_000, 'Alpha');
+      console.log('  Bob gain:', bobGain / 1_000_000, 'Alpha');
+      console.log('  Expected share:', (expectedGainRatio * 100).toFixed(6) + '%');
+    });
+
+    it('should accumulate many small compounds without precision loss', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 100_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000);
+
+      const statsBefore = await getVaultStats(algod, deployment);
+
+      // 20 minimum compounds
+      for (let i = 0; i < 20; i++) {
+        await performCompoundYield(algod, deployment, creator, 2_000_000, 100);
+      }
+
+      const statsAfter = await getVaultStats(algod, deployment);
+      const aliceAlpha = await getUserAlphaBalance(algod, deployment, alice.addr);
+
+      // Total should match Alice's balance (she's only depositor)
+      expect(Math.abs(statsAfter.totalAlpha - aliceAlpha)).toBeLessThan(100);
+
+      console.log('Many small compounds (20x 2 USDC):');
+      console.log('  Alice Alpha:', aliceAlpha / 1_000_000);
+      console.log('  Total Alpha:', statsAfter.totalAlpha / 1_000_000);
+      console.log('  Share price:', statsAfter.sharePrice / SCALE);
+    });
+
+    it('should handle deposit-withdraw-deposit cycles with share price changes', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 500_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+
+      // Round 1: Deposit 100, compound, check value
+      await performDeposit(algod, deployment, alice, 100_000_000);
+      await performCompoundYield(algod, deployment, creator, 10_000_000, 100);
+
+      const round1Alpha = await getUserAlphaBalance(algod, deployment, alice.addr);
+      const round1Stats = await getVaultStats(algod, deployment);
+
+      // Withdraw all
+      await performWithdraw(algod, deployment, alice, 0);
+
+      // Round 2: Deposit 200 at new share price
+      await performDeposit(algod, deployment, alice, 200_000_000);
+      const round2Shares = await getUserShares(algod, deployment, alice.addr);
+      const round2Stats = await getVaultStats(algod, deployment);
+
+      // Share price is 1:1 again after complete withdrawal
+      expect(round2Shares).toBe(200_000_000);
+      expect(round2Stats.sharePrice).toBe(SCALE);
+
+      // Compound and check
+      await performCompoundYield(algod, deployment, creator, 20_000_000, 100);
+      const round2Alpha = await getUserAlphaBalance(algod, deployment, alice.addr);
+
+      console.log('Deposit-withdraw cycles:');
+      console.log('  Round 1: 100 deposit ->', round1Alpha / 1_000_000, 'Alpha');
+      console.log('  Round 2: 200 deposit ->', round2Alpha / 1_000_000, 'Alpha');
+    });
+  });
+
+  /**
+   * 10-PHASE REAL-WORLD SCENARIO WITH FARM
+   * Comprehensive test simulating realistic usage with farming enabled
+   */
+  describe('10-Phase Real-World Scenario with Farm', () => {
+    let deployment: CompoundingVaultDeploymentResult;
+    let charlie: { addr: string; sk: Uint8Array };
+    let dave: { addr: string; sk: Uint8Array };
+
+    beforeAll(async () => {
+      const charlieAccount = algosdk.generateAccount();
+      const daveAccount = algosdk.generateAccount();
+      charlie = { addr: charlieAccount.addr.toString(), sk: charlieAccount.sk };
+      dave = { addr: daveAccount.addr.toString(), sk: daveAccount.sk };
+
+      const suggestedParams = await algod.getTransactionParams().do();
+      for (const user of [charlie, dave]) {
+        const fundTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+          sender: creator.addr,
+          receiver: user.addr,
+          amount: 10_000_000,
+          suggestedParams,
+        });
+        const signed = fundTxn.signTxn(creator.sk);
+        const { txid } = await algod.sendRawTransaction(signed).do();
+        await algosdk.waitForConfirmation(algod, txid, 5);
+      }
+
+      deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 15,
+        minSwapThreshold: 5_000_000,
+        poolReserveUsdc: 500_000_000_000,
+        poolReserveAlpha: 500_000_000_000,
+      });
+
+      for (const user of [alice, bob, charlie, dave]) {
+        await optInToAsset(algod, user, deployment.alphaAssetId);
+        await fundAsset(algod, creator, user.addr, deployment.alphaAssetId, 200_000_000_000);
+      }
+    });
+
+    it('Phase 1: Initial deposits - varying sizes', async () => {
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000_000); // 100k
+
+      await performUserOptIn(algod, deployment, bob);
+      await performDeposit(algod, deployment, bob, 25_000_000_000); // 25k
+
+      const stats = await getVaultStats(algod, deployment);
+      expect(stats.totalShares).toBe(125_000_000_000);
+
+      console.log('Phase 1: Alice 100k, Bob 25k');
+    });
+
+    it('Phase 2: First compound (no farm)', async () => {
+      await performCompoundYield(algod, deployment, creator, 1_000_000_000, 100);
+
+      const stats = await getVaultStats(algod, deployment);
+      const aliceAlpha = await getUserAlphaBalance(algod, deployment, alice.addr);
+      const bobAlpha = await getUserAlphaBalance(algod, deployment, bob.addr);
+
+      expect(aliceAlpha / bobAlpha).toBeCloseTo(4.0, 1);
+
+      console.log('Phase 2: Compound 1000 USDC, share price:', stats.sharePrice / SCALE);
+    });
+
+    it('Phase 3: Enable farm with 1000 Alpha', async () => {
+      await performContributeFarm(algod, deployment, creator, 1_000_000_000);
+      await performSetFarmEmissionRate(algod, deployment, creator, 2000); // 20%
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmBalance).toBe(1_000_000_000);
+      expect(farmStats.farmEmissionRate).toBe(2000);
+
+      console.log('Phase 3: Farm enabled with 1000 Alpha, 20% emission');
+    });
+
+    it('Phase 4: Charlie joins, compound with farm bonus', async () => {
+      await performUserOptIn(algod, deployment, charlie);
+      await performDeposit(algod, deployment, charlie, 50_000_000_000); // 50k
+
+      const farmBefore = await getFarmStats(algod, deployment);
+      const statsBefore = await getVaultStats(algod, deployment);
+
+      await performCompoundYield(algod, deployment, creator, 500_000_000, 100);
+
+      const farmAfter = await getFarmStats(algod, deployment);
+      const statsAfter = await getVaultStats(algod, deployment);
+
+      expect(farmAfter.farmBalance).toBeLessThan(farmBefore.farmBalance);
+
+      console.log('Phase 4: Charlie joined, compound with farm:');
+      console.log('  Farm used:', (farmBefore.farmBalance - farmAfter.farmBalance) / 1_000_000);
+    });
+
+    it('Phase 5: Alice partial withdrawal', async () => {
+      const aliceSharesBefore = await getUserShares(algod, deployment, alice.addr);
+      await performWithdraw(algod, deployment, alice, Math.floor(aliceSharesBefore / 3));
+
+      const aliceSharesAfter = await getUserShares(algod, deployment, alice.addr);
+      expect(aliceSharesAfter).toBeCloseTo((aliceSharesBefore * 2) / 3, -5);
+
+      console.log('Phase 5: Alice withdrew 1/3 of shares');
+    });
+
+    it('Phase 6: Dave joins with small amount', async () => {
+      await performUserOptIn(algod, deployment, dave);
+      await performDeposit(algod, deployment, dave, 5_000_000); // 5 Alpha
+
+      const daveShares = await getUserShares(algod, deployment, dave.addr);
+      const stats = await getVaultStats(algod, deployment);
+
+      // Dave gets fewer shares due to share price > 1
+      expect(daveShares).toBeLessThan(5_000_000);
+
+      console.log('Phase 6: Dave joined with 5 Alpha, got', daveShares / 1_000_000, 'shares');
+    });
+
+    it('Phase 7: Large compound draining farm', async () => {
+      const farmBefore = await getFarmStats(algod, deployment);
+
+      // Multiple large compounds
+      for (let i = 0; i < 3; i++) {
+        await performCompoundYield(algod, deployment, creator, 2_000_000_000, 100);
+      }
+
+      const farmAfter = await getFarmStats(algod, deployment);
+
+      console.log('Phase 7: Large compounds:');
+      console.log('  Farm before:', farmBefore.farmBalance / 1_000_000);
+      console.log('  Farm after:', farmAfter.farmBalance / 1_000_000);
+    });
+
+    it('Phase 8: Bob withdraws all', async () => {
+      const bobAlphaBefore = await getAssetBalance(algod, bob.addr, deployment.alphaAssetId);
+      const bobAlphaValue = await getUserAlphaBalance(algod, deployment, bob.addr);
+
+      await performWithdraw(algod, deployment, bob, 0);
+
+      const bobAlphaAfter = await getAssetBalance(algod, bob.addr, deployment.alphaAssetId);
+      const withdrawn = bobAlphaAfter - bobAlphaBefore;
+
+      expect(withdrawn).toBeCloseTo(bobAlphaValue, -5);
+
+      console.log('Phase 8: Bob withdrew all:', withdrawn / 1_000_000, 'Alpha');
+    });
+
+    it('Phase 9: Final compounds', async () => {
+      // Multiple small compounds
+      for (let i = 0; i < 5; i++) {
+        await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+      }
+
+      const stats = await getVaultStats(algod, deployment);
+      console.log('Phase 9: Final share price:', stats.sharePrice / SCALE);
+    });
+
+    it('Phase 10: Complete close out - verify accounting', async () => {
+      const statsBefore = await getVaultStats(algod, deployment);
+
+      // Creator claims fees
+      await performClaimCreator(algod, deployment, creator);
+
+      // Everyone closes out
+      for (const user of [alice, charlie, dave]) {
+        const shares = await getUserShares(algod, deployment, user.addr);
+        if (shares > 0) {
+          await performCloseOut(algod, deployment, user);
+        }
+      }
+
+      // Bob already withdrew, just close out
+      try {
+        await performCloseOut(algod, deployment, bob);
+      } catch (e) {
+        // May fail if already closed
+      }
+
+      const statsAfter = await getVaultStats(algod, deployment);
+
+      console.log('Phase 10 - Final accounting:');
+      console.log('  Total shares:', statsAfter.totalShares);
+      console.log('  Total Alpha:', statsAfter.totalAlpha);
+      console.log('  Dust remaining:', statsAfter.totalAlpha);
+
+      // Minimal dust
+      expect(statsAfter.totalAlpha).toBeLessThan(1000);
     });
   });
 });

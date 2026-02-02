@@ -689,3 +689,99 @@ async function getUserLocalState(
 export function getContract(deployment: VaultDeploymentResult): algosdk.ABIContract {
   return new algosdk.ABIContract(deployment.arc56Spec);
 }
+
+// Farm functions
+export async function performContributeFarm(
+  algod: algosdk.Algodv2,
+  deployment: VaultDeploymentResult,
+  contributor: { addr: string | algosdk.Address; sk: Uint8Array },
+  ibusAmount: number,
+) {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const contributorAddr = typeof contributor.addr === 'string' ? contributor.addr : contributor.addr.toString();
+  const signer = algosdk.makeBasicAccountTransactionSigner({
+    sk: contributor.sk,
+    addr: algosdk.decodeAddress(contributorAddr),
+  });
+
+  const atc = new algosdk.AtomicTransactionComposer();
+
+  // Asset transfer first
+  const ibusTransfer = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+    sender: contributorAddr,
+    receiver: deployment.vaultAddress,
+    amount: ibusAmount,
+    assetIndex: deployment.ibusAssetId,
+    suggestedParams,
+  });
+  atc.addTransaction({ txn: ibusTransfer, signer });
+
+  // Then contributeFarm call
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('contributeFarm'),
+    methodArgs: [],
+    sender: contributorAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+    appForeignAssets: [deployment.ibusAssetId],
+  });
+
+  await atc.execute(algod, 5);
+}
+
+export async function performSetFarmEmissionRate(
+  algod: algosdk.Algodv2,
+  deployment: VaultDeploymentResult,
+  sender: { addr: string | algosdk.Address; sk: Uint8Array },
+  emissionRateBps: number,
+) {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const senderAddr = typeof sender.addr === 'string' ? sender.addr : sender.addr.toString();
+  const signer = algosdk.makeBasicAccountTransactionSigner({
+    sk: sender.sk,
+    addr: algosdk.decodeAddress(senderAddr),
+  });
+
+  const atc = new algosdk.AtomicTransactionComposer();
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('setFarmEmissionRate'),
+    methodArgs: [emissionRateBps],
+    sender: senderAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+
+  await atc.execute(algod, 5);
+}
+
+export async function getFarmStats(
+  algod: algosdk.Algodv2,
+  deployment: VaultDeploymentResult,
+): Promise<{
+  farmBalance: number;
+  farmEmissionRate: number;
+}> {
+  const appInfo = await algod.getApplicationByID(deployment.vaultAppId).do();
+  const globalState: Record<string, number> = {};
+
+  for (const kv of appInfo.params?.globalState || []) {
+    let key: string;
+    if (kv.key instanceof Uint8Array) {
+      key = new TextDecoder().decode(kv.key);
+    } else {
+      key = Buffer.from(kv.key as string, 'base64').toString('utf8');
+    }
+    if (kv.value.type === 2) {
+      globalState[key] = safeToNumber(kv.value.uint);
+    }
+  }
+
+  return {
+    farmBalance: globalState['farmBalance'] || 0,
+    farmEmissionRate: globalState['farmEmissionRate'] || 0,
+  };
+}

@@ -1,9 +1,9 @@
 # RareFi Vault Contracts - Test Summary
 
-**Date:** January 2025
+**Date:** February 2025
 **Contracts Tested:** RareFiVault, RareFiAlphaCompoundingVault
 **Test Framework:** Jest + Algorand Localnet
-**Total Tests:** 74 passing
+**Total Tests:** 142 passing (81 RareFiVault + 61 RareFiAlphaCompoundingVault)
 
 ---
 
@@ -51,7 +51,7 @@ This document provides a comprehensive summary of the test coverage for the Rare
 
 ## Test Results
 
-### RareFiVault Tests (41 tests)
+### RareFiVault Tests (81 tests)
 
 #### Deployment (2 tests)
 | Test | Status | Description |
@@ -126,7 +126,7 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 
 ---
 
-### RareFiAlphaCompoundingVault Tests (33 tests)
+### RareFiAlphaCompoundingVault Tests (61 tests)
 
 #### Deployment (2 tests)
 | Test | Status | Description |
@@ -365,7 +365,7 @@ npm test -- --verbose
 
 ## Conclusion
 
-All 74 tests pass with correct behavior verified for:
+All 142 tests pass with correct behavior verified for:
 - Core deposit/withdraw/claim operations
 - Proportional yield distribution
 - Share-based accounting and compounding

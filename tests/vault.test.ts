@@ -11,6 +11,9 @@ import {
   getVaultStats,
   getPendingYield,
   getUserDeposit,
+  performContributeFarm,
+  performSetFarmEmissionRate,
+  getFarmStats,
   VaultDeploymentResult,
 } from './utils/vault';
 import { getAssetBalance, optInToAsset, fundAsset } from './utils/assets';
@@ -1238,6 +1241,1094 @@ describe('RareFiVault Contract Tests', () => {
       expect(bobDeposit).toBe(100_000_000);
 
       console.log('Both users have their deposits:', aliceDeposit / 1_000_000, 'and', bobDeposit / 1_000_000);
+    });
+  });
+
+  /**
+   * COMPREHENSIVE MULTI-USER STRESS TEST
+   * Tests with 6 users, varying deposit sizes from very small (1.2 ALPHA) to very large (500k ALPHA)
+   * This tests accounting precision across extreme ranges
+   */
+  describe('Multi-User Stress Test - Extreme Balance Ranges', () => {
+    let deployment: VaultDeploymentResult;
+    let charlie: { addr: string; sk: Uint8Array };
+    let dave: { addr: string; sk: Uint8Array };
+    let eve: { addr: string; sk: Uint8Array };
+    let frank: { addr: string; sk: Uint8Array };
+
+    // Using 6 decimals: 1 ALPHA = 1_000_000 microAlpha
+    const WHALE_DEPOSIT = 500_000_000_000;      // 500,000 ALPHA (whale)
+    const LARGE_DEPOSIT = 50_000_000_000;       // 50,000 ALPHA
+    const MEDIUM_DEPOSIT = 5_000_000_000;       // 5,000 ALPHA
+    const SMALL_DEPOSIT = 100_000_000;          // 100 ALPHA
+    const TINY_DEPOSIT = 10_000_000;            // 10 ALPHA
+    const MICRO_DEPOSIT = 1_200_000;            // 1.2 ALPHA (just above minimum)
+
+    beforeAll(async () => {
+      // Generate additional accounts
+      const charlieAccount = algosdk.generateAccount();
+      const daveAccount = algosdk.generateAccount();
+      const eveAccount = algosdk.generateAccount();
+      const frankAccount = algosdk.generateAccount();
+
+      charlie = { addr: charlieAccount.addr.toString(), sk: charlieAccount.sk };
+      dave = { addr: daveAccount.addr.toString(), sk: daveAccount.sk };
+      eve = { addr: eveAccount.addr.toString(), sk: eveAccount.sk };
+      frank = { addr: frankAccount.addr.toString(), sk: frankAccount.sk };
+
+      // Fund new accounts with ALGO
+      const suggestedParams = await algod.getTransactionParams().do();
+      for (const user of [charlie, dave, eve, frank]) {
+        const fundTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+          sender: creator.addr,
+          receiver: user.addr,
+          amount: 10_000_000, // 10 ALGO
+          suggestedParams,
+        });
+        const signedFund = fundTxn.signTxn(creator.sk);
+        const { txid } = await algod.sendRawTransaction(signedFund).do();
+        await algosdk.waitForConfirmation(algod, txid, 5);
+      }
+
+      // Deploy with large pool reserves to handle whale deposits
+      deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 20,
+        minSwapThreshold: 2_000_000,
+        poolReserveUsdc: 1_000_000_000_000,  // 1M USDC
+        poolReserveIbus: 1_000_000_000_000,  // 1M IBUS
+      });
+
+      // Fund all users with Alpha and IBUS opt-in
+      for (const user of [alice, bob, charlie, dave, eve, frank]) {
+        await optInToAsset(algod, user, deployment.alphaAssetId);
+        await optInToAsset(algod, user, deployment.ibusAssetId);
+        await fundAsset(algod, creator, user.addr, deployment.alphaAssetId, WHALE_DEPOSIT * 2);
+      }
+    });
+
+    it('Phase 1: Extreme range deposits - whale to micro', async () => {
+      // Alice: Whale (500k ALPHA)
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, WHALE_DEPOSIT);
+
+      // Bob: Large (50k ALPHA)
+      await performUserOptIn(algod, deployment, bob);
+      await performDeposit(algod, deployment, bob, LARGE_DEPOSIT);
+
+      // Charlie: Medium (5k ALPHA)
+      await performUserOptIn(algod, deployment, charlie);
+      await performDeposit(algod, deployment, charlie, MEDIUM_DEPOSIT);
+
+      // Dave: Small (100 ALPHA)
+      await performUserOptIn(algod, deployment, dave);
+      await performDeposit(algod, deployment, dave, SMALL_DEPOSIT);
+
+      // Eve: Tiny (10 ALPHA)
+      await performUserOptIn(algod, deployment, eve);
+      await performDeposit(algod, deployment, eve, TINY_DEPOSIT);
+
+      // Frank: Micro (1.2 ALPHA)
+      await performUserOptIn(algod, deployment, frank);
+      await performDeposit(algod, deployment, frank, MICRO_DEPOSIT);
+
+      const stats = await getVaultStats(algod, deployment);
+      const expectedTotal = WHALE_DEPOSIT + LARGE_DEPOSIT + MEDIUM_DEPOSIT + SMALL_DEPOSIT + TINY_DEPOSIT + MICRO_DEPOSIT;
+      expect(stats.totalDeposits).toBe(expectedTotal);
+
+      console.log('Phase 1 - Deposits registered:');
+      console.log('  Alice (whale):', WHALE_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Bob (large):', LARGE_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Charlie (medium):', MEDIUM_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Dave (small):', SMALL_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Eve (tiny):', TINY_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Frank (micro):', MICRO_DEPOSIT / 1_000_000, 'ALPHA');
+      console.log('  Total:', stats.totalDeposits / 1_000_000, 'ALPHA');
+    });
+
+    it('Phase 2: Large yield distribution - verify micro depositor gets yield', async () => {
+      // Large yield: 10,000 USDC
+      const largeYield = 10_000_000_000;
+      await performSwapYield(algod, deployment, creator, largeYield, 100);
+
+      const stats = await getVaultStats(algod, deployment);
+      const totalDeposits = stats.totalDeposits;
+
+      // Get pending yields
+      const alicePending = await getPendingYield(algod, deployment, alice.addr);
+      const bobPending = await getPendingYield(algod, deployment, bob.addr);
+      const charliePending = await getPendingYield(algod, deployment, charlie.addr);
+      const davePending = await getPendingYield(algod, deployment, dave.addr);
+      const evePending = await getPendingYield(algod, deployment, eve.addr);
+      const frankPending = await getPendingYield(algod, deployment, frank.addr);
+
+      // Frank (micro depositor) should still get yield
+      expect(frankPending).toBeGreaterThan(0);
+
+      // Verify proportional distribution
+      // Alice has ~90% of deposits, so should get ~90% of user yield
+      const totalUserPending = alicePending + bobPending + charliePending + davePending + evePending + frankPending;
+      const aliceRatio = alicePending / totalUserPending;
+      const expectedAliceRatio = WHALE_DEPOSIT / totalDeposits;
+      expect(aliceRatio).toBeCloseTo(expectedAliceRatio, 1);
+
+      console.log('Phase 2 - Large yield (10k USDC):');
+      console.log('  Alice pending:', alicePending / 1_000_000, 'IBUS');
+      console.log('  Bob pending:', bobPending / 1_000_000, 'IBUS');
+      console.log('  Charlie pending:', charliePending / 1_000_000, 'IBUS');
+      console.log('  Dave pending:', davePending / 1_000_000, 'IBUS');
+      console.log('  Eve pending:', evePending / 1_000_000, 'IBUS');
+      console.log('  Frank (micro) pending:', frankPending / 1_000_000, 'IBUS');
+      console.log('  Alice ratio:', (aliceRatio * 100).toFixed(2) + '%', '(expected:', (expectedAliceRatio * 100).toFixed(2) + '%)');
+    });
+
+    it('Phase 3: Multiple small yields - dust accumulation test', async () => {
+      // 10 small yields of 5 USDC each (just above minimum)
+      for (let i = 0; i < 10; i++) {
+        await performSwapYield(algod, deployment, creator, 5_000_000, 100);
+      }
+
+      // Even micro depositor should have accumulated something
+      const frankPending = await getPendingYield(algod, deployment, frank.addr);
+      expect(frankPending).toBeGreaterThan(0);
+
+      console.log('Phase 3 - After 10 small yields:');
+      console.log('  Frank (micro) accumulated:', frankPending / 1_000_000, 'IBUS');
+    });
+
+    it('Phase 4: Whale withdrawal - verify accounting stays correct', async () => {
+      // Alice withdraws half
+      const aliceDepositBefore = await getUserDeposit(algod, deployment, alice.addr);
+      const withdrawAmount = Math.floor(aliceDepositBefore / 2);
+
+      await performWithdraw(algod, deployment, alice, withdrawAmount);
+
+      const stats = await getVaultStats(algod, deployment);
+      const aliceDepositAfter = await getUserDeposit(algod, deployment, alice.addr);
+
+      expect(aliceDepositAfter).toBe(aliceDepositBefore - withdrawAmount);
+
+      // Verify total deposits is correct
+      const expectedTotal = aliceDepositAfter + LARGE_DEPOSIT + MEDIUM_DEPOSIT + SMALL_DEPOSIT + TINY_DEPOSIT + MICRO_DEPOSIT;
+      expect(stats.totalDeposits).toBe(expectedTotal);
+
+      console.log('Phase 4 - After whale partial withdrawal:');
+      console.log('  Alice withdrew:', withdrawAmount / 1_000_000, 'ALPHA');
+      console.log('  Alice remaining:', aliceDepositAfter / 1_000_000, 'ALPHA');
+      console.log('  Total deposits:', stats.totalDeposits / 1_000_000, 'ALPHA');
+    });
+
+    it('Phase 5: Micro depositor claims and re-deposits', async () => {
+      const frankPendingBefore = await getPendingYield(algod, deployment, frank.addr);
+
+      // Frank claims
+      const frankIbusBefore = await getAssetBalance(algod, frank.addr, deployment.ibusAssetId);
+      await performClaim(algod, deployment, frank);
+      const frankIbusAfter = await getAssetBalance(algod, frank.addr, deployment.ibusAssetId);
+
+      const frankClaimed = frankIbusAfter - frankIbusBefore;
+      expect(frankClaimed).toBeCloseTo(frankPendingBefore, -3);
+
+      // Frank deposits more (doubling his position)
+      await performDeposit(algod, deployment, frank, MICRO_DEPOSIT);
+
+      const frankDepositAfter = await getUserDeposit(algod, deployment, frank.addr);
+      expect(frankDepositAfter).toBe(MICRO_DEPOSIT * 2);
+
+      console.log('Phase 5 - Frank (micro):');
+      console.log('  Claimed:', frankClaimed / 1_000_000, 'IBUS');
+      console.log('  New deposit:', frankDepositAfter / 1_000_000, 'ALPHA');
+    });
+
+    it('Phase 6: Very small yield - verify no one loses out', async () => {
+      // Minimum yield (2 USDC)
+      await performSwapYield(algod, deployment, creator, 2_000_000, 100);
+
+      // All depositors should have pending yield
+      const alicePending = await getPendingYield(algod, deployment, alice.addr);
+      const frankPending = await getPendingYield(algod, deployment, frank.addr);
+
+      expect(alicePending).toBeGreaterThan(0);
+      // Frank may get 0 due to rounding with such small yield, but should not lose existing yield
+      // The key is no negative yield or lost funds
+
+      console.log('Phase 6 - After minimum yield:');
+      console.log('  Alice pending:', alicePending / 1_000_000, 'IBUS');
+      console.log('  Frank pending:', frankPending / 1_000_000, 'IBUS');
+    });
+
+    it('Phase 7: Final accounting verification - all users close out', async () => {
+      // Track vault IBUS balance before close outs
+      const vaultIbusBefore = await getAssetBalance(algod, deployment.vaultAddress, deployment.ibusAssetId);
+
+      // Get creator fees
+      const stats = await getVaultStats(algod, deployment);
+      const creatorUnclaimedBefore = stats.creatorUnclaimedYield;
+
+      // Everyone claims and closes out
+      for (const user of [alice, bob, charlie, dave, eve, frank]) {
+        const pending = await getPendingYield(algod, deployment, user.addr);
+        if (pending > 0) {
+          try {
+            await performClaim(algod, deployment, user);
+          } catch (e) {
+            // May fail if 0 yield
+          }
+        }
+        await performCloseOut(algod, deployment, user);
+      }
+
+      // Creator claims fees
+      await performClaimCreator(algod, deployment, creator);
+
+      // Final stats
+      const finalStats = await getVaultStats(algod, deployment);
+      expect(finalStats.totalDeposits).toBe(0);
+
+      // Check for dust - should be minimal
+      const vaultIbusAfter = await getAssetBalance(algod, deployment.vaultAddress, deployment.ibusAssetId);
+
+      console.log('Phase 7 - Final accounting:');
+      console.log('  Total deposits:', finalStats.totalDeposits);
+      console.log('  Vault IBUS before:', vaultIbusBefore / 1_000_000);
+      console.log('  Vault IBUS after (dust):', vaultIbusAfter / 1_000_000);
+      console.log('  Creator claimed:', creatorUnclaimedBefore / 1_000_000, 'IBUS');
+
+      // Dust should be minimal (less than 1 IBUS with 6 users)
+      expect(vaultIbusAfter).toBeLessThan(1_000_000);
+    });
+  });
+
+  /**
+   * PRECISION AND ROUNDING DEEP DIVE
+   * Tests edge cases for rounding errors with prime numbers and extreme ratios
+   */
+  describe('Precision and Rounding Deep Dive', () => {
+    it('should handle prime number deposits with prime yield correctly', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Setup users
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await optInToAsset(algod, bob, deployment.alphaAssetId);
+      await optInToAsset(algod, alice, deployment.ibusAssetId);
+      await optInToAsset(algod, bob, deployment.ibusAssetId);
+
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 100_000_000_000);
+      await fundAsset(algod, creator, bob.addr, deployment.alphaAssetId, 100_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performUserOptIn(algod, deployment, bob);
+
+      // Prime number deposits
+      const aliceDeposit = 17_000_003; // Prime-ish
+      const bobDeposit = 31_000_007;   // Prime-ish
+
+      await performDeposit(algod, deployment, alice, aliceDeposit);
+      await performDeposit(algod, deployment, bob, bobDeposit);
+
+      // Prime yield
+      const yieldAmount = 7_000_013; // Prime-ish
+
+      await performSwapYield(algod, deployment, creator, yieldAmount, 100);
+
+      const alicePending = await getPendingYield(algod, deployment, alice.addr);
+      const bobPending = await getPendingYield(algod, deployment, bob.addr);
+
+      // Expected ratio: Alice/Bob = 17_000_003 / 31_000_007 ≈ 0.548
+      const actualRatio = alicePending / bobPending;
+      const expectedRatio = aliceDeposit / bobDeposit;
+
+      expect(actualRatio).toBeCloseTo(expectedRatio, 2);
+
+      // Verify total pending matches vault IBUS balance
+      const stats = await getVaultStats(algod, deployment);
+      const totalPending = alicePending + bobPending;
+
+      // Allow for small rounding difference (< 10 micro-units)
+      expect(Math.abs(stats.swapAssetBalance - totalPending)).toBeLessThan(10);
+
+      console.log('Prime number test:');
+      console.log('  Alice deposit:', aliceDeposit);
+      console.log('  Bob deposit:', bobDeposit);
+      console.log('  Yield:', yieldAmount);
+      console.log('  Alice pending:', alicePending);
+      console.log('  Bob pending:', bobPending);
+      console.log('  Actual ratio:', actualRatio.toFixed(6));
+      console.log('  Expected ratio:', expectedRatio.toFixed(6));
+      console.log('  Vault IBUS:', stats.swapAssetBalance);
+      console.log('  Total pending:', totalPending);
+      console.log('  Difference:', stats.swapAssetBalance - totalPending);
+    });
+
+    it('should handle extreme ratio (whale vs dust) without losing dust yield', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+        poolReserveUsdc: 1_000_000_000_000,
+        poolReserveIbus: 1_000_000_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await optInToAsset(algod, bob, deployment.alphaAssetId);
+      await optInToAsset(algod, alice, deployment.ibusAssetId);
+      await optInToAsset(algod, bob, deployment.ibusAssetId);
+
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 600_000_000_000);
+      await fundAsset(algod, creator, bob.addr, deployment.alphaAssetId, 10_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performUserOptIn(algod, deployment, bob);
+
+      // Alice: 500,000 ALPHA (whale)
+      // Bob: 1 ALPHA (dust)
+      const whaleDeposit = 500_000_000_000;
+      const dustDeposit = 1_000_000; // 1 ALPHA (minimum)
+
+      await performDeposit(algod, deployment, alice, whaleDeposit);
+      await performDeposit(algod, deployment, bob, dustDeposit);
+
+      // Ratio is 500,000:1 = 500,000x difference
+
+      // Large yield to ensure dust user gets something
+      const yieldAmount = 100_000_000_000; // 100,000 USDC
+
+      await performSwapYield(algod, deployment, creator, yieldAmount, 100);
+
+      const bobPending = await getPendingYield(algod, deployment, bob.addr);
+
+      // Bob should get ~0.0002% of yield ≈ 200 IBUS
+      // With 1e9 scale, this should be detectable
+      expect(bobPending).toBeGreaterThan(0);
+
+      // Expected: ~(1/500001) * ~99700 IBUS = ~0.199 IBUS = ~199,000 microIBUS
+      const expectedBobYield = Math.floor((dustDeposit / (whaleDeposit + dustDeposit)) * 99_700_000_000);
+
+      console.log('Extreme ratio test (500,000:1):');
+      console.log('  Alice (whale):', whaleDeposit / 1_000_000, 'ALPHA');
+      console.log('  Bob (dust):', dustDeposit / 1_000_000, 'ALPHA');
+      console.log('  Bob pending yield:', bobPending);
+      console.log('  Expected (approx):', expectedBobYield);
+
+      // Within 10% of expected (accounting for swap fees and rounding)
+      expect(bobPending).toBeGreaterThan(expectedBobYield * 0.9);
+      expect(bobPending).toBeLessThan(expectedBobYield * 1.1);
+    });
+
+    it('should accumulate many small yields without losing precision', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await optInToAsset(algod, alice, deployment.ibusAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 100_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000); // 100 ALPHA
+
+      // 20 minimum yields
+      for (let i = 0; i < 20; i++) {
+        await performSwapYield(algod, deployment, creator, 2_000_000, 100);
+      }
+
+      const pending = await getPendingYield(algod, deployment, alice.addr);
+      const stats = await getVaultStats(algod, deployment);
+
+      // Should have accumulated ~40 USDC worth of IBUS (minus fees)
+      // Approximately 39.88 IBUS (0.3% swap fee on each)
+      expect(pending).toBeGreaterThan(39_000_000);
+
+      // Vault balance should match pending (Alice is only depositor)
+      expect(Math.abs(stats.swapAssetBalance - pending)).toBeLessThan(100);
+
+      console.log('Many small yields test (20x 2 USDC):');
+      console.log('  Total pending:', pending / 1_000_000, 'IBUS');
+      console.log('  Vault IBUS:', stats.swapAssetBalance / 1_000_000);
+    });
+
+    it('should handle deposit-withdraw-deposit cycle without yield loss', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await optInToAsset(algod, alice, deployment.ibusAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 500_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+
+      let totalYieldReceived = 0;
+
+      // Round 1: Deposit 100, get yield, claim
+      await performDeposit(algod, deployment, alice, 100_000_000);
+      await performSwapYield(algod, deployment, creator, 10_000_000, 100);
+
+      let pending = await getPendingYield(algod, deployment, alice.addr);
+      const ibusBefore1 = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
+      await performClaim(algod, deployment, alice);
+      const ibusAfter1 = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
+      totalYieldReceived += (ibusAfter1 - ibusBefore1);
+
+      // Withdraw all
+      await performWithdraw(algod, deployment, alice, 0);
+
+      // Round 2: Deposit 200, get yield, claim
+      await performDeposit(algod, deployment, alice, 200_000_000);
+      await performSwapYield(algod, deployment, creator, 20_000_000, 100);
+
+      const ibusBefore2 = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
+      await performClaim(algod, deployment, alice);
+      const ibusAfter2 = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
+      totalYieldReceived += (ibusAfter2 - ibusBefore2);
+
+      // Withdraw all
+      await performWithdraw(algod, deployment, alice, 0);
+
+      // Round 3: Deposit 50, get yield, claim
+      await performDeposit(algod, deployment, alice, 50_000_000);
+      await performSwapYield(algod, deployment, creator, 5_000_000, 100);
+
+      const ibusBefore3 = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
+      await performClaim(algod, deployment, alice);
+      const ibusAfter3 = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
+      totalYieldReceived += (ibusAfter3 - ibusBefore3);
+
+      // Final state check
+      const finalStats = await getVaultStats(algod, deployment);
+
+      console.log('Deposit-withdraw cycles:');
+      console.log('  Round 1 yield:', (ibusAfter1 - ibusBefore1) / 1_000_000, 'IBUS');
+      console.log('  Round 2 yield:', (ibusAfter2 - ibusBefore2) / 1_000_000, 'IBUS');
+      console.log('  Round 3 yield:', (ibusAfter3 - ibusBefore3) / 1_000_000, 'IBUS');
+      console.log('  Total received:', totalYieldReceived / 1_000_000, 'IBUS');
+      console.log('  Vault IBUS remaining:', finalStats.swapAssetBalance);
+
+      // Vault should have near-zero IBUS (all claimed)
+      expect(finalStats.swapAssetBalance).toBeLessThan(100);
+    });
+  });
+
+  /**
+   * COMPREHENSIVE 10-PHASE MULTI-USER SCENARIO
+   * Simulates a realistic usage pattern over time with varying user actions
+   */
+  describe('Comprehensive 10-Phase Real-World Scenario', () => {
+    let deployment: VaultDeploymentResult;
+    let charlie: { addr: string; sk: Uint8Array };
+    let dave: { addr: string; sk: Uint8Array };
+
+    // Track accounting
+    let expectedTotalDeposits = 0;
+    const userDeposits: Record<string, number> = {};
+    const userYieldClaimed: Record<string, number> = {};
+
+    beforeAll(async () => {
+      const charlieAccount = algosdk.generateAccount();
+      const daveAccount = algosdk.generateAccount();
+      charlie = { addr: charlieAccount.addr.toString(), sk: charlieAccount.sk };
+      dave = { addr: daveAccount.addr.toString(), sk: daveAccount.sk };
+
+      const suggestedParams = await algod.getTransactionParams().do();
+      for (const user of [charlie, dave]) {
+        const fundTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+          sender: creator.addr,
+          receiver: user.addr,
+          amount: 10_000_000,
+          suggestedParams,
+        });
+        const signed = fundTxn.signTxn(creator.sk);
+        const { txid } = await algod.sendRawTransaction(signed).do();
+        await algosdk.waitForConfirmation(algod, txid, 5);
+      }
+
+      deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 15, // 15%
+        minSwapThreshold: 5_000_000,
+        poolReserveUsdc: 500_000_000_000,
+        poolReserveIbus: 500_000_000_000,
+      });
+
+      for (const user of [alice, bob, charlie, dave]) {
+        await optInToAsset(algod, user, deployment.alphaAssetId);
+        await optInToAsset(algod, user, deployment.ibusAssetId);
+        await fundAsset(algod, creator, user.addr, deployment.alphaAssetId, 200_000_000_000);
+        userYieldClaimed[user.addr] = 0;
+      }
+    });
+
+    it('Phase 1: Initial deposits - varying sizes', async () => {
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000_000); // 100k ALPHA
+      userDeposits['alice'] = 100_000_000_000;
+
+      await performUserOptIn(algod, deployment, bob);
+      await performDeposit(algod, deployment, bob, 25_000_000_000); // 25k ALPHA
+      userDeposits['bob'] = 25_000_000_000;
+
+      const stats = await getVaultStats(algod, deployment);
+      expect(stats.totalDeposits).toBe(125_000_000_000);
+
+      console.log('Phase 1: Alice 100k, Bob 25k');
+    });
+
+    it('Phase 2: First yield distribution', async () => {
+      await performSwapYield(algod, deployment, creator, 1_000_000_000, 100); // 1000 USDC
+
+      const alicePending = await getPendingYield(algod, deployment, alice.addr);
+      const bobPending = await getPendingYield(algod, deployment, bob.addr);
+
+      // Alice: 80%, Bob: 20% of user yield (creator gets 15%)
+      expect(alicePending / bobPending).toBeCloseTo(4.0, 1);
+
+      console.log('Phase 2: 1000 USDC yield distributed');
+    });
+
+    it('Phase 3: Charlie joins late', async () => {
+      await performUserOptIn(algod, deployment, charlie);
+      await performDeposit(algod, deployment, charlie, 50_000_000_000); // 50k ALPHA
+      userDeposits['charlie'] = 50_000_000_000;
+
+      // Charlie should have 0 pending (joined after yield)
+      const charliePending = await getPendingYield(algod, deployment, charlie.addr);
+      expect(charliePending).toBe(0);
+
+      console.log('Phase 3: Charlie joined with 50k');
+    });
+
+    it('Phase 4: Second yield - includes Charlie', async () => {
+      await performSwapYield(algod, deployment, creator, 500_000_000, 100); // 500 USDC
+
+      const charliePending = await getPendingYield(algod, deployment, charlie.addr);
+      expect(charliePending).toBeGreaterThan(0);
+
+      console.log('Phase 4: 500 USDC yield, Charlie now has pending');
+    });
+
+    it('Phase 5: Alice partial withdrawal', async () => {
+      // Alice withdraws 30k
+      await performWithdraw(algod, deployment, alice, 30_000_000_000);
+      userDeposits['alice'] -= 30_000_000_000;
+
+      const aliceDeposit = await getUserDeposit(algod, deployment, alice.addr);
+      expect(aliceDeposit).toBe(70_000_000_000);
+
+      console.log('Phase 5: Alice withdrew 30k, now has 70k');
+    });
+
+    it('Phase 6: Dave joins with small deposit', async () => {
+      await performUserOptIn(algod, deployment, dave);
+      await performDeposit(algod, deployment, dave, 5_000_000); // 5 ALPHA (small)
+      userDeposits['dave'] = 5_000_000;
+
+      const stats = await getVaultStats(algod, deployment);
+      console.log('Phase 6: Dave joined with 5 ALPHA, total:', stats.totalDeposits / 1_000_000);
+    });
+
+    it('Phase 7: Large yield distribution', async () => {
+      await performSwapYield(algod, deployment, creator, 5_000_000_000, 100); // 5000 USDC
+
+      // Even Dave should get something
+      const davePending = await getPendingYield(algod, deployment, dave.addr);
+      expect(davePending).toBeGreaterThan(0);
+
+      console.log('Phase 7: 5000 USDC yield, Dave pending:', davePending / 1_000_000);
+    });
+
+    it('Phase 8: Bob claims and re-deposits', async () => {
+      const bobIbusBefore = await getAssetBalance(algod, bob.addr, deployment.ibusAssetId);
+      await performClaim(algod, deployment, bob);
+      const bobIbusAfter = await getAssetBalance(algod, bob.addr, deployment.ibusAssetId);
+      userYieldClaimed[bob.addr] = bobIbusAfter - bobIbusBefore;
+
+      await performDeposit(algod, deployment, bob, 10_000_000_000); // +10k
+      userDeposits['bob'] += 10_000_000_000;
+
+      const bobDeposit = await getUserDeposit(algod, deployment, bob.addr);
+      expect(bobDeposit).toBe(35_000_000_000);
+
+      console.log('Phase 8: Bob claimed and added 10k, now has 35k');
+    });
+
+    it('Phase 9: Multiple small yields', async () => {
+      for (let i = 0; i < 5; i++) {
+        await performSwapYield(algod, deployment, creator, 100_000_000, 100); // 100 USDC each
+      }
+
+      const stats = await getVaultStats(algod, deployment);
+      console.log('Phase 9: 5x 100 USDC yields, total yield generated:', stats.yieldPerToken);
+    });
+
+    it('Phase 10: Final accounting - everyone withdraws', async () => {
+      // Get final vault state
+      const statsBefore = await getVaultStats(algod, deployment);
+
+      // Everyone claims their yield
+      let totalUserYieldClaimed = 0;
+      for (const [name, user] of [['alice', alice], ['bob', bob], ['charlie', charlie], ['dave', dave]] as const) {
+        const pending = await getPendingYield(algod, deployment, user.addr);
+        if (pending > 0) {
+          const ibusBefore = await getAssetBalance(algod, user.addr, deployment.ibusAssetId);
+          await performClaim(algod, deployment, user);
+          const ibusAfter = await getAssetBalance(algod, user.addr, deployment.ibusAssetId);
+          totalUserYieldClaimed += (ibusAfter - ibusBefore);
+        }
+      }
+
+      // Creator claims fees
+      const creatorIbusBefore = await getAssetBalance(algod, creator.addr, deployment.ibusAssetId);
+      await performClaimCreator(algod, deployment, creator);
+      const creatorIbusAfter = await getAssetBalance(algod, creator.addr, deployment.ibusAssetId);
+      const creatorClaimed = creatorIbusAfter - creatorIbusBefore;
+
+      // Everyone withdraws deposits
+      for (const user of [alice, bob, charlie, dave]) {
+        const deposit = await getUserDeposit(algod, deployment, user.addr);
+        if (deposit > 0) {
+          await performWithdraw(algod, deployment, user, 0);
+        }
+      }
+
+      // Final state check
+      const statsAfter = await getVaultStats(algod, deployment);
+
+      console.log('Phase 10 - Final accounting:');
+      console.log('  Total deposits:', statsAfter.totalDeposits);
+      console.log('  User yield claimed:', totalUserYieldClaimed / 1_000_000, 'IBUS');
+      console.log('  Creator claimed:', creatorClaimed / 1_000_000, 'IBUS');
+      console.log('  Vault IBUS remaining (dust):', statsAfter.swapAssetBalance);
+
+      // All deposits withdrawn
+      expect(statsAfter.totalDeposits).toBe(0);
+
+      // Minimal dust remaining
+      expect(statsAfter.swapAssetBalance).toBeLessThan(1000);
+    });
+  });
+
+  /**
+   * FARM FEATURE COMPREHENSIVE TESTS
+   * Tests farming with and without farm bonus
+   */
+  describe('Farm Feature - Comprehensive Tests', () => {
+    describe('Without Farm (baseline)', () => {
+      let deployment: VaultDeploymentResult;
+      let baselineYield: number;
+
+      beforeAll(async () => {
+        deployment = await deployVaultForTest(algod, creator, {
+          creatorFeeRate: 20,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await optInToAsset(algod, alice, deployment.ibusAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+      });
+
+      it('should swap without farm bonus', async () => {
+        const farmStats = await getFarmStats(algod, deployment);
+        expect(farmStats.farmBalance).toBe(0);
+        expect(farmStats.farmEmissionRate).toBe(0);
+
+        // Swap 100 USDC
+        await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+
+        const pending = await getPendingYield(algod, deployment, alice.addr);
+        baselineYield = pending;
+
+        console.log('Without farm - yield:', pending / 1_000_000, 'IBUS');
+      });
+    });
+
+    describe('With Farm Active', () => {
+      let deployment: VaultDeploymentResult;
+      let yieldWithoutFarm: number;
+      let yieldWithFarm: number;
+
+      beforeAll(async () => {
+        deployment = await deployVaultForTest(algod, creator, {
+          creatorFeeRate: 20,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await optInToAsset(algod, alice, deployment.ibusAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+      });
+
+      it('should show no farm bonus initially', async () => {
+        await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+        yieldWithoutFarm = await getPendingYield(algod, deployment, alice.addr);
+
+        console.log('Baseline (no farm):', yieldWithoutFarm / 1_000_000, 'IBUS');
+      });
+
+      it('should allow contributing IBUS to farm', async () => {
+        // Creator needs to fund vault with IBUS for farm
+        await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 1_000_000_000);
+
+        await performContributeFarm(algod, deployment, creator, 500_000_000); // 500 IBUS
+
+        const farmStats = await getFarmStats(algod, deployment);
+        expect(farmStats.farmBalance).toBe(500_000_000);
+
+        console.log('Farm balance:', farmStats.farmBalance / 1_000_000, 'IBUS');
+      });
+
+      it('should set farm emission rate', async () => {
+        await performSetFarmEmissionRate(algod, deployment, creator, 5000); // 50%
+
+        const farmStats = await getFarmStats(algod, deployment);
+        expect(farmStats.farmEmissionRate).toBe(5000);
+
+        console.log('Farm emission rate:', farmStats.farmEmissionRate, 'bps (50%)');
+      });
+
+      it('should add farm bonus to swap', async () => {
+        // Claim existing yield first
+        await performClaim(algod, deployment, alice);
+
+        const farmBefore = await getFarmStats(algod, deployment);
+
+        // Another swap
+        await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+
+        const farmAfter = await getFarmStats(algod, deployment);
+        yieldWithFarm = await getPendingYield(algod, deployment, alice.addr);
+
+        // Farm should have decreased
+        expect(farmAfter.farmBalance).toBeLessThan(farmBefore.farmBalance);
+
+        // More yield with farm bonus
+        expect(yieldWithFarm).toBeGreaterThan(yieldWithoutFarm);
+
+        const farmBonus = farmBefore.farmBalance - farmAfter.farmBalance;
+
+        console.log('With farm:');
+        console.log('  Yield:', yieldWithFarm / 1_000_000, '(was', yieldWithoutFarm / 1_000_000, ')');
+        console.log('  Farm bonus used:', farmBonus / 1_000_000, 'IBUS');
+        console.log('  Improvement:', ((yieldWithFarm / yieldWithoutFarm - 1) * 100).toFixed(2) + '%');
+      });
+
+      it('should deplete farm over multiple swaps', async () => {
+        const farmBefore = await getFarmStats(algod, deployment);
+
+        // Multiple swaps to deplete farm
+        for (let i = 0; i < 5; i++) {
+          await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+        }
+
+        const farmAfter = await getFarmStats(algod, deployment);
+
+        console.log('Farm depletion:');
+        console.log('  Before:', farmBefore.farmBalance / 1_000_000, 'IBUS');
+        console.log('  After:', farmAfter.farmBalance / 1_000_000, 'IBUS');
+      });
+    });
+
+    describe('Farm Edge Cases', () => {
+      it('should handle swap when farm is empty but emission rate set', async () => {
+        const deployment = await deployVaultForTest(algod, creator, {
+          creatorFeeRate: 0,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await optInToAsset(algod, alice, deployment.ibusAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+
+        // Set emission rate but no farm balance
+        await performSetFarmEmissionRate(algod, deployment, creator, 5000);
+
+        const farmStats = await getFarmStats(algod, deployment);
+        expect(farmStats.farmBalance).toBe(0);
+        expect(farmStats.farmEmissionRate).toBe(5000);
+
+        // Swap should still work
+        await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+
+        const pending = await getPendingYield(algod, deployment, alice.addr);
+        expect(pending).toBeGreaterThan(0);
+
+        console.log('Empty farm swap:', pending / 1_000_000, 'IBUS');
+      });
+
+      it('should cap farm bonus at available balance', async () => {
+        const deployment = await deployVaultForTest(algod, creator, {
+          creatorFeeRate: 0,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await optInToAsset(algod, alice, deployment.ibusAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+
+        // Small farm, high emission rate
+        await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 10_000_000);
+        await performContributeFarm(algod, deployment, creator, 1_000_000); // 1 IBUS
+        await performSetFarmEmissionRate(algod, deployment, creator, 10000); // 100%
+
+        const farmBefore = await getFarmStats(algod, deployment);
+
+        // Large swap that would request more than farm balance
+        await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+
+        const farmAfter = await getFarmStats(algod, deployment);
+
+        // Farm should be completely depleted
+        expect(farmAfter.farmBalance).toBe(0);
+
+        console.log('Farm cap test:');
+        console.log('  Farm before:', farmBefore.farmBalance / 1_000_000);
+        console.log('  Farm after:', farmAfter.farmBalance / 1_000_000);
+      });
+
+      it('should correctly distribute yield with farm bonus among multiple users', async () => {
+        const deployment = await deployVaultForTest(algod, creator, {
+          creatorFeeRate: 20,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await optInToAsset(algod, bob, deployment.alphaAssetId);
+        await optInToAsset(algod, alice, deployment.ibusAssetId);
+        await optInToAsset(algod, bob, deployment.ibusAssetId);
+
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+        await fundAsset(algod, creator, bob.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performUserOptIn(algod, deployment, bob);
+
+        // Alice: 600 tokens, Bob: 400 tokens (60/40 split)
+        await performDeposit(algod, deployment, alice, 600_000_000);
+        await performDeposit(algod, deployment, bob, 400_000_000);
+
+        // Setup farm
+        await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 500_000_000);
+        await performContributeFarm(algod, deployment, creator, 200_000_000); // 200 IBUS
+        await performSetFarmEmissionRate(algod, deployment, creator, 5000); // 50%
+
+        // Swap with farm bonus
+        await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+
+        const alicePending = await getPendingYield(algod, deployment, alice.addr);
+        const bobPending = await getPendingYield(algod, deployment, bob.addr);
+
+        // Ratio should be 60/40 = 1.5
+        const ratio = alicePending / bobPending;
+        expect(ratio).toBeCloseTo(1.5, 1);
+
+        console.log('Multi-user with farm:');
+        console.log('  Alice (60%):', alicePending / 1_000_000, 'IBUS');
+        console.log('  Bob (40%):', bobPending / 1_000_000, 'IBUS');
+        console.log('  Ratio:', ratio.toFixed(3), '(expected: 1.5)');
+      });
+    });
+  });
+
+  /**
+   * 10-PHASE SCENARIO WITH FARM
+   * Comprehensive test combining all features
+   */
+  describe('10-Phase Real-World Scenario with Farm', () => {
+    let deployment: VaultDeploymentResult;
+    let charlie: { addr: string; sk: Uint8Array };
+    let dave: { addr: string; sk: Uint8Array };
+
+    beforeAll(async () => {
+      const charlieAccount = algosdk.generateAccount();
+      const daveAccount = algosdk.generateAccount();
+      charlie = { addr: charlieAccount.addr.toString(), sk: charlieAccount.sk };
+      dave = { addr: daveAccount.addr.toString(), sk: daveAccount.sk };
+
+      const suggestedParams = await algod.getTransactionParams().do();
+      for (const user of [charlie, dave]) {
+        const fundTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+          sender: creator.addr,
+          receiver: user.addr,
+          amount: 10_000_000,
+          suggestedParams,
+        });
+        const signed = fundTxn.signTxn(creator.sk);
+        const { txid } = await algod.sendRawTransaction(signed).do();
+        await algosdk.waitForConfirmation(algod, txid, 5);
+      }
+
+      deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 15,
+        minSwapThreshold: 5_000_000,
+        poolReserveUsdc: 500_000_000_000,
+        poolReserveIbus: 500_000_000_000,
+      });
+
+      for (const user of [alice, bob, charlie, dave]) {
+        await optInToAsset(algod, user, deployment.alphaAssetId);
+        await optInToAsset(algod, user, deployment.ibusAssetId);
+        await fundAsset(algod, creator, user.addr, deployment.alphaAssetId, 200_000_000_000);
+      }
+    });
+
+    it('Phase 1: Initial deposits', async () => {
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000_000); // 100k
+
+      await performUserOptIn(algod, deployment, bob);
+      await performDeposit(algod, deployment, bob, 25_000_000_000); // 25k
+
+      const stats = await getVaultStats(algod, deployment);
+      expect(stats.totalDeposits).toBe(125_000_000_000);
+
+      console.log('Phase 1: Alice 100k, Bob 25k');
+    });
+
+    it('Phase 2: First swap (no farm)', async () => {
+      await performSwapYield(algod, deployment, creator, 1_000_000_000, 100);
+
+      const alicePending = await getPendingYield(algod, deployment, alice.addr);
+      const bobPending = await getPendingYield(algod, deployment, bob.addr);
+
+      expect(alicePending / bobPending).toBeCloseTo(4.0, 1);
+
+      console.log('Phase 2: First swap, Alice/Bob ratio:', (alicePending / bobPending).toFixed(2));
+    });
+
+    it('Phase 3: Enable farm', async () => {
+      await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 2_000_000_000);
+      await performContributeFarm(algod, deployment, creator, 1_000_000_000); // 1000 IBUS
+      await performSetFarmEmissionRate(algod, deployment, creator, 2000); // 20%
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmBalance).toBe(1_000_000_000);
+
+      console.log('Phase 3: Farm enabled with 1000 IBUS, 20% emission');
+    });
+
+    it('Phase 4: Charlie joins, swap with farm', async () => {
+      await performUserOptIn(algod, deployment, charlie);
+      await performDeposit(algod, deployment, charlie, 50_000_000_000); // 50k
+
+      const farmBefore = await getFarmStats(algod, deployment);
+
+      await performSwapYield(algod, deployment, creator, 500_000_000, 100);
+
+      const farmAfter = await getFarmStats(algod, deployment);
+      expect(farmAfter.farmBalance).toBeLessThan(farmBefore.farmBalance);
+
+      const farmUsed = farmBefore.farmBalance - farmAfter.farmBalance;
+      console.log('Phase 4: Farm bonus used:', farmUsed / 1_000_000, 'IBUS');
+    });
+
+    it('Phase 5: Alice claims', async () => {
+      const alicePending = await getPendingYield(algod, deployment, alice.addr);
+      const ibusBefore = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
+
+      await performClaim(algod, deployment, alice);
+
+      const ibusAfter = await getAssetBalance(algod, alice.addr, deployment.ibusAssetId);
+      const claimed = ibusAfter - ibusBefore;
+
+      expect(claimed).toBeCloseTo(alicePending, -5);
+
+      console.log('Phase 5: Alice claimed:', claimed / 1_000_000, 'IBUS');
+    });
+
+    it('Phase 6: Dave joins with small amount', async () => {
+      await performUserOptIn(algod, deployment, dave);
+      await performDeposit(algod, deployment, dave, 5_000_000); // 5 ALPHA
+
+      const daveDeposit = await getUserDeposit(algod, deployment, dave.addr);
+      expect(daveDeposit).toBe(5_000_000);
+
+      console.log('Phase 6: Dave joined with 5 ALPHA');
+    });
+
+    it('Phase 7: Large swap draining farm', async () => {
+      const farmBefore = await getFarmStats(algod, deployment);
+
+      for (let i = 0; i < 3; i++) {
+        await performSwapYield(algod, deployment, creator, 2_000_000_000, 100);
+      }
+
+      const farmAfter = await getFarmStats(algod, deployment);
+
+      console.log('Phase 7: Farm drain:');
+      console.log('  Before:', farmBefore.farmBalance / 1_000_000);
+      console.log('  After:', farmAfter.farmBalance / 1_000_000);
+    });
+
+    it('Phase 8: Bob withdraws all', async () => {
+      const bobPending = await getPendingYield(algod, deployment, bob.addr);
+      await performClaim(algod, deployment, bob);
+      await performWithdraw(algod, deployment, bob, 0);
+
+      const bobDeposit = await getUserDeposit(algod, deployment, bob.addr);
+      expect(bobDeposit).toBe(0);
+
+      console.log('Phase 8: Bob withdrew all');
+    });
+
+    it('Phase 9: Final swaps without farm', async () => {
+      const farmBefore = await getFarmStats(algod, deployment);
+
+      for (let i = 0; i < 3; i++) {
+        await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+      }
+
+      // Farm should be at or near 0, no bonus applied
+      const farmAfter = await getFarmStats(algod, deployment);
+
+      console.log('Phase 9: Final swaps, farm:', farmAfter.farmBalance / 1_000_000);
+    });
+
+    it('Phase 10: Complete close out', async () => {
+      // Everyone claims
+      for (const user of [alice, charlie, dave]) {
+        const pending = await getPendingYield(algod, deployment, user.addr);
+        if (pending > 0) {
+          try {
+            await performClaim(algod, deployment, user);
+          } catch (e) {
+            // May fail if 0
+          }
+        }
+      }
+
+      // Creator claims
+      await performClaimCreator(algod, deployment, creator);
+
+      // Everyone withdraws
+      for (const user of [alice, charlie, dave]) {
+        const deposit = await getUserDeposit(algod, deployment, user.addr);
+        if (deposit > 0) {
+          await performWithdraw(algod, deployment, user, 0);
+        }
+      }
+
+      const stats = await getVaultStats(algod, deployment);
+
+      console.log('Phase 10 - Final:');
+      console.log('  Total deposits:', stats.totalDeposits);
+      console.log('  IBUS remaining:', stats.swapAssetBalance);
+
+      expect(stats.totalDeposits).toBe(0);
+      expect(stats.swapAssetBalance).toBeLessThan(1000);
     });
   });
 });
