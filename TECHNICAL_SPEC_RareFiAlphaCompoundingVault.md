@@ -54,7 +54,7 @@ RareFiAlphaCompoundingVault is an auto-compounding yield vault where users depos
 | `usdcAsset` | uint64 | USDC ASA ID (airdrop asset) |
 | `creatorAddress` | Account | Vault creator receiving fees |
 | `rarefiAddress` | Account | RareFi platform address |
-| `creatorFeeRate` | uint64 | Fee percentage (0-100) |
+| `creatorFeeRate` | uint64 | Fee percentage (0-6) |
 | `creatorUnclaimedAlpha` | uint64 | Accumulated fees for creator |
 | `totalShares` | uint64 | Total shares issued |
 | `totalAlpha` | uint64 | Total Alpha held (deposits + yield) |
@@ -80,12 +80,14 @@ RareFiAlphaCompoundingVault is an auto-compounding yield vault where users depos
 | Constant | Value | Description |
 |----------|-------|-------------|
 | `SCALE` | 1,000,000,000,000 (1e12) | Share price precision |
-| `MAX_FEE_RATE` | 100 | Max fee (100 = 100%) |
+| `MAX_FEE_RATE` | 6 | Max fee (6 = 6%) |
+| `FEE_PERCENT_BASE` | 100 | Fee percentage denominator |
 | `MIN_DEPOSIT_AMOUNT` | 1,000,000 | 1 token (6 decimals) |
 | `MIN_SWAP_AMOUNT` | 200,000 | 0.20 USDC minimum |
 | `FEE_BPS_BASE` | 10,000 | Basis points denominator |
 | `MAX_SLIPPAGE_BPS` | 10,000 | 100% max slippage |
 | `MAX_FARM_EMISSION_BPS` | 10,000 | 100% max farm rate |
+| `MIN_FARM_EMISSION_BPS` | 1,000 | 10% min emission when farm has balance |
 
 ---
 
@@ -101,14 +103,14 @@ Creates and initializes the vault. Called once at deployment.
 |------|------|-------------|
 | `alphaAssetId` | uint64 | Alpha ASA ID |
 | `usdcAssetId` | uint64 | USDC ASA ID |
-| `creatorFeeRate` | uint64 | Fee percentage (0-100) |
+| `creatorFeeRate` | uint64 | Fee percentage (0-6) |
 | `minSwapThreshold` | uint64 | Min USDC before compound |
 | `tinymanPoolAppId` | uint64 | Tinyman pool app ID |
 | `tinymanPoolAddress` | Account | Tinyman pool address |
 | `rarefiAddress` | Account | RareFi platform address |
 
 **Validations:**
-- Creator fee rate ≤ 100%
+- Creator fee rate ≤ 6%
 - Min swap threshold ≥ 0.20 USDC
 - Alpha and USDC asset IDs must be different
 
@@ -262,6 +264,16 @@ Updates Tinyman pool configuration (for migrations).
 
 ---
 
+#### `updateCreatorFeeRate(newFeeRate: uint64)`
+Updates the creator fee rate.
+
+**Access:** Creator only
+
+**Requirements:**
+- `newFeeRate ≤ MAX_FEE_RATE (6%)`
+
+---
+
 ### Farm Operations
 
 #### `contributeFarm()`
@@ -279,7 +291,10 @@ Sets farm emission rate.
 **Access:** Creator or RareFi
 
 **Requirements:**
-- `emissionRateBps ≤ MAX_FARM_EMISSION_BPS`
+- `emissionRateBps ≤ MAX_FARM_EMISSION_BPS (10000)`
+- If `farmBalance > 0`: `emissionRateBps ≥ MIN_FARM_EMISSION_BPS (1000 = 10%)`
+
+**Note:** This protects farm contributors from having their incentives disabled by creator setting emission to 0%.
 
 ---
 
@@ -408,6 +423,7 @@ result = q_lo (asserts q_hi == 0)
 | `compoundYield` | ✓ | ✓ | ✓ |
 | `contributeFarm` | ✓ | ✓ | ✓ |
 | `claimCreator` | ✗ | ✓ | ✗ |
+| `updateCreatorFeeRate` | ✗ | ✓ | ✗ |
 | `setFarmEmissionRate` | ✗ | ✓ | ✓ |
 | `updateMinSwapThreshold` | ✗ | ✓ | ✓ |
 | `updateTinymanPool` | ✗ | ✓ | ✓ |

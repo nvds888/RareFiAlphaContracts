@@ -23,7 +23,9 @@ import { mulw, divmodw, itob, AppLocal } from '@algorandfoundation/algorand-type
 
 // Constants
 const SCALE: uint64 = Uint64(1_000_000_000);           // 1e9 for yield_per_token precision
-const MAX_FEE_RATE: uint64 = Uint64(100);              // 100% max fee (basis is 100)
+const MAX_FEE_RATE: uint64 = Uint64(6);                 // 6% max fee (percentage 0-6)
+const FEE_PERCENT_BASE: uint64 = Uint64(100);          // Fee percentage base (feeRate/100 = percentage)
+const MIN_FARM_EMISSION_BPS: uint64 = Uint64(1_000);    // 10% minimum when farm has balance
 const MIN_DEPOSIT_AMOUNT: uint64 = Uint64(1_000_000);  // Minimum deposit (1 token with 6 decimals)
 const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0.20 USDC)
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
@@ -184,7 +186,7 @@ export class RareFiVault extends arc4.Contract {
     rarefiAddress: Account
   ): void {
     // Validate parameters
-    assert(creatorFeeRate <= MAX_FEE_RATE, 'Creator fee rate exceeds maximum (100%)');
+    assert(creatorFeeRate <= MAX_FEE_RATE, 'Creator fee rate exceeds maximum (6%)');
     assert(minSwapThreshold >= MIN_SWAP_AMOUNT, 'Swap threshold too low');
     assert(depositAssetId !== Uint64(0), 'Invalid deposit asset');
     assert(yieldAssetId !== Uint64(0), 'Invalid yield asset');
@@ -388,7 +390,7 @@ export class RareFiVault extends arc4.Contract {
       this.totalYieldGenerated.value = this.totalYieldGenerated.value + totalOutput;
 
       // Split yield between creator and users
-      const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
+      const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, FEE_PERCENT_BASE);
       const userCut: uint64 = totalOutput - creatorCut;
 
       // Add to creator's claimable
@@ -585,7 +587,7 @@ export class RareFiVault extends arc4.Contract {
     this.totalYieldGenerated.value = this.totalYieldGenerated.value + totalOutput;
 
     // Split yield between creator and users (creator fee applies to total output)
-    const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, MAX_FEE_RATE);
+    const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, FEE_PERCENT_BASE);
     const userCut: uint64 = totalOutput - creatorCut;
 
     // Add to creator's claimable
@@ -702,6 +704,17 @@ export class RareFiVault extends arc4.Contract {
     this.tinymanPoolAddress.value = newPoolAddress;
   }
 
+  /**
+   * Update the creator fee rate
+   * Only callable by creator, constrained to 0-6% range
+   */
+  @arc4.abimethod()
+  updateCreatorFeeRate(newFeeRate: uint64): void {
+    assert(Txn.sender === this.creatorAddress.value, 'Only creator can update fee rate');
+    assert(newFeeRate <= MAX_FEE_RATE, 'Fee rate exceeds maximum (6%)');
+    this.creatorFeeRate.value = newFeeRate;
+  }
+
   // ============================================
   // FARM FEATURE - Bonus yield distribution
   // ============================================
@@ -737,6 +750,7 @@ export class RareFiVault extends arc4.Contract {
    *
    * @param emissionRateBps - Emission rate in basis points (e.g., 1000 = 10%, 5000 = 50%)
    *                          Maximum 10000 (100%) - matches swap output 1:1
+   *                          Minimum 1000 (10%) when farm has balance (to protect contributors)
    */
   @arc4.abimethod()
   setFarmEmissionRate(emissionRateBps: uint64): void {
@@ -744,6 +758,11 @@ export class RareFiVault extends arc4.Contract {
     const isRarefi = Txn.sender === this.rarefiAddress.value;
     assert(isCreator || isRarefi, 'Only creator or RareFi can set farm rate');
     assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 100%)');
+
+    // If farm has balance, enforce minimum emission rate to protect contributors
+    if (this.farmBalance.value > Uint64(0)) {
+      assert(emissionRateBps >= MIN_FARM_EMISSION_BPS, 'Emission rate too low (min 10% when farm has balance)');
+    }
 
     this.farmEmissionRate.value = emissionRateBps;
   }

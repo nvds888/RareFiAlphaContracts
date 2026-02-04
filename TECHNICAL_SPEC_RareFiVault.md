@@ -52,7 +52,7 @@ RareFiVault is a permissionless yield vault where users deposit Alpha tokens (yi
 | `swapAsset` | uint64 | Project's ASA ID (yield token) |
 | `creatorAddress` | Account | Vault creator receiving fees |
 | `rarefiAddress` | Account | RareFi platform address |
-| `creatorFeeRate` | uint64 | Fee percentage (0-100) |
+| `creatorFeeRate` | uint64 | Fee percentage (0-6) |
 | `creatorUnclaimedYield` | uint64 | Accumulated fees for creator |
 | `totalDeposits` | uint64 | Total Alpha deposited |
 | `yieldPerToken` | uint64 | Accumulator scaled by 1e9 |
@@ -80,7 +80,9 @@ RareFiVault is a permissionless yield vault where users deposit Alpha tokens (yi
 | Constant | Value | Description |
 |----------|-------|-------------|
 | `SCALE` | 1,000,000,000 (1e9) | Yield-per-token precision |
-| `MAX_FEE_RATE` | 100 | Max fee (100 = 100%) |
+| `MAX_FEE_RATE` | 6 | Max fee (6 = 6%) |
+| `FEE_PERCENT_BASE` | 100 | Fee percentage denominator |
+| `MIN_FARM_EMISSION_BPS` | 1,000 | Min farm rate when balance > 0 (10%) |
 | `MIN_DEPOSIT_AMOUNT` | 1,000,000 | 1 token (6 decimals) |
 | `MIN_SWAP_AMOUNT` | 200,000 | 0.20 USDC minimum |
 | `FEE_BPS_BASE` | 10,000 | Basis points denominator |
@@ -102,14 +104,14 @@ Creates and initializes the vault. Called once at deployment.
 | `depositAssetId` | uint64 | Alpha ASA ID |
 | `yieldAssetId` | uint64 | USDC ASA ID |
 | `swapAssetId` | uint64 | Project token ASA ID |
-| `creatorFeeRate` | uint64 | Fee percentage (0-100) |
+| `creatorFeeRate` | uint64 | Fee percentage (0-6) |
 | `minSwapThreshold` | uint64 | Min USDC before swap |
 | `tinymanPoolAppId` | uint64 | Tinyman pool app ID |
 | `tinymanPoolAddress` | Account | Tinyman pool address |
 | `rarefiAddress` | Account | RareFi platform address |
 
 **Validations:**
-- Creator fee rate ≤ 100%
+- Creator fee rate ≤ 6%
 - Min swap threshold ≥ 0.20 USDC
 - All asset IDs non-zero and unique
 
@@ -240,6 +242,21 @@ Creator claims accumulated fees.
 
 ---
 
+#### `updateCreatorFeeRate(newFeeRate: uint64)`
+Updates the creator fee rate.
+
+**Access:** Creator only
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| `newFeeRate` | uint64 | New fee percentage (0-6) |
+
+**Requirements:**
+- `newFeeRate ≤ MAX_FEE_RATE` (6%)
+
+---
+
 ### Admin Operations
 
 #### `updateMinSwapThreshold(newThreshold: uint64)`
@@ -276,7 +293,10 @@ Sets farm emission rate.
 **Access:** Creator or RareFi
 
 **Requirements:**
-- `emissionRateBps ≤ MAX_FARM_EMISSION_BPS`
+- `emissionRateBps ≤ MAX_FARM_EMISSION_BPS` (10000 = 100%)
+- If `farmBalance > 0`: `emissionRateBps ≥ MIN_FARM_EMISSION_BPS` (1000 = 10%)
+
+**Note:** The minimum 10% constraint only applies when there are existing farm deposits. This prevents the creator from setting the emission rate to 0% after receiving farm contributions, ensuring farm contributors' tokens will actually be distributed.
 
 ---
 
@@ -372,6 +392,7 @@ result = q_lo (asserts q_hi == 0)
 | `swapYield` | ✓ | ✓ | ✓ |
 | `contributeFarm` | ✓ | ✓ | ✓ |
 | `claimCreator` | ✗ | ✓ | ✗ |
+| `updateCreatorFeeRate` | ✗ | ✓ | ✗ |
 | `setFarmEmissionRate` | ✗ | ✓ | ✓ |
 | `updateMinSwapThreshold` | ✗ | ✓ | ✓ |
 | `updateTinymanPool` | ✗ | ✓ | ✓ |

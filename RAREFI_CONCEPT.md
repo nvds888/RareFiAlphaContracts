@@ -209,10 +209,11 @@ Both vaults use Tinyman V2 for swaps.
 |--------|---------------|
 | Deploy vault | Anyone (permissionless) |
 | Configure vault | Creator at deployment only |
+| Update creator fee rate | Creator only (0-6% range) |
 | Trigger swaps/compounds | Anyone (permissionless) |
 | Deposit/withdraw | Any opted-in user |
 | Claim yield | Any user with pending yield |
-| Set farm emission rate | Creator or RareFi |
+| Set farm emission rate | Creator or RareFi (min 10% when farm has balance) |
 | Upgrade contract | Nobody (disabled) |
 | Delete contract | Nobody (disabled) |
 
@@ -257,6 +258,8 @@ Both vaults support an optional farm bonus that sponsors can fund.
 **How it works:**
 1. Anyone can contribute tokens to the farm via `contributeFarm()`
 2. Creator/RareFi sets emission rate (e.g., 10% = 1000 bps)
+   - Emission rate can be 0% before any farm contributions
+   - Once farm has balance, minimum emission rate is 10% (protects contributors)
 3. On each swap/compound, farm bonus is added proportionally:
    ```
    farmBonus = min(swapOutput * emissionRate / 10000, farmBalance)
@@ -277,10 +280,10 @@ Both vaults support an optional farm bonus that sponsors can fund.
 - **MBR:** 5.4-5.5 ALGO (stays in contract for asset opt-ins and operations)
 
 ### Yield Fees
-- **Creator fee:** 0-100% of yield (set at deployment)
-- **Example:** If creator fee is 20% and 100 USDC yield is swapped:
-  - 20 USDC worth of output -> Creator
-  - 80 USDC worth of output -> Users
+- **Creator fee:** 0-6% of yield (set at deployment, can be updated by creator)
+- **Example:** If creator fee is 5% and 100 USDC yield is swapped:
+  - 5 USDC worth of output -> Creator
+  - 95 USDC worth of output -> Users
 
 ---
 

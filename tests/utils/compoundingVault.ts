@@ -107,7 +107,7 @@ export async function deployCompoundingVaultForTest(
   );
 
   // Parameters
-  const creatorFeeRate = overrides?.creatorFeeRate ?? 20; // 20% default
+  const creatorFeeRate = overrides?.creatorFeeRate ?? 5; // 5% default (max 6%)
   const minSwapThreshold = overrides?.minSwapThreshold ?? 2_000_000; // 2 USDC default
   const poolFeeBps = overrides?.poolFeeBps ?? 30; // 0.3% default
   const poolReserveUsdc = overrides?.poolReserveUsdc ?? 10_000_000_000; // 10,000 USDC
@@ -705,6 +705,33 @@ export async function performSetFarmEmissionRate(
     appID: deployment.vaultAppId,
     method: contract.getMethodByName('setFarmEmissionRate'),
     methodArgs: [emissionRateBps],
+    sender: senderAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+
+  await atc.execute(algod, 5);
+}
+
+export async function performUpdateCreatorFeeRate(
+  algod: algosdk.Algodv2,
+  deployment: CompoundingVaultDeploymentResult,
+  sender: { addr: string | algosdk.Address; sk: Uint8Array },
+  newFeeRate: number,
+) {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const senderAddr = typeof sender.addr === 'string' ? sender.addr : sender.addr.toString();
+  const signer = algosdk.makeBasicAccountTransactionSigner({
+    sk: sender.sk,
+    addr: algosdk.decodeAddress(senderAddr),
+  });
+
+  const atc = new algosdk.AtomicTransactionComposer();
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('updateCreatorFeeRate'),
+    methodArgs: [newFeeRate],
     sender: senderAddr,
     signer,
     suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },

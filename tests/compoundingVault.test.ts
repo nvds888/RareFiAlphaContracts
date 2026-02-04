@@ -12,6 +12,7 @@ import {
   getUserAlphaBalance,
   performContributeFarm,
   performSetFarmEmissionRate,
+  performUpdateCreatorFeeRate,
   getFarmStats,
   CompoundingVaultDeploymentResult,
 } from './utils/compoundingVault';
@@ -66,7 +67,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
 
     it('should deploy vault and pool successfully', async () => {
       deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 20,
+        creatorFeeRate: 5,
         minSwapThreshold: 2_000_000, // 2 USDC
       });
 
@@ -150,7 +151,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
 
     beforeAll(async () => {
       deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 20, // 20%
+        creatorFeeRate: 5, // 5%
         minSwapThreshold: 2_000_000, // 2 USDC
       });
 
@@ -255,7 +256,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
 
     beforeAll(async () => {
       deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 20,
+        creatorFeeRate: 5,
         minSwapThreshold: 2_000_000,
       });
 
@@ -434,9 +435,9 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       expect(stats.sharePrice).toBeGreaterThan(SCALE);
     });
 
-    it('should handle 100% fee rate correctly', async () => {
+    it('should handle maximum 6% fee rate correctly', async () => {
       const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 100,
+        creatorFeeRate: 6, // Maximum allowed
         minSwapThreshold: 2_000_000,
       });
 
@@ -450,10 +451,10 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       await performCompoundYield(algod, deployment, creator, 50_000_000, 100);
 
       const stats = await getVaultStats(algod, deployment);
-      expect(stats.creatorUnclaimedAlpha).toBeGreaterThan(0); // All to creator
+      expect(stats.creatorUnclaimedAlpha).toBeGreaterThan(0); // Creator gets 6%
 
-      // Share price should stay at 1:1 (no yield to vault)
-      expect(stats.sharePrice).toBe(SCALE);
+      // Share price should increase (94% of yield goes to vault)
+      expect(stats.sharePrice).toBeGreaterThan(SCALE);
     });
 
     it('should allow anyone to call compoundYield (permissionless)', async () => {
@@ -741,9 +742,9 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       const { txid } = await algod.sendRawTransaction(signedFundCharlie).do();
       await algosdk.waitForConfirmation(algod, txid, 5);
 
-      // Deploy with 20% creator fee
+      // Deploy with 5% creator fee
       deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 20, // 20%
+        creatorFeeRate: 5, // 5%
         minSwapThreshold: 2_000_000,
         poolReserveUsdc: 100_000_000_000,  // 100k USDC
         poolReserveAlpha: 100_000_000_000, // 100k Alpha (1:1 ratio)
@@ -949,7 +950,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
 
       // Deploy with large pool reserves
       deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 20,
+        creatorFeeRate: 5,
         minSwapThreshold: 2_000_000,
         poolReserveUsdc: 1_000_000_000_000,  // 1M USDC
         poolReserveAlpha: 1_000_000_000_000, // 1M Alpha
@@ -1127,7 +1128,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
 
       beforeAll(async () => {
         deployment = await deployCompoundingVaultForTest(algod, creator, {
-          creatorFeeRate: 20,
+          creatorFeeRate: 5,
           minSwapThreshold: 2_000_000,
         });
 
@@ -1165,7 +1166,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
 
       beforeAll(async () => {
         deployment = await deployCompoundingVaultForTest(algod, creator, {
-          creatorFeeRate: 20,
+          creatorFeeRate: 5,
           minSwapThreshold: 2_000_000,
         });
 
@@ -1497,7 +1498,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       }
 
       deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 15,
+        creatorFeeRate: 5,
         minSwapThreshold: 5_000_000,
         poolReserveUsdc: 500_000_000_000,
         poolReserveAlpha: 500_000_000_000,
@@ -1655,6 +1656,228 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
 
       // Minimal dust
       expect(statsAfter.totalAlpha).toBeLessThan(1000);
+    });
+  });
+
+  /**
+   * CREATOR FEE RATE UPDATE TESTS
+   * Tests the updateCreatorFeeRate method with 0-6% constraint
+   */
+  describe('Creator Fee Rate Update', () => {
+    let deployment: CompoundingVaultDeploymentResult;
+
+    beforeAll(async () => {
+      deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 3, // Start at 3%
+        minSwapThreshold: 2_000_000,
+      });
+    });
+
+    it('should allow creator to update fee rate within valid range (0-6%)', async () => {
+      // Update to 5%
+      await performUpdateCreatorFeeRate(algod, deployment, creator, 5);
+
+      // Verify by doing a compound and checking creator gets 5%
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 1_000_000_000);
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000);
+
+      await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+
+      const stats = await getVaultStats(algod, deployment);
+      // Creator fee should be approximately 5% of the compound output
+      expect(stats.creatorUnclaimedAlpha).toBeGreaterThan(0);
+
+      console.log('Fee rate updated to 5%, creator unclaimed:', stats.creatorUnclaimedAlpha / 1_000_000);
+    });
+
+    it('should allow creator to set fee rate to 0%', async () => {
+      const newDeployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await performUpdateCreatorFeeRate(algod, newDeployment, creator, 0);
+
+      // Setup and compound
+      await optInToAsset(algod, bob, newDeployment.alphaAssetId);
+      await fundAsset(algod, creator, bob.addr, newDeployment.alphaAssetId, 1_000_000_000);
+      await performUserOptIn(algod, newDeployment, bob);
+      await performDeposit(algod, newDeployment, bob, 100_000_000);
+
+      await performCompoundYield(algod, newDeployment, creator, 100_000_000, 100);
+
+      const stats = await getVaultStats(algod, newDeployment);
+      expect(stats.creatorUnclaimedAlpha).toBe(0);
+
+      console.log('Fee rate set to 0%, creator unclaimed:', stats.creatorUnclaimedAlpha);
+    });
+
+    it('should allow creator to set fee rate to maximum 6%', async () => {
+      const newDeployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await performUpdateCreatorFeeRate(algod, newDeployment, creator, 6);
+
+      console.log('Fee rate set to maximum 6%');
+    });
+
+    it('should reject fee rate above 6%', async () => {
+      const newDeployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateCreatorFeeRate(algod, newDeployment, creator, 7)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected fee rate of 7%');
+    });
+
+    it('should reject non-creator updating fee rate', async () => {
+      const newDeployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateCreatorFeeRate(algod, newDeployment, alice, 5)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected non-creator fee rate update');
+    });
+  });
+
+  /**
+   * FARM EMISSION RATE MINIMUM CONSTRAINT TESTS
+   * Tests that emission rate cannot go below 10% when farm has balance
+   */
+  describe('Farm Emission Rate Minimum Constraint', () => {
+    it('should allow setting emission rate to 0% when farm balance is 0', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Farm balance is 0, should allow setting to 0%
+      await performSetFarmEmissionRate(algod, deployment, creator, 0);
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(0);
+      expect(farmStats.farmBalance).toBe(0);
+
+      console.log('Set emission rate to 0% with empty farm - OK');
+    });
+
+    it('should allow setting emission rate to 5% when farm balance is 0', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Farm balance is 0, should allow any rate
+      await performSetFarmEmissionRate(algod, deployment, creator, 500); // 5%
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(500);
+
+      console.log('Set emission rate to 5% with empty farm - OK');
+    });
+
+    it('should reject setting emission rate below 10% when farm has balance', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // First, contribute to farm
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      const farmStatsBefore = await getFarmStats(algod, deployment);
+      expect(farmStatsBefore.farmBalance).toBe(50_000_000);
+
+      // Try to set emission rate to 5% (500 bps) - should fail
+      await expect(
+        performSetFarmEmissionRate(algod, deployment, creator, 500)
+      ).rejects.toThrow();
+
+      // Try to set to 0% - should also fail
+      await expect(
+        performSetFarmEmissionRate(algod, deployment, creator, 0)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected emission rate below 10% when farm has balance');
+    });
+
+    it('should allow setting emission rate to exactly 10% when farm has balance', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Contribute to farm
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      // Set to exactly 10% (1000 bps) - should succeed
+      await performSetFarmEmissionRate(algod, deployment, creator, 1000);
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(1000);
+
+      console.log('Set emission rate to 10% with funded farm - OK');
+    });
+
+    it('should allow setting emission rate above 10% when farm has balance', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Contribute to farm
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      // Set to 50% (5000 bps) - should succeed
+      await performSetFarmEmissionRate(algod, deployment, creator, 5000);
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(5000);
+
+      console.log('Set emission rate to 50% with funded farm - OK');
+    });
+
+    it('should allow contributions when emission rate is 0, but then require min 10% to change', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Emission rate starts at 0
+      const farmStatsBefore = await getFarmStats(algod, deployment);
+      expect(farmStatsBefore.farmEmissionRate).toBe(0);
+
+      // Contribution should work even with 0 emission rate
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      const farmStatsAfter = await getFarmStats(algod, deployment);
+      expect(farmStatsAfter.farmBalance).toBe(50_000_000);
+      expect(farmStatsAfter.farmEmissionRate).toBe(0); // Still 0
+
+      // Now try to set to 5% - should fail
+      await expect(
+        performSetFarmEmissionRate(algod, deployment, creator, 500)
+      ).rejects.toThrow();
+
+      // Must set to at least 10%
+      await performSetFarmEmissionRate(algod, deployment, creator, 1000);
+
+      const farmStatsFinal = await getFarmStats(algod, deployment);
+      expect(farmStatsFinal.farmEmissionRate).toBe(1000);
+
+      console.log('Contribution works at 0% emission, then requires min 10% to update - OK');
     });
   });
 });

@@ -3,7 +3,7 @@
 **Date:** February 2025
 **Contracts Tested:** RareFiVault, RareFiAlphaCompoundingVault
 **Test Framework:** Jest + Algorand Localnet
-**Total Tests:** 142 passing (81 RareFiVault + 61 RareFiAlphaCompoundingVault)
+**Total Tests:** 164 passing (92 RareFiVault + 72 RareFiAlphaCompoundingVault)
 
 ---
 
@@ -51,7 +51,7 @@ This document provides a comprehensive summary of the test coverage for the Rare
 
 ## Test Results
 
-### RareFiVault Tests (81 tests)
+### RareFiVault Tests (92 tests)
 
 #### Deployment (2 tests)
 | Test | Status | Description |
@@ -95,7 +95,7 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
   - Bob (25%): 19.92 IBUS
   - Charlie (15%): 11.95 IBUS
   - Dave (10%): 7.97 IBUS
-  - Creator (20% fee): 19.92 IBUS
+  - Creator (5% fee): 4.98 IBUS
 
 #### Edge Cases and Rounding (5 tests)
 | Test | Status | Description |
@@ -124,9 +124,28 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 |------|--------|-------------|
 | should allow anyone to call swapYield | PASS | Non-creator can trigger swap successfully |
 
+#### Creator Fee Rate Update (5 tests)
+| Test | Status | Description |
+|------|--------|-------------|
+| should allow creator to update fee rate to valid value | PASS | Creator updates from 2% to 5% |
+| should allow creator to set fee rate to 0 | PASS | Creator sets fee rate to 0% |
+| should allow creator to set fee rate to maximum (6%) | PASS | Creator sets fee rate to 6% |
+| should reject fee rate above maximum | PASS | Setting 7% fails with "Fee rate exceeds maximum" |
+| should reject non-creator from updating fee rate | PASS | Non-creator cannot update fee rate |
+
+#### Farm Emission Rate Minimum Constraint (6 tests)
+| Test | Status | Description |
+|------|--------|-------------|
+| should allow setting emission rate to 0 when farm balance is 0 | PASS | Can set 0% when no contributions |
+| should allow setting any rate up to max when farm balance is 0 | PASS | Can set 5%, 50%, 100% when no contributions |
+| should reject emission rate below 10% when farm has balance | PASS | Cannot set 5% when farm has balance |
+| should allow emission rate at minimum 10% when farm has balance | PASS | Can set exactly 10% when farm has balance |
+| should allow emission rate above minimum when farm has balance | PASS | Can set 50% when farm has balance |
+| should reject setting emission rate to 0 when farm has balance | PASS | Cannot set 0% when farm has balance |
+
 ---
 
-### RareFiAlphaCompoundingVault Tests (61 tests)
+### RareFiAlphaCompoundingVault Tests (72 tests)
 
 #### Deployment (2 tests)
 | Test | Status | Description |
@@ -176,6 +195,25 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 | Test | Status | Description |
 |------|--------|-------------|
 | should allow anyone to call compoundYield | PASS | Non-creator can trigger compound successfully |
+
+#### Creator Fee Rate Update (5 tests)
+| Test | Status | Description |
+|------|--------|-------------|
+| should allow creator to update fee rate to valid value | PASS | Creator updates from 2% to 5% |
+| should allow creator to set fee rate to 0 | PASS | Creator sets fee rate to 0% |
+| should allow creator to set fee rate to maximum (6%) | PASS | Creator sets fee rate to 6% |
+| should reject fee rate above maximum | PASS | Setting 7% fails with "Fee rate exceeds maximum" |
+| should reject non-creator from updating fee rate | PASS | Non-creator cannot update fee rate |
+
+#### Farm Emission Rate Minimum Constraint (6 tests)
+| Test | Status | Description |
+|------|--------|-------------|
+| should allow setting emission rate to 0 when farm balance is 0 | PASS | Can set 0% when no contributions |
+| should allow setting any rate up to max when farm balance is 0 | PASS | Can set 5%, 50%, 100% when no contributions |
+| should reject emission rate below 10% when farm has balance | PASS | Cannot set 5% when farm has balance |
+| should allow emission rate at minimum 10% when farm has balance | PASS | Can set exactly 10% when farm has balance |
+| should allow emission rate above minimum when farm has balance | PASS | Can set 50% when farm has balance |
+| should reject setting emission rate to 0 when farm has balance | PASS | Cannot set 0% when farm has balance |
 
 #### Comprehensive Integration Test (6 tests)
 | Phase | Status | Description |
@@ -234,9 +272,17 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 ### 5. Farm Feature Bounds
 **Tests Verified:**
 - `farmEmissionRate` capped at 100% (10000 bps) via `MAX_FARM_EMISSION_BPS`
+- `farmEmissionRate` minimum 10% (1000 bps) when farm has balance via `MIN_FARM_EMISSION_BPS`
 - Farm bonus correctly calculated and deducted from balance
 - **`contributeFarm()`**: Anyone can fund the farm (permissionless)
 - **`setFarmEmissionRate()`**: Only creator or RareFi can set emission rate
+
+### 6. Creator Fee Rate Update
+**Tests Verified:**
+- Creator can update fee rate at any time (not just deployment)
+- Fee rate constrained to 0-6% range (`MAX_FEE_RATE = 6`)
+- Only creator can update (not RareFi, not anyone else)
+- **`updateCreatorFeeRate()`**: Creator only, validates against MAX_FEE_RATE
 
 ---
 
@@ -248,7 +294,7 @@ Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interacti
 |----------|---------------|--------------|-------|
 | Prime deposits (7:13) | 1.8571428571 | 1.8571429491 | 0.00001% |
 | Share price calculation | Exact | Exact | 0% |
-| Creator fee (20%) | 20.00% | 20.00% | 0% |
+| Creator fee (5%) | 5.00% | 5.00% | 0% |
 
 ### Mathematical Verification
 - `yieldPerToken` scaled by 1e9 (SCALE constant)
@@ -365,14 +411,16 @@ npm test -- --verbose
 
 ## Conclusion
 
-All 142 tests pass with correct behavior verified for:
+All 164 tests pass with correct behavior verified for:
 - Core deposit/withdraw/claim operations
 - Proportional yield distribution
 - Share-based accounting and compounding
 - **Auto-swap on deposit** (flash protection)
 - Permissionless swap triggering
 - Creator fee calculations
+- **Creator fee rate updates** (0-6% range, creator only)
 - Farm bonus mechanics
+- **Farm emission rate constraints** (10% minimum when farm has balance)
 - Edge cases and rounding
 
 The contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (auto-swap protection, attack prevention) function as designed.

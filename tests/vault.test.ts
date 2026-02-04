@@ -13,6 +13,7 @@ import {
   getUserDeposit,
   performContributeFarm,
   performSetFarmEmissionRate,
+  performUpdateCreatorFeeRate,
   getFarmStats,
   VaultDeploymentResult,
 } from './utils/vault';
@@ -67,7 +68,7 @@ describe('RareFiVault Contract Tests', () => {
 
     it('should deploy vault and pool successfully', async () => {
       deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 20,
+        creatorFeeRate: 5,
         minSwapThreshold: 2_000_000, // 2 USDC
       });
 
@@ -150,7 +151,7 @@ describe('RareFiVault Contract Tests', () => {
 
     beforeAll(async () => {
       deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 20, // 20%
+        creatorFeeRate: 5, // 5%
         minSwapThreshold: 2_000_000, // 2 USDC
       });
 
@@ -183,7 +184,7 @@ describe('RareFiVault Contract Tests', () => {
 
       // Creator should have received their cut
       // With 1:1 pool ratio and 0.3% fee, swap output ~= 299.1M IBUS
-      // Creator fee = 20% of that
+      // Creator fee = 5% of that
       expect(stats.creatorUnclaimedYield).toBeGreaterThan(0);
 
       // yieldPerToken should be updated
@@ -249,7 +250,7 @@ describe('RareFiVault Contract Tests', () => {
 
     beforeAll(async () => {
       deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 20,
+        creatorFeeRate: 5,
         minSwapThreshold: 2_000_000,
       });
 
@@ -423,9 +424,9 @@ describe('RareFiVault Contract Tests', () => {
       expect(pending).toBeGreaterThan(0);
     });
 
-    it('should handle 100% fee rate correctly', async () => {
+    it('should handle maximum 6% fee rate correctly', async () => {
       const deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 100,
+        creatorFeeRate: 6, // Maximum allowed
         minSwapThreshold: 2_000_000,
       });
 
@@ -440,11 +441,16 @@ describe('RareFiVault Contract Tests', () => {
       await performSwapYield(algod, deployment, creator, 50_000_000, 100);
 
       const stats = await getVaultStats(algod, deployment);
-      expect(stats.creatorUnclaimedYield).toBeGreaterThan(0); // All to creator
+      expect(stats.creatorUnclaimedYield).toBeGreaterThan(0); // Creator gets 6%
 
-      // User gets nothing
+      // User gets 94%
       const pending = await getPendingYield(algod, deployment, bob.addr);
-      expect(pending).toBe(0);
+      expect(pending).toBeGreaterThan(0);
+
+      // Verify ~6% to creator
+      const totalYield = stats.creatorUnclaimedYield + pending;
+      const creatorRatio = stats.creatorUnclaimedYield / totalYield;
+      expect(creatorRatio).toBeCloseTo(0.06, 2);
     });
 
     it('should allow anyone to call swapYield (permissionless)', async () => {
@@ -563,9 +569,9 @@ describe('RareFiVault Contract Tests', () => {
       const { txid } = await algod.sendRawTransaction(signedFundDave).do();
       await algosdk.waitForConfirmation(algod, txid, 5);
 
-      // Deploy with 20% creator fee
+      // Deploy with 5% creator fee
       deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 20, // 20%
+        creatorFeeRate: 5, // 5%
         minSwapThreshold: 2_000_000,
         poolReserveUsdc: 100_000_000_000,  // 100k USDC
         poolReserveIbus: 100_000_000_000,  // 100k IBUS (1:1 ratio)
@@ -611,14 +617,14 @@ describe('RareFiVault Contract Tests', () => {
       const stats = await getVaultStats(algod, deployment);
 
       // With 1:1 pool and 0.3% fee, swap output ≈ 99.7 IBUS
-      // Creator gets 20% ≈ 19.94 IBUS
-      // Users get 80% ≈ 79.76 IBUS
+      // Creator gets 5% ≈ 4.98 IBUS
+      // Users get 95% ≈ 94.71 IBUS
 
       // Check proportional distribution:
-      // Alice (1000/2000 = 50%): ~39.88 IBUS
-      // Bob (500/2000 = 25%): ~19.94 IBUS
-      // Charlie (300/2000 = 15%): ~11.96 IBUS
-      // Dave (200/2000 = 10%): ~7.97 IBUS
+      // Alice (1000/2000 = 50%): ~47.36 IBUS
+      // Bob (500/2000 = 25%): ~23.68 IBUS
+      // Charlie (300/2000 = 15%): ~14.21 IBUS
+      // Dave (200/2000 = 10%): ~9.47 IBUS
 
       const alicePending = await getPendingYield(algod, deployment, alice.addr);
       const bobPending = await getPendingYield(algod, deployment, bob.addr);
@@ -637,10 +643,10 @@ describe('RareFiVault Contract Tests', () => {
       expect(bobPending / davePending).toBeCloseTo(2.5, 1);
       expect(charliePending / davePending).toBeCloseTo(1.5, 1);
 
-      // Verify creator gets ~20%
+      // Verify creator gets ~5%
       const totalUserPending = alicePending + bobPending + charliePending + davePending;
       const creatorRatio = stats.creatorUnclaimedYield / (totalUserPending + stats.creatorUnclaimedYield);
-      expect(creatorRatio).toBeCloseTo(0.2, 1);
+      expect(creatorRatio).toBeCloseTo(0.05, 2);
     });
 
     it('Phase 3: Alice claims, Bob withdraws partially', async () => {
@@ -998,9 +1004,9 @@ describe('RareFiVault Contract Tests', () => {
       console.log('  Round 2 (300 tokens, 20 USDC):', yield2 / 1_000_000);
     });
 
-    it('should correctly handle creator with 20% fee over multiple swaps', async () => {
+    it('should correctly handle creator with 5% fee over multiple swaps', async () => {
       const deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 20,
+        creatorFeeRate: 5,
         minSwapThreshold: 2_000_000,
         poolReserveUsdc: 100_000_000_000,
         poolReserveIbus: 100_000_000_000,
@@ -1024,7 +1030,7 @@ describe('RareFiVault Contract Tests', () => {
       const stats = await getVaultStats(algod, deployment);
       const alicePending = await getPendingYield(algod, deployment, alice.addr);
 
-      // Creator should have ~20% of total
+      // Creator should have ~5% of total
       const totalYield = stats.creatorUnclaimedYield + alicePending;
       const creatorRatio = stats.creatorUnclaimedYield / totalYield;
 
@@ -1034,7 +1040,7 @@ describe('RareFiVault Contract Tests', () => {
       console.log('  User yield:', alicePending / 1_000_000);
       console.log('  Creator ratio:', (creatorRatio * 100).toFixed(2) + '%');
 
-      expect(creatorRatio).toBeCloseTo(0.2, 1); // ~20% to creator
+      expect(creatorRatio).toBeCloseTo(0.05, 2); // ~5% to creator
     });
   });
 
@@ -1292,7 +1298,7 @@ describe('RareFiVault Contract Tests', () => {
 
       // Deploy with large pool reserves to handle whale deposits
       deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 20,
+        creatorFeeRate: 5,
         minSwapThreshold: 2_000_000,
         poolReserveUsdc: 1_000_000_000_000,  // 1M USDC
         poolReserveIbus: 1_000_000_000_000,  // 1M IBUS
@@ -1746,7 +1752,7 @@ describe('RareFiVault Contract Tests', () => {
       }
 
       deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 15, // 15%
+        creatorFeeRate: 5, // 5%
         minSwapThreshold: 5_000_000,
         poolReserveUsdc: 500_000_000_000,
         poolReserveIbus: 500_000_000_000,
@@ -1781,7 +1787,7 @@ describe('RareFiVault Contract Tests', () => {
       const alicePending = await getPendingYield(algod, deployment, alice.addr);
       const bobPending = await getPendingYield(algod, deployment, bob.addr);
 
-      // Alice: 80%, Bob: 20% of user yield (creator gets 15%)
+      // Alice: 80%, Bob: 20% of user yield (creator gets 5%)
       expect(alicePending / bobPending).toBeCloseTo(4.0, 1);
 
       console.log('Phase 2: 1000 USDC yield distributed');
@@ -1920,7 +1926,7 @@ describe('RareFiVault Contract Tests', () => {
 
       beforeAll(async () => {
         deployment = await deployVaultForTest(algod, creator, {
-          creatorFeeRate: 20,
+          creatorFeeRate: 5,
           minSwapThreshold: 2_000_000,
         });
 
@@ -1954,7 +1960,7 @@ describe('RareFiVault Contract Tests', () => {
 
       beforeAll(async () => {
         deployment = await deployVaultForTest(algod, creator, {
-          creatorFeeRate: 20,
+          creatorFeeRate: 5,
           minSwapThreshold: 2_000_000,
         });
 
@@ -2101,7 +2107,7 @@ describe('RareFiVault Contract Tests', () => {
 
       it('should correctly distribute yield with farm bonus among multiple users', async () => {
         const deployment = await deployVaultForTest(algod, creator, {
-          creatorFeeRate: 20,
+          creatorFeeRate: 5,
           minSwapThreshold: 2_000_000,
         });
 
@@ -2172,7 +2178,7 @@ describe('RareFiVault Contract Tests', () => {
       }
 
       deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 15,
+        creatorFeeRate: 5,
         minSwapThreshold: 5_000_000,
         poolReserveUsdc: 500_000_000_000,
         poolReserveIbus: 500_000_000_000,
@@ -2329,6 +2335,233 @@ describe('RareFiVault Contract Tests', () => {
 
       expect(stats.totalDeposits).toBe(0);
       expect(stats.swapAssetBalance).toBeLessThan(1000);
+    });
+  });
+
+  /**
+   * CREATOR FEE RATE UPDATE TESTS
+   * Tests the updateCreatorFeeRate method with 0-6% constraint
+   */
+  describe('Creator Fee Rate Update', () => {
+    let deployment: VaultDeploymentResult;
+
+    beforeAll(async () => {
+      deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3, // Start at 3%
+        minSwapThreshold: 2_000_000,
+      });
+    });
+
+    it('should allow creator to update fee rate within valid range (0-6%)', async () => {
+      // Update to 5%
+      await performUpdateCreatorFeeRate(algod, deployment, creator, 5);
+
+      // Verify by doing a swap and checking creator gets 5%
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await optInToAsset(algod, alice, deployment.ibusAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 1_000_000_000);
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000);
+
+      await performSwapYield(algod, deployment, creator, 100_000_000, 100);
+
+      const stats = await getVaultStats(algod, deployment);
+      expect(stats.creatorUnclaimedYield).toBeGreaterThan(0);
+
+      console.log('Fee rate updated to 5%, creator unclaimed:', stats.creatorUnclaimedYield / 1_000_000);
+    });
+
+    it('should allow creator to set fee rate to 0%', async () => {
+      const newDeployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await performUpdateCreatorFeeRate(algod, newDeployment, creator, 0);
+
+      // Setup and swap
+      await optInToAsset(algod, bob, newDeployment.alphaAssetId);
+      await optInToAsset(algod, bob, newDeployment.ibusAssetId);
+      await fundAsset(algod, creator, bob.addr, newDeployment.alphaAssetId, 1_000_000_000);
+      await performUserOptIn(algod, newDeployment, bob);
+      await performDeposit(algod, newDeployment, bob, 100_000_000);
+
+      await performSwapYield(algod, newDeployment, creator, 100_000_000, 100);
+
+      const stats = await getVaultStats(algod, newDeployment);
+      expect(stats.creatorUnclaimedYield).toBe(0);
+
+      console.log('Fee rate set to 0%, creator unclaimed:', stats.creatorUnclaimedYield);
+    });
+
+    it('should allow creator to set fee rate to maximum 6%', async () => {
+      const newDeployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await performUpdateCreatorFeeRate(algod, newDeployment, creator, 6);
+
+      console.log('Fee rate set to maximum 6%');
+    });
+
+    it('should reject fee rate above 6%', async () => {
+      const newDeployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateCreatorFeeRate(algod, newDeployment, creator, 7)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected fee rate of 7%');
+    });
+
+    it('should reject non-creator updating fee rate', async () => {
+      const newDeployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateCreatorFeeRate(algod, newDeployment, alice, 5)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected non-creator fee rate update');
+    });
+  });
+
+  /**
+   * FARM EMISSION RATE MINIMUM CONSTRAINT TESTS
+   * Tests that emission rate cannot go below 10% when farm has balance
+   */
+  describe('Farm Emission Rate Minimum Constraint', () => {
+    it('should allow setting emission rate to 0% when farm balance is 0', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Farm balance is 0, should allow setting to 0%
+      await performSetFarmEmissionRate(algod, deployment, creator, 0);
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(0);
+      expect(farmStats.farmBalance).toBe(0);
+
+      console.log('Set emission rate to 0% with empty farm - OK');
+    });
+
+    it('should allow setting emission rate to 5% when farm balance is 0', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Farm balance is 0, should allow any rate
+      await performSetFarmEmissionRate(algod, deployment, creator, 500); // 5%
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(500);
+
+      console.log('Set emission rate to 5% with empty farm - OK');
+    });
+
+    it('should reject setting emission rate below 10% when farm has balance', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // First, contribute to farm
+      await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 100_000_000);
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      const farmStatsBefore = await getFarmStats(algod, deployment);
+      expect(farmStatsBefore.farmBalance).toBe(50_000_000);
+
+      // Try to set emission rate to 5% (500 bps) - should fail
+      await expect(
+        performSetFarmEmissionRate(algod, deployment, creator, 500)
+      ).rejects.toThrow();
+
+      // Try to set to 0% - should also fail
+      await expect(
+        performSetFarmEmissionRate(algod, deployment, creator, 0)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected emission rate below 10% when farm has balance');
+    });
+
+    it('should allow setting emission rate to exactly 10% when farm has balance', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Contribute to farm
+      await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 100_000_000);
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      // Set to exactly 10% (1000 bps) - should succeed
+      await performSetFarmEmissionRate(algod, deployment, creator, 1000);
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(1000);
+
+      console.log('Set emission rate to 10% with funded farm - OK');
+    });
+
+    it('should allow setting emission rate above 10% when farm has balance', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Contribute to farm
+      await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 100_000_000);
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      // Set to 50% (5000 bps) - should succeed
+      await performSetFarmEmissionRate(algod, deployment, creator, 5000);
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(5000);
+
+      console.log('Set emission rate to 50% with funded farm - OK');
+    });
+
+    it('should allow contributions when emission rate is 0, but then require min 10% to change', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Emission rate starts at 0
+      const farmStatsBefore = await getFarmStats(algod, deployment);
+      expect(farmStatsBefore.farmEmissionRate).toBe(0);
+
+      // Contribution should work even with 0 emission rate
+      await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 100_000_000);
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      const farmStatsAfter = await getFarmStats(algod, deployment);
+      expect(farmStatsAfter.farmBalance).toBe(50_000_000);
+      expect(farmStatsAfter.farmEmissionRate).toBe(0); // Still 0
+
+      // Now try to set to 5% - should fail
+      await expect(
+        performSetFarmEmissionRate(algod, deployment, creator, 500)
+      ).rejects.toThrow();
+
+      // Must set to at least 10%
+      await performSetFarmEmissionRate(algod, deployment, creator, 1000);
+
+      const farmStatsFinal = await getFarmStats(algod, deployment);
+      expect(farmStatsFinal.farmEmissionRate).toBe(1000);
+
+      console.log('Contribution works at 0% emission, then requires min 10% to update - OK');
     });
   });
 });
