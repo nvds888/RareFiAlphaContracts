@@ -1,428 +1,238 @@
 # RareFi Vault Contracts - Test Summary
 
 **Date:** February 2025
-**Contracts Tested:** RareFiVault, RareFiAlphaCompoundingVault
-**Test Framework:** Jest + Algorand Localnet
-**Total Tests:** 164 passing (92 RareFiVault + 72 RareFiAlphaCompoundingVault)
+**Contracts:** RareFiVault, RareFiAlphaCompoundingVault
+**Framework:** Jest + Algorand Localnet
+**Total Tests:** 190 passing
 
 ---
 
-## Overview
-
-This document provides a comprehensive summary of the test coverage for the RareFi vault smart contracts. All tests run against Algorand localnet with a mock Tinyman V2 pool implementation.
-
----
-
-## Contract Architectures
+## Contract Overview
 
 ### RareFiVault (Staking Rewards Accumulator)
-- Users deposit Alpha tokens
-- USDC airdrops arrive at vault
-- USDC is swapped to project token (IBUS) via Tinyman
-- Yield distributed proportionally using `yieldPerToken` accumulator pattern
-- Creator receives configurable fee percentage
-- **Auto-swap on deposit** when threshold met
+- Deposit Alpha → earn project tokens via USDC → swapAsset swaps
+- Yield-per-token accumulator pattern (SCALE = 1e12)
+- Auto-swap on deposit when threshold met
 
 ### RareFiAlphaCompoundingVault (Share-Based Auto-Compounding)
-- Users deposit Alpha tokens, receive shares
-- USDC airdrops are compounded back into Alpha via Tinyman
+- Deposit Alpha → earn more Alpha via USDC → Alpha swaps
 - Share price increases over time as yield compounds
-- Creator receives configurable fee percentage
-- **Auto-compound on deposit** when threshold met
+- Auto-compound on deposit when threshold met
 
 ---
 
-## Recent Changes (January 2025)
+## RareFiVault Tests (105 tests)
 
-### Permissionless Swaps
-- `swapYield()` and `compoundYield()` are now **permissionless** - anyone can call them
-- Max slippage increased to **100%** (was 10%) to handle illiquid pools
-- Removes need for cronjobs - users can trigger swaps if needed
+### Deployment (2 tests)
+- Deploy vault and pool successfully
+- Correct initial state (all global state vars)
 
-### Auto-Swap on Deposit
-- `deposit(slippageBps)` now takes a slippage parameter
-- When USDC balance >= threshold AND existing depositors exist:
-  - Swap executes **BEFORE** deposit is credited
-  - Yield goes to existing depositors only
-  - New depositor cannot capture pre-existing yield
-- This replaces the previous "pause deposits" mechanism
+### User Operations (6 tests)
+- Opt in, deposit, yield tracking, claim, withdraw, deposit-withdraw-deposit cycle
 
----
+### Close Out (1 test)
+- Returns deposit and yield on close out
 
-## Test Results
+### Comprehensive Integration (9 tests)
+Multi-user scenario (Alice, Bob, Charlie, Dave):
+1. Initial deposits (1000 + 500 + 300 + 200 = 2000 total)
+2. First yield swap — proportional distribution verified
+3. Partial operations (claims, partial withdrawals)
+4. Second yield swap to remaining users
+5. Close out returns deposit + yield
+6. Additional deposits with preserved history
+7. Creator fee claims
+8. Final user operations
+9. Full withdrawal (vault ends at 0)
 
-### RareFiVault Tests (92 tests)
+### Edge Cases & Rounding (5 tests)
+- Prime number deposits: 0.00001% error
+- Small yield (2 USDC on 1000 tokens)
+- Large deposits (10,000 tokens)
+- Multiple deposit-claim cycles
+- Creator fee accumulation over 5 swaps: exactly 20.00%
 
-#### Deployment (2 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should deploy vault and pool successfully | PASS | Verifies contract deployment, asset creation, pool setup |
-| should have correct initial state | PASS | Validates all global state variables initialized correctly |
+### Auto-Swap on Deposit (4 tests)
+- No swap when USDC below threshold
+- Auto-swap triggers at threshold (yieldPerToken increases)
+- Withdrawals always allowed
+- New depositor gets 0 from pre-existing yield
 
-#### User Operations (6 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow user to opt in | PASS | User can opt into vault application |
-| should allow user to deposit Alpha tokens | PASS | Deposit updates totalDeposits and user local state |
-| should track yield per token correctly | PASS | yieldPerToken accumulator updates on swap |
-| should allow user to claim yield | PASS | User receives proportional IBUS yield |
-| should allow user to withdraw deposited tokens | PASS | Partial and full withdrawal works correctly |
-| should handle deposit-withdraw-deposit cycle | PASS | State remains consistent through multiple operations |
+### Flash Deposit Prevention (1 test)
+- Alice: 100% yield (49.60 IBUS), attacker Bob: 0
 
-#### Close Out (1 test)
-| Test | Status | Description |
-|------|--------|-------------|
-| should return deposit and yield on close out | PASS | CloseOut returns all tokens and pending yield |
+### Permissionless Swap (1 test)
+- Non-creator can trigger swapYield
 
-#### Comprehensive Integration Test (9 tests)
-Multi-user scenario with Alice, Bob, Charlie, and Dave testing complex interactions:
+### Creator Fee Rate Update (5 tests)
+- Update to valid value (2% → 5%)
+- Set to 0%, set to max (6%)
+- Reject 7% (exceeds maximum)
+- Reject non-creator update
 
-| Phase | Status | Description |
-|-------|--------|-------------|
-| Phase 1: Initial deposits | PASS | 4 users deposit varying amounts (1000, 500, 300, 200 = 2000 total) |
-| Phase 2: First yield swap | PASS | 100 USDC swapped, proportional distribution verified |
-| Phase 3: Partial operations | PASS | Alice claims, Bob withdraws 200 tokens |
-| Phase 4: Second yield swap | PASS | 50 USDC swapped to remaining 3 users |
-| Phase 5: Charlie closes out | PASS | Full close out returns deposit + yield |
-| Phase 6: Dave deposits more | PASS | Historical yield preserved, new deposits tracked |
-| Phase 7: Creator claims fees | PASS | Creator receives accumulated fees |
-| Phase 8: Alice claims and withdraws | PASS | Final user operations succeed |
-| Phase 9: Full withdrawal | PASS | Vault ends with 0 deposits |
+### Max Slippage (5 tests)
+- Creator can update maxSlippageBps
+- Enforced min 5% (rejects lower)
+- Enforced max 100% (rejects higher)
+- Swap rejects slippage above max setting
+- Non-creator cannot update
 
-**Key Metrics from Comprehensive Test:**
-- Phase 2 yield distribution:
-  - Alice (50%): 39.84 IBUS
-  - Bob (25%): 19.92 IBUS
-  - Charlie (15%): 11.95 IBUS
-  - Dave (10%): 7.97 IBUS
-  - Creator (5% fee): 4.98 IBUS
+### Asset Opt-In Guard (2 tests)
+- optInAssets succeeds on first call
+- Rejects second call (already opted in)
 
-#### Edge Cases and Rounding (5 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should distribute yield proportionally with prime numbers | PASS | Alice (7 tokens): 1.046536, Bob (13 tokens): 1.943568. Ratio: 1.857143 (expected: 1.857142) - 0.00001% error |
-| should handle small yield amounts | PASS | 2 USDC on 1000 tokens = 1.993602 IBUS |
-| should handle large deposits correctly | PASS | 2 USDC on 10,000 tokens = 1.9936 IBUS |
-| should handle multiple deposit-claim cycles | PASS | Round 1: 9.96 IBUS, Round 2: 19.86 IBUS |
-| should accumulate creator fees correctly over multiple swaps | PASS | 5 swaps: Creator ratio exactly 20.00% |
+### Farm Emission Rate (6 tests)
+- Set to 0% when balance is 0
+- Set any rate when balance is 0
+- Reject < 10% when farm has balance
+- Allow exactly 10% when farm has balance
+- Allow > 10% when farm has balance
+- Reject 0% when farm has balance
 
-#### Auto-Swap on Deposit (4 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow deposits when USDC below threshold (no auto-swap) | PASS | Deposit succeeds, USDC balance unchanged |
-| should AUTO-SWAP when USDC balance meets threshold | PASS | yieldPerToken increased from 0 to 0.090546081 |
-| should allow withdrawals when USDC at threshold | PASS | Withdrawals always succeed |
-| should give new depositor correct yield (not capturing pre-existing) | PASS | Alice: 9.96 IBUS, Bob (new): 0 IBUS |
-
-#### Flash Deposit Attack Prevention (1 test)
-| Test | Status | Description |
-|------|--------|-------------|
-| should prevent attacker from stealing yield via auto-swap | PASS | Alice receives 100% (49.60 IBUS), Bob triggers swap but gets 0 |
-
-#### Permissionless Swap (1 test)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow anyone to call swapYield | PASS | Non-creator can trigger swap successfully |
-
-#### Creator Fee Rate Update (5 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow creator to update fee rate to valid value | PASS | Creator updates from 2% to 5% |
-| should allow creator to set fee rate to 0 | PASS | Creator sets fee rate to 0% |
-| should allow creator to set fee rate to maximum (6%) | PASS | Creator sets fee rate to 6% |
-| should reject fee rate above maximum | PASS | Setting 7% fails with "Fee rate exceeds maximum" |
-| should reject non-creator from updating fee rate | PASS | Non-creator cannot update fee rate |
-
-#### Farm Emission Rate Minimum Constraint (6 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow setting emission rate to 0 when farm balance is 0 | PASS | Can set 0% when no contributions |
-| should allow setting any rate up to max when farm balance is 0 | PASS | Can set 5%, 50%, 100% when no contributions |
-| should reject emission rate below 10% when farm has balance | PASS | Cannot set 5% when farm has balance |
-| should allow emission rate at minimum 10% when farm has balance | PASS | Can set exactly 10% when farm has balance |
-| should allow emission rate above minimum when farm has balance | PASS | Can set 50% when farm has balance |
-| should reject setting emission rate to 0 when farm has balance | PASS | Cannot set 0% when farm has balance |
+### Tinyman Pool Update (3 tests)
+- Creator can update pool
+- Validates pool contains correct assets
+- Rejects non-creator/non-RareFi
 
 ---
 
-### RareFiAlphaCompoundingVault Tests (72 tests)
+## RareFiAlphaCompoundingVault Tests (85 tests)
 
-#### Deployment (2 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should deploy vault and pool successfully | PASS | Contract deployment verified |
-| should have correct initial state | PASS | All state variables initialized correctly |
+### Deployment (2 tests)
+- Deploy vault and pool successfully
+- Correct initial state
 
-#### User Operations - Share-Based Accounting (6 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow user to opt in | PASS | User can opt into vault |
-| should allow user to deposit and receive shares | PASS | 1:1 share ratio on first deposit |
-| should compound yield and increase share price | PASS | Share price: 1.0 -> 1.154 after compound |
-| should allow user to withdraw with yield | PASS | Alice withdraws 1154.88 Alpha (deposited 1000) |
-| should calculate shares correctly at higher share price | PASS | Bob gets 463.4 shares for 500 Alpha at 1.079 price |
-| should give late depositor fair share | PASS | Late depositor pays current share price |
+### User Operations - Share Accounting (6 tests)
+- Opt in, deposit (1:1 first), compound (price 1.0 → 1.154)
+- Withdraw with yield (1000 → 1154.88 Alpha)
+- Correct shares at higher price (500 Alpha → 463.4 shares at 1.079)
+- Late depositor pays current share price
 
-#### Auto-Compounding Logic (2 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should distribute yield proportionally to shareholders | PASS | Alice (2x shares) gets 2x yield |
-| should handle close out correctly | PASS | All shares burned, full Alpha returned |
+### Auto-Compounding Logic (2 tests)
+- Proportional distribution (2x shares = 2x yield)
+- Close out returns all Alpha for shares
 
-#### Edge Cases (4 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should handle prime number deposits | PASS | Ratio: 1.857142 (expected: 1.857142) |
-| should handle multiple compound cycles | PASS | 5 compounds: Share price 1.496 |
-| should handle withdrawal that leaves dust | PASS | Dust amounts handled correctly |
-| should reject deposit of 0 | PASS | Zero deposit rejected |
+### Edge Cases (4 tests)
+- Prime number deposits
+- 5 compound cycles: share price 1.496
+- Dust handling on withdrawals
+- Reject zero deposit
 
-#### Auto-Compound on Deposit (3 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow deposits when USDC below threshold (no auto-compound) | PASS | Deposit succeeds, USDC unchanged |
-| should AUTO-COMPOUND when USDC balance meets threshold | PASS | Share price increased from 1 to 1.090546 |
-| should give new depositor correct shares (not capturing pre-existing yield) | PASS | Alice Alpha: 109.96, Bob Alpha: 100 (deposited 100) |
+### Auto-Compound on Deposit (3 tests)
+- No compound when USDC below threshold
+- Auto-compound at threshold (price 1.0 → 1.090546)
+- New depositor gets correct shares (not capturing yield)
 
-#### Farm Feature (3 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow creator to fund farm | PASS | Farm balance: 50 Alpha |
-| should allow setting farm emission rate | PASS | Emission rate: 1000 bps (10%) |
-| should apply farm bonus on compound | PASS | Farm balance before: 50, after: 49.00 (bonus applied) |
+### Farm Feature (3 tests)
+- Fund farm (50 Alpha)
+- Set emission rate (10%)
+- Farm bonus applied on compound
 
-#### Permissionless Compound (1 test)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow anyone to call compoundYield | PASS | Non-creator can trigger compound successfully |
+### Permissionless Compound (1 test)
+- Non-creator can trigger compoundYield
 
-#### Creator Fee Rate Update (5 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow creator to update fee rate to valid value | PASS | Creator updates from 2% to 5% |
-| should allow creator to set fee rate to 0 | PASS | Creator sets fee rate to 0% |
-| should allow creator to set fee rate to maximum (6%) | PASS | Creator sets fee rate to 6% |
-| should reject fee rate above maximum | PASS | Setting 7% fails with "Fee rate exceeds maximum" |
-| should reject non-creator from updating fee rate | PASS | Non-creator cannot update fee rate |
+### Creator Fee Rate Update (5 tests)
+- Same pattern as RareFiVault (0-6% range, creator only)
 
-#### Farm Emission Rate Minimum Constraint (6 tests)
-| Test | Status | Description |
-|------|--------|-------------|
-| should allow setting emission rate to 0 when farm balance is 0 | PASS | Can set 0% when no contributions |
-| should allow setting any rate up to max when farm balance is 0 | PASS | Can set 5%, 50%, 100% when no contributions |
-| should reject emission rate below 10% when farm has balance | PASS | Cannot set 5% when farm has balance |
-| should allow emission rate at minimum 10% when farm has balance | PASS | Can set exactly 10% when farm has balance |
-| should allow emission rate above minimum when farm has balance | PASS | Can set 50% when farm has balance |
-| should reject setting emission rate to 0 when farm has balance | PASS | Cannot set 0% when farm has balance |
+### Max Slippage (5 tests)
+- Same pattern as RareFiVault (5-100% range, creator only)
 
-#### Comprehensive Integration Test (6 tests)
-| Phase | Status | Description |
-|-------|--------|-------------|
-| Phase 1: Initial deposits | PASS | 3 users: 1000, 500, 500 = 2000 total shares |
-| Phase 2: First compound | PASS | Share price: 1.0398, all users gain proportionally |
-| Phase 3: Partial withdrawals | PASS | Alice withdraws 500 shares, Bob closes out |
-| Phase 4: Second compound | PASS | Alice/Charlie shares appreciate further |
-| Phase 5: Creator claims | PASS | Creator receives 29.86 Alpha fees |
-| Phase 6: Final withdrawals | PASS | Total shares: 0, Total Alpha: 0 |
+### Asset Opt-In Guard (2 tests)
+- Same pattern as RareFiVault
+
+### Farm Emission Rate (6 tests)
+- Same pattern as RareFiVault
+
+### Tinyman Pool Update (3 tests)
+- Same pattern as RareFiVault
+
+### Comprehensive Integration (6 tests)
+1. Initial deposits (3 users: 1000 + 500 + 500 = 2000 shares)
+2. First compound — share price 1.0398
+3. Partial withdrawals, Bob closes out
+4. Second compound — further appreciation
+5. Creator claims 29.86 Alpha fees
+6. Final withdrawals (totalShares: 0, totalAlpha: 0)
 
 ---
 
 ## Security Features Tested
 
-### 1. Auto-Swap/Compound on Deposit (Flash Protection)
-**Purpose:** Prevent attackers from depositing right before a known yield distribution.
+### Flash Deposit Prevention
+Auto-swap/compound executes BEFORE deposit is credited. New depositor cannot capture pre-existing yield. Verified with explicit attacker scenario.
 
-**Mechanism:** When vault's USDC balance >= `minSwapThreshold`, the deposit triggers an automatic swap BEFORE the deposit is credited.
-
-**Test Results:**
-- Auto-swap triggers at threshold: PASS
-- Yield distributed to existing holders only: PASS
-- New depositor receives 0 from pre-existing yield: PASS
-- Withdrawals always allowed: PASS
-- Claims always allowed: PASS
-
-### 2. Flash Deposit Attack Prevention
-**Purpose:** Ensure attackers cannot steal yield from existing depositors.
-
-**Scenario Tested:**
-1. Alice deposits 100 tokens
-2. 50 USDC airdrop arrives (at threshold)
-3. Bob attempts to deposit
-4. **Auto-swap executes FIRST** - Alice gets all yield
-5. **Then** Bob's deposit is credited
-6. Alice receives 100% of yield (49.60 IBUS)
-7. Bob receives 0 from that distribution
-
-**Result:** Attack fully prevented via auto-swap mechanism.
-
-### 3. Yield Distribution Fairness
-**Tests Verified:**
-- Proportional distribution based on deposit size
-- Late depositors don't steal from early depositors
-- Historical yield preserved through deposit/withdrawal cycles
+### Yield Distribution Fairness
+- Proportional distribution based on deposit/share size
+- Late depositors pay current share price
+- Historical yield preserved through cycles
 - Creator fee deducted before user distribution
 
-### 4. Permissionless Swaps
-**Tests Verified:**
-- Anyone can call `swapYield()` / `compoundYield()`
-- Slippage up to 100% allowed (for illiquid pools)
+### Permissionless Swaps
+- Anyone can trigger `swapYield()` / `compoundYield()`
+- Slippage capped by creator-controlled `maxSlippageBps` (min 5%)
 - On-chain price calculation prevents fake quotes
-- No admin bottleneck for yield processing
 
-### 5. Farm Feature Bounds
-**Tests Verified:**
-- `farmEmissionRate` capped at 100% (10000 bps) via `MAX_FARM_EMISSION_BPS`
-- `farmEmissionRate` minimum 10% (1000 bps) when farm has balance via `MIN_FARM_EMISSION_BPS`
-- Farm bonus correctly calculated and deducted from balance
-- **`contributeFarm()`**: Anyone can fund the farm (permissionless)
-- **`setFarmEmissionRate()`**: Only creator or RareFi can set emission rate
+### Creator Fee Constraints
+- Capped at 0-6% via `MAX_FEE_RATE`
+- Only creator can update (not RareFi or anyone else)
 
-### 6. Creator Fee Rate Update
-**Tests Verified:**
-- Creator can update fee rate at any time (not just deployment)
-- Fee rate constrained to 0-6% range (`MAX_FEE_RATE = 6`)
-- Only creator can update (not RareFi, not anyone else)
-- **`updateCreatorFeeRate()`**: Creator only, validates against MAX_FEE_RATE
+### Max Slippage Constraints
+- Creator-controlled, range 5-100% (500-10000 bps)
+- Enforced on all swap paths (permissionless + auto-swap on deposit)
+
+### Farm Emission Constraints
+- Min 10% when farm has balance (protects contributors)
+- Max 100%, only creator or RareFi can set
+
+### Immutability
+- Contract updates and deletions always fail
 
 ---
 
 ## Accounting Precision
 
-### Rounding Error Analysis
-
-| Scenario | Expected Ratio | Actual Ratio | Error |
-|----------|---------------|--------------|-------|
+| Scenario | Expected | Actual | Error |
+|----------|----------|--------|-------|
 | Prime deposits (7:13) | 1.8571428571 | 1.8571429491 | 0.00001% |
-| Share price calculation | Exact | Exact | 0% |
+| Share price | Exact | Exact | 0% |
 | Creator fee (5%) | 5.00% | 5.00% | 0% |
 
-### Mathematical Verification
-- `yieldPerToken` scaled by 1e9 (SCALE constant)
-- Safe math using `mulw`/`divmodw` opcodes prevents overflow
-- Floor division used consistently (no rounding up)
-
----
-
-## API Changes
-
-### deposit() Method
-```typescript
-// Old signature
-deposit(): void
-
-// New signature
-deposit(slippageBps: uint64): void
-```
-
-**Frontend changes required:**
-- Pass slippage parameter (e.g., 100 = 1%)
-- Include foreign references for Tinyman pool when USDC >= threshold:
-  - `appForeignApps: [tinymanPoolAppId]`
-  - `appForeignAssets: [outputAsset]`
-  - `appAccounts: [poolStateHolderAddress]`
-- Higher transaction fee (5000 micro-ALGO) to cover potential inner transactions
-
----
-
-## State Transitions Verified
-
-### RareFiVault
-```
-User States: optIn -> deposit -> (claim/withdraw)* -> closeOut
-Vault States: created -> (deposits/auto-swaps/withdrawals)* -> empty
-```
-
-### RareFiAlphaCompoundingVault
-```
-User States: optIn -> deposit (receive shares) -> (auto-compound)* -> withdraw (burn shares)
-Vault States: created -> (deposits/auto-compounds/withdrawals)* -> empty
-Share Price: 1.0 -> increases with each compound
-```
-
----
-
-## Mock Tinyman Pool Implementation
-
-The tests use `MockTinymanPool` which simulates Tinyman V2 behavior:
-
-- **LocalState storage** (matches real Tinyman V2)
-- **Constant product AMM** formula: `output = (reserves_out * input) / (reserves_in + input)`
-- **Fee handling**: 30 bps (0.3%) default
-- **State holder pattern**: External account holds local state
+- `yieldPerToken` / share price scaled by 1e12
+- Safe math: `mulw`/`divmodw` (128-bit intermediates)
+- Floor division throughout
 
 ---
 
 ## Test Infrastructure
 
-### Running Tests
 ```bash
-# Run all vault tests
+# Run all tests
 npm test
 
-# Run specific test file
+# Verbose output
+npx jest --verbose
+
+# Single file
 npm test -- tests/vault.test.ts
 
-# Verbose output
-npm test -- --verbose
+# Compile contracts
+npm run compile:vault
 ```
 
-### Prerequisites
-- Docker running with Algorand localnet (`algokit localnet start`)
-- Node.js >= 18
-- Contracts compiled: `npm run compile:vault`
+**Prerequisites:** Docker (Algorand localnet via `algokit localnet start`), Node.js ≥ 18
 
 ---
 
-## Recommendations for Auditors
+## Mock Tinyman Pool
 
-### Areas Requiring Special Attention
-
-1. **Tinyman Integration**
-   - Slippage parameter handling in `swapYield`/`compoundYield`/`deposit`
-   - Pool state reading via `AppLocal.getExUint64`
-   - MEV/sandwich attack vectors on mainnet
-
-2. **Auto-Swap Timing**
-   - Verify swap executes before deposit crediting
-   - Confirm existing shareholders receive full yield
-   - Check edge case: first depositor (no auto-swap since totalShares=0)
-
-3. **Integer Arithmetic**
-   - `mulDivFloor` implementation using `mulw`/`divmodw`
-   - SCALE constant (1e9) usage
-   - Edge cases with very small or very large values
-
-4. **Access Control**
-   - Permissionless: `swapYield`, `compoundYield`, `deposit`, `withdraw`, `claim`, `contributeFarm`
-   - Creator/RareFi only: `setFarmEmissionRate`, `claimCreator`
-
-5. **State Consistency**
-   - `yieldPerToken` accumulator updates
-   - Share minting/burning calculations
-   - Total deposit/share tracking
-
-### Not Tested (Out of Scope)
-- Mainnet MEV conditions
-- Real Tinyman pool integration
-- Emergency pause/recovery mechanisms
-- Multi-signature admin controls
+Tests use `MockTinymanPool` simulating Tinyman V2:
+- LocalState storage (matches real Tinyman V2 pattern)
+- Constant product AMM formula
+- 30 bps (0.3%) default fee
+- State holder pattern for pool data
 
 ---
 
 ## Conclusion
 
-All 164 tests pass with correct behavior verified for:
-- Core deposit/withdraw/claim operations
-- Proportional yield distribution
-- Share-based accounting and compounding
-- **Auto-swap on deposit** (flash protection)
-- Permissionless swap triggering
-- Creator fee calculations
-- **Creator fee rate updates** (0-6% range, creator only)
-- Farm bonus mechanics
-- **Farm emission rate constraints** (10% minimum when farm has balance)
-- Edge cases and rounding
-
-The contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (auto-swap protection, attack prevention) function as designed.
-
-**Recommendation:** Proceed to senior developer review focusing on Tinyman integration, slippage handling, and mainnet-specific attack vectors.
+All 190 tests pass. Both contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (auto-swap/compound protection, slippage caps, access controls, immutability) function as designed.

@@ -36,6 +36,7 @@ export class MockTinymanPool extends Contract {
   // Stored in the pool address's local state within this app
   // Vaults read this via AppLocal.getExUint64(poolAddr, poolAppId, key)
   asset_1_id = LocalState<uint64>();
+  asset_2_id = LocalState<uint64>();
   asset_1_reserves = LocalState<uint64>();
   asset_2_reserves = LocalState<uint64>();
   total_fee_share = LocalState<uint64>();  // Fee in basis points
@@ -193,6 +194,7 @@ export class MockTinymanPool extends Contract {
 
     // Store pool data in sender's local state
     this.asset_1_id(Txn.sender).value = this.asset1Id.value;
+    this.asset_2_id(Txn.sender).value = this.asset2Id.value;
     this.asset_1_reserves(Txn.sender).value = initialReserve1;
     this.asset_2_reserves(Txn.sender).value = initialReserve2;
     this.total_fee_share(Txn.sender).value = feeBps > Uint64(0) ? feeBps : DEFAULT_FEE_BPS;

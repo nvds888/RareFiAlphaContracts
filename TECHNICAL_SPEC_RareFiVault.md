@@ -1,75 +1,58 @@
 # RareFiVault Technical Specification
 
-**Contract Type:** Staking Rewards Accumulator
-**Version:** 1.0
-**Last Updated:** January 2025
+**Contract:** Staking Rewards Accumulator Vault
+**Framework:** Algorand TypeScript (puya-ts)
+**Last Updated:** February 2025
 
 ---
 
 ## Overview
 
-RareFiVault is a permissionless yield vault where users deposit Alpha tokens (yield-bearing asset) and earn yield in a project's ASA token. USDC airdrops arriving at the vault are swapped to the project token via Tinyman V2, with yield distributed proportionally using the standard staking rewards accumulator pattern.
+Users deposit Alpha tokens and earn yield in a project's ASA token. USDC airdrops arriving at the vault are swapped to the project token via Tinyman V2, with yield distributed proportionally using the yield-per-token accumulator pattern.
 
-### Key Features
-- **Yield-per-token accumulator** - Fair, gas-efficient yield distribution
-- **Auto-swap on deposit** - Flash deposit attack prevention
-- **Permissionless swaps** - Anyone can trigger yield processing
-- **On-chain price calculation** - Reads Tinyman pool state directly
-- **Farm bonus** - Optional boosted yields from sponsor contributions
+**Flow:** Alpha (deposit) → USDC (airdrop) → Swap via Tinyman → Project Token (yield to users)
 
 ---
 
-## Architecture
+## Assets (3)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         RareFiVault                             │
-├─────────────────────────────────────────────────────────────────┤
-│  Assets:                                                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
-│  │   Alpha     │  │    USDC     │  │  swapAsset  │             │
-│  │  (deposit)  │  │  (airdrop)  │  │  (project)  │             │
-│  └─────────────┘  └─────────────┘  └─────────────┘             │
-│         │               │                 ▲                     │
-│         ▼               ▼                 │                     │
-│  ┌─────────────────────────────────────────┐                   │
-│  │           Vault Logic                    │                   │
-│  │  • Deposit/Withdraw Alpha               │                   │
-│  │  • Swap USDC → swapAsset (via Tinyman)  │                   │
-│  │  • Distribute yield via accumulator     │                   │
-│  └─────────────────────────────────────────┘                   │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Asset | Role | Example |
+|-------|------|---------|
+| `depositAsset` | What users deposit | Alpha |
+| `yieldAsset` | Airdrop currency | USDC |
+| `swapAsset` | What yield is swapped to | Project Token |
 
 ---
 
-## Global State
+## State
+
+### Global State (17 keys)
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `depositAsset` | uint64 | Alpha ASA ID (what users deposit) |
-| `yieldAsset` | uint64 | USDC ASA ID (airdrop asset) |
-| `swapAsset` | uint64 | Project's ASA ID (yield token) |
-| `creatorAddress` | Account | Vault creator receiving fees |
+| `depositAsset` | uint64 | Alpha ASA ID |
+| `yieldAsset` | uint64 | USDC ASA ID |
+| `swapAsset` | uint64 | Project ASA ID |
+| `creatorAddress` | Account | Vault creator (receives fees) |
 | `rarefiAddress` | Account | RareFi platform address |
-| `creatorFeeRate` | uint64 | Fee percentage (0-6) |
-| `creatorUnclaimedYield` | uint64 | Accumulated fees for creator |
+| `creatorFeeRate` | uint64 | Fee percentage (0-6%) |
+| `creatorUnclaimedYield` | uint64 | Accumulated creator fees |
 | `totalDeposits` | uint64 | Total Alpha deposited |
-| `yieldPerToken` | uint64 | Accumulator scaled by 1e9 |
-| `minSwapThreshold` | uint64 | Minimum USDC before swap |
+| `yieldPerToken` | uint64 | Accumulator (scaled by 1e12) |
+| `minSwapThreshold` | uint64 | Min USDC before swap |
+| `maxSlippageBps` | uint64 | Max slippage for swaps (bps) |
 | `totalYieldGenerated` | uint64 | Lifetime yield generated |
 | `tinymanPoolAppId` | uint64 | Tinyman V2 pool app ID |
-| `tinymanPoolAddress` | Account | Tinyman pool address |
+| `tinymanPoolAddress` | Account | Tinyman pool state holder |
 | `farmBalance` | uint64 | Farm bonus pool |
 | `farmEmissionRate` | uint64 | Farm emission rate (bps) |
+| `assetsOptedIn` | uint64 | 1 if assets opted in |
 
----
-
-## Local State (Per User)
+### Local State (3 keys per user)
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `depositedAmount` | uint64 | User's Alpha balance in vault |
+| `depositedAmount` | uint64 | User's Alpha in vault |
 | `userYieldPerToken` | uint64 | Snapshot at last action |
 | `earnedYield` | uint64 | Accumulated unclaimed yield |
 
@@ -79,412 +62,192 @@ RareFiVault is a permissionless yield vault where users deposit Alpha tokens (yi
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `SCALE` | 1,000,000,000 (1e9) | Yield-per-token precision |
-| `MAX_FEE_RATE` | 6 | Max fee (6 = 6%) |
-| `FEE_PERCENT_BASE` | 100 | Fee percentage denominator |
-| `MIN_FARM_EMISSION_BPS` | 1,000 | Min farm rate when balance > 0 (10%) |
+| `SCALE` | 1e12 | Yield-per-token precision |
+| `MAX_FEE_RATE` | 6 | Max creator fee (6%) |
 | `MIN_DEPOSIT_AMOUNT` | 1,000,000 | 1 token (6 decimals) |
-| `MIN_SWAP_AMOUNT` | 200,000 | 0.20 USDC minimum |
+| `MIN_SWAP_AMOUNT` | 200,000 | 0.20 USDC |
 | `FEE_BPS_BASE` | 10,000 | Basis points denominator |
-| `MAX_SLIPPAGE_BPS` | 10,000 | 100% max slippage |
+| `MIN_MAX_SLIPPAGE_BPS` | 500 | 5% min for maxSlippageBps |
+| `MAX_SLIPPAGE_BPS` | 10,000 | 100% absolute ceiling |
+| `MIN_FARM_EMISSION_BPS` | 1,000 | 10% min when farm funded |
 | `MAX_FARM_EMISSION_BPS` | 10,000 | 100% max farm rate |
 
 ---
 
-## ABI Methods
+## Methods
 
 ### Initialization
 
-#### `createVault()`
-Creates and initializes the vault. Called once at deployment.
+#### `createVault(depositAssetId, yieldAssetId, swapAssetId, creatorFeeRate, minSwapThreshold, maxSlippageBps, tinymanPoolAppId, tinymanPoolAddress, rarefiAddress)`
+**Action:** `onCreate` (required)
 
-**Parameters:**
-| Name | Type | Description |
-|------|------|-------------|
-| `depositAssetId` | uint64 | Alpha ASA ID |
-| `yieldAssetId` | uint64 | USDC ASA ID |
-| `swapAssetId` | uint64 | Project token ASA ID |
-| `creatorFeeRate` | uint64 | Fee percentage (0-6) |
-| `minSwapThreshold` | uint64 | Min USDC before swap |
-| `tinymanPoolAppId` | uint64 | Tinyman pool app ID |
-| `tinymanPoolAddress` | Account | Tinyman pool address |
-| `rarefiAddress` | Account | RareFi platform address |
-
-**Validations:**
-- Creator fee rate ≤ 6%
-- Min swap threshold ≥ 0.20 USDC
-- All asset IDs non-zero and unique
-
----
+Creates vault. Validates: fee ≤ 6%, threshold ≥ 0.20 USDC, slippage 5-100%, all asset IDs non-zero and unique, pool app ID non-zero. Sets caller as creator.
 
 #### `optInAssets()`
-Opts contract into all required assets.
-
-**Requirements:**
-- Caller must be creator
-- Must include 5.5 ALGO payment in preceding transaction
-
-**Actions:**
-- Opts into depositAsset (Alpha)
-- Opts into yieldAsset (USDC)
-- Opts into swapAsset (Project token)
-
----
+Creator opts contract into all 3 assets. Requires 5.5 ALGO payment in preceding txn. Can only be called once (`assetsOptedIn` guard).
 
 ### User Operations
 
 #### `optIn()`
-User opts into the contract to enable local storage.
+**Action:** `OptIn` — Initializes all local state to 0.
 
-**Action:** `OptIn`
-**Initializes:** All local state to 0
+#### `deposit(slippageBps)`
+Deposits Alpha. Requires asset transfer in preceding txn, amount ≥ 1 token.
 
----
+**Auto-swap:** If USDC balance ≥ threshold AND existing depositors, executes swap BEFORE crediting deposit. Yield goes to existing depositors only.
 
-#### `deposit(slippageBps: uint64)`
-User deposits Alpha tokens into the vault.
+Calls `updateEarnedYield` before adding to deposit to capture pending yield.
 
-**Auto-Swap Logic:**
-If `usdcBalance ≥ minSwapThreshold` AND `totalDeposits > 0`:
-1. Execute swap BEFORE deposit is credited
-2. Yield goes to existing depositors only
-3. New depositor cannot capture pre-existing yield
-
-**Requirements:**
-- Asset transfer of Alpha in preceding transaction
-- Amount ≥ MIN_DEPOSIT_AMOUNT (1 token)
-- slippageBps ≤ MAX_SLIPPAGE_BPS (10000)
-
-**State Updates:**
-- `depositedAmount[user] += amount`
-- `totalDeposits += amount`
-- `userYieldPerToken[user] = yieldPerToken` (after pending yield captured)
-
----
-
-#### `withdraw(amount: uint64)`
-User withdraws Alpha from the vault.
-
-**Parameters:**
-- `amount`: Amount to withdraw (0 = withdraw all)
-
-**Requirements:**
-- `amount ≤ depositedAmount[user]`
-
-**State Updates:**
-- Updates pending yield before withdrawal
-- `depositedAmount[user] -= amount`
-- `totalDeposits -= amount`
-
----
+#### `withdraw(amount)`
+Withdraws Alpha. Pass 0 to withdraw all. Calls `updateEarnedYield` before reducing balance.
 
 #### `claim()`
-User claims accumulated yield in swapAsset.
-
-**Requirements:**
-- `earnedYield[user] > 0`
-
-**State Updates:**
-- `earnedYield[user] = 0`
-
----
+Claims accumulated yield in swapAsset. Calls `updateEarnedYield`, resets `earnedYield` to 0, transfers.
 
 #### `closeOut()`
-User closes out, receiving all deposits and pending yield.
-
-**Action:** `CloseOut`
-**Returns:** All deposited Alpha + all pending yield (swapAsset)
-
----
+**Action:** `CloseOut` — Returns all deposited Alpha + all pending yield (swapAsset).
 
 ### Yield Processing
 
-#### `swapYield(slippageBps: uint64)`
-Swaps accumulated USDC to project token via Tinyman V2.
+#### `swapYield(slippageBps)`
+**Permissionless.** Swaps USDC → swapAsset via Tinyman V2.
 
-**Access:** Permissionless (anyone can call)
+Requirements: USDC ≥ threshold, depositors > 0, slippage ≤ maxSlippageBps.
 
-**Requirements:**
-- `usdcBalance ≥ minSwapThreshold`
-- `totalDeposits > 0`
-- `slippageBps ≤ MAX_SLIPPAGE_BPS`
-
-**On-Chain Price Calculation:**
-1. Reads pool reserves from Tinyman local state
-2. Calculates expected output using AMM formula
-3. Applies slippage tolerance
-
-**Yield Distribution:**
-```
-creatorCut = totalOutput × creatorFeeRate / 100
-userCut = totalOutput - creatorCut
-yieldPerToken += (userCut × SCALE) / totalDeposits
-```
-
-**Farm Bonus:**
-If `farmEmissionRate > 0` AND `farmBalance > 0`:
-```
-farmBonus = min(swapOutput × farmEmissionRate / 10000, farmBalance)
-totalOutput = swapOutput + farmBonus
-```
-
----
+Uses `executeSwapAndDistribute` helper:
+1. Read pool reserves on-chain → calculate expected output
+2. Apply slippage → execute swap via inner txn group
+3. Calculate farm bonus (capped by farmBalance)
+4. Split `totalOutput` between creator fee and user yield
+5. Update `yieldPerToken` accumulator
 
 ### Creator Operations
 
 #### `claimCreator()`
-Creator claims accumulated fees.
+Creator claims accumulated fees in swapAsset.
 
-**Access:** Creator only
+#### `updateCreatorFeeRate(newFeeRate)`
+Creator only. Must be 0-6%.
 
-**Requirements:**
-- `creatorUnclaimedYield > 0`
+### Admin Operations (Creator or RareFi)
 
----
+#### `updateMinSwapThreshold(newThreshold)`
+Must be ≥ 0.20 USDC.
 
-#### `updateCreatorFeeRate(newFeeRate: uint64)`
-Updates the creator fee rate.
+#### `updateMaxSlippage(newMaxSlippageBps)`
+Creator only. Must be 5-100% (500-10000 bps).
 
-**Access:** Creator only
-
-**Parameters:**
-| Name | Type | Description |
-|------|------|-------------|
-| `newFeeRate` | uint64 | New fee percentage (0-6) |
-
-**Requirements:**
-- `newFeeRate ≤ MAX_FEE_RATE` (6%)
-
----
-
-### Admin Operations
-
-#### `updateMinSwapThreshold(newThreshold: uint64)`
-Updates minimum swap threshold.
-
-**Access:** Creator or RareFi
-
-**Requirements:**
-- `newThreshold ≥ MIN_SWAP_AMOUNT`
-
----
-
-#### `updateTinymanPool(newPoolAppId: uint64, newPoolAddress: Account)`
-Updates Tinyman pool configuration (for migrations).
-
-**Access:** Creator or RareFi
-
----
+#### `updateTinymanPool(newPoolAppId, newPoolAddress)`
+Validates new pool contains both yieldAsset and swapAsset by reading on-chain local state.
 
 ### Farm Operations
 
 #### `contributeFarm()`
-Anyone can contribute swapAsset to the farm.
+Anyone sends swapAsset to fund the farm. Requires asset transfer in preceding txn.
 
-**Requirements:**
-- Asset transfer of swapAsset in preceding transaction
-- Amount > 0
-
----
-
-#### `setFarmEmissionRate(emissionRateBps: uint64)`
-Sets farm emission rate.
-
-**Access:** Creator or RareFi
-
-**Requirements:**
-- `emissionRateBps ≤ MAX_FARM_EMISSION_BPS` (10000 = 100%)
-- If `farmBalance > 0`: `emissionRateBps ≥ MIN_FARM_EMISSION_BPS` (1000 = 10%)
-
-**Note:** The minimum 10% constraint only applies when there are existing farm deposits. This prevents the creator from setting the emission rate to 0% after receiving farm contributions, ensuring farm contributors' tokens will actually be distributed.
-
----
+#### `setFarmEmissionRate(emissionRateBps)`
+Creator or RareFi. Max 100%. Min 10% when farm has balance (protects contributors).
 
 ### Read-Only Methods
 
-#### `getVaultStats()`
-**Returns:** `[totalDeposits, yieldPerToken, creatorUnclaimedYield, usdcBalance, swapAssetBalance, totalYieldGenerated]`
+| Method | Returns |
+|--------|---------|
+| `getVaultStats()` | `[totalDeposits, yieldPerToken, creatorUnclaimed, usdcBal, swapBal, totalYield]` |
+| `getPendingYield(user)` | User's claimable yield |
+| `getUserDeposit(user)` | User's deposited Alpha |
+| `getSwapQuote()` | `[usdcBal, expectedOutput, minAt50bps]` |
+| `getFarmStats()` | `[farmBalance, farmEmissionRate]` |
 
-#### `getPendingYield(user: Account)`
-**Returns:** User's pending yield (without claiming)
+### Security (Bare Methods)
 
-#### `getUserDeposit(user: Account)`
-**Returns:** User's deposited Alpha amount
-
-#### `getSwapQuote()`
-**Returns:** `[usdcBalance, expectedOutput, minOutputAt50bps]`
-
-#### `getFarmStats()`
-**Returns:** `[farmBalance, farmEmissionRate]`
+- `updateApplication()` → always fails
+- `deleteApplication()` → always fails
 
 ---
 
-## Mathematical Formulas
+## Core Formulas
 
-### Yield Per Token Accumulator
-
-When yield is distributed:
+**Yield distribution:**
 ```
-yield_increase = (user_cut × SCALE) / total_deposits
-yield_per_token += yield_increase
+yieldPerToken += (userCut × SCALE) / totalDeposits
 ```
 
-When user claims/deposits/withdraws:
+**Pending yield calculation:**
 ```
-pending = deposited × (yield_per_token - user_snapshot) / SCALE
-earned_yield += pending
-user_snapshot = yield_per_token
+pending = deposited × (yieldPerToken - userSnapshot) / SCALE
 ```
 
-### AMM Swap Calculation
-
+**AMM swap (constant product):**
 ```
-net_input = input × (10000 - fee_bps) / 10000
-output = (output_reserves × net_input) / (input_reserves + net_input)
-min_output = output × (10000 - slippage_bps) / 10000
+netInput = input × (10000 - feeBps) / 10000
+output = (outputReserves × netInput) / (inputReserves + netInput)
 ```
 
-### Safe Math (mulDivFloor)
+**Safe math:** All multiplications use `mulw` (128-bit) + `divmodw` (128-bit division), asserts no overflow.
 
-Uses `mulw` for 128-bit multiplication and `divmodw` for 128-bit division:
+---
+
+## Access Control
+
+| Method | Anyone | Creator | RareFi |
+|--------|--------|---------|--------|
+| deposit, withdraw, claim, closeOut | ✓ | ✓ | ✓ |
+| swapYield, contributeFarm | ✓ | ✓ | ✓ |
+| claimCreator, updateCreatorFeeRate | | ✓ | |
+| updateMaxSlippage | | ✓ | |
+| updateMinSwapThreshold, updateTinymanPool | | ✓ | ✓ |
+| setFarmEmissionRate | | ✓ | ✓ |
+
+---
+
+## Transaction Groups
+
+**Deposit:**
 ```
-[hi, lo] = mulw(n1, n2)
-[q_hi, q_lo, r_hi, r_lo] = divmodw(hi, lo, 0, d)
-result = q_lo (asserts q_hi == 0)
+[0] AssetTransfer: Alpha → Vault
+[1] AppCall: deposit(slippageBps)
+    foreignApps: [tinymanPoolAppId]  (if auto-swap possible)
+    foreignAssets: [swapAsset]
+    accounts: [poolAddress]
+    fee: 5000 (covers inner txns)
+```
+
+**Swap:**
+```
+[0] AppCall: swapYield(slippageBps)
+    foreignApps: [tinymanPoolAppId]
+    foreignAssets: [yieldAsset, swapAsset]
+    accounts: [poolAddress]
+    fee: 5000
 ```
 
 ---
 
 ## Security Features
 
-### 1. Flash Deposit Attack Prevention
-- Auto-swap executes BEFORE deposit is credited
-- New depositor cannot capture pre-existing yield
-
-### 2. On-Chain Price Calculation
-- Reads Tinyman pool reserves directly
-- No off-chain oracle dependency
-- Prevents fake quote attacks
-
-### 3. Permissionless Swaps with High Slippage
-- 100% max slippage allows swaps in illiquid pools
-- On-chain calculation ensures fair minimum output
-- No operational bottleneck
-
-### 4. Immutability
-- Contract updates disabled
-- Contract deletion disabled
-
-### 5. Safe Integer Arithmetic
-- 128-bit precision for all multiplications
-- Floor division prevents rounding exploits
+1. **Flash deposit prevention** — Auto-swap executes BEFORE deposit is credited
+2. **On-chain pricing** — Reads Tinyman pool reserves directly, no oracle dependency
+3. **Slippage cap** — Creator sets maxSlippageBps (min 5%), all swaps bounded
+4. **Immutable** — Update and delete always fail
+5. **128-bit safe math** — `mulw`/`divmodw` prevents overflow, floor division throughout
+6. **Asset opt-in guard** — `optInAssets` can only be called once
+7. **Pool validation** — `updateTinymanPool` verifies asset pair on-chain
 
 ---
 
-## Access Control Matrix
+## Deployment
 
-| Method | Anyone | Creator | RareFi |
-|--------|--------|---------|--------|
-| `deposit` | ✓ | ✓ | ✓ |
-| `withdraw` | ✓ | ✓ | ✓ |
-| `claim` | ✓ | ✓ | ✓ |
-| `closeOut` | ✓ | ✓ | ✓ |
-| `swapYield` | ✓ | ✓ | ✓ |
-| `contributeFarm` | ✓ | ✓ | ✓ |
-| `claimCreator` | ✗ | ✓ | ✗ |
-| `updateCreatorFeeRate` | ✗ | ✓ | ✗ |
-| `setFarmEmissionRate` | ✗ | ✓ | ✓ |
-| `updateMinSwapThreshold` | ✗ | ✓ | ✓ |
-| `updateTinymanPool` | ✗ | ✓ | ✓ |
-
----
-
-## Transaction Requirements
-
-### Deposit Transaction
-```
-Group:
-  [0] Asset Transfer: Alpha → Vault
-  [1] App Call: deposit(slippageBps)
-
-If auto-swap may trigger:
-  - appForeignApps: [tinymanPoolAppId]
-  - appForeignAssets: [swapAsset]
-  - appAccounts: [poolStateHolderAddress]
-  - fee: 5000 micro-ALGO (covers inner txns)
-```
-
-### Swap Transaction
-```
-Group:
-  [0] App Call: swapYield(slippageBps)
-
-Required:
-  - appForeignApps: [tinymanPoolAppId]
-  - appForeignAssets: [yieldAsset, swapAsset]
-  - appAccounts: [tinymanPoolAddress]
-  - fee: 5000 micro-ALGO (covers inner txns)
-```
-
----
-
-## State Diagram
-
-```
-User Lifecycle:
-  ┌──────────┐
-  │  Start   │
-  └────┬─────┘
-       │ optIn()
-       ▼
-  ┌──────────┐
-  │ Opted In │ ◄─────────────────────────┐
-  └────┬─────┘                           │
-       │ deposit()                       │
-       ▼                                 │
-  ┌──────────┐   withdraw()    ┌─────────┴───┐
-  │Depositor │ ◄──────────────►│ Partial     │
-  └────┬─────┘   (partial)     │ Withdrawal  │
-       │                       └─────────────┘
-       │ closeOut()
-       ▼
-  ┌──────────┐
-  │  Closed  │
-  └──────────┘
-```
-
----
-
-## Deployment Checklist
-
-1. Deploy contract with `createVault()` parameters
+1. Deploy with `createVault()` parameters
 2. Creator calls `optInAssets()` with 5.5 ALGO payment
-3. Verify all assets are opted-in
-4. (Optional) Fund farm with `contributeFarm()`
-5. (Optional) Set farm rate with `setFarmEmissionRate()`
-6. Users can begin depositing
+3. (Optional) Fund farm with `contributeFarm()` + set rate with `setFarmEmissionRate()`
+4. Team performs first deposit
+5. Users can begin depositing
 
 ---
 
 ## Known Limitations
 
-1. **MEV Exposure** - High slippage tolerance means sandwich attacks are possible on mainnet
-2. **Pool Dependency** - Swaps fail if Tinyman pool state is unreadable
-3. **No Emergency Pause** - Contract cannot be paused (users can always withdraw deposits)
-4. **Single Pool** - Only one Tinyman pool per vault (can be updated by admin)
-
----
-
-## Audit Recommendations
-
-### Priority Areas
-1. Tinyman V2 integration (swap execution, state reading)
-2. Yield accumulator arithmetic (rounding, overflow)
-3. Auto-swap timing (before deposit credit)
-4. Farm bonus calculation and deduction
-
-### Test Scenarios
-- Multi-user yield distribution fairness
-- Flash deposit attack prevention
-- Edge cases (dust amounts, prime numbers)
-- Pool state reading failures
+1. **Pool dependency** — Swaps fail if Tinyman pool state is unreadable
+2. **No emergency pause** — Contract cannot be paused (users can always withdraw)
+3. **Single pool** — One Tinyman pool per vault (updatable by admin)
+4. **Stranded USDC** — If all depositors withdraw while USDC is in vault, it's stranded until someone deposits again

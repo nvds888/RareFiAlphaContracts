@@ -147,7 +147,7 @@ export async function deployVaultForTest(
     numGlobalByteSlices: 1, // stateHolder
     numGlobalInts: 3, // asset1Id, asset2Id, initialized
     numLocalByteSlices: 0,
-    numLocalInts: 4,  // asset_1_id, asset_1_reserves, asset_2_reserves, total_fee_share
+    numLocalInts: 5,  // asset_1_id, asset_2_id, asset_1_reserves, asset_2_reserves, total_fee_share
     extraPages: 0,
     suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
     appArgs: [
@@ -259,6 +259,7 @@ export async function deployVaultForTest(
       ibusAssetId,
       creatorFeeRate,
       minSwapThreshold,
+      5000, // maxSlippageBps (50% for testing)
       poolAppId,
       poolStateHolderAddress, // Use state holder (where pool state is in local state)
       creatorAddr, // rarefiAddress = creator for testing
@@ -269,7 +270,7 @@ export async function deployVaultForTest(
     approvalProgram: vaultCompiled.approvalProgram,
     clearProgram: vaultCompiled.clearProgram,
     numGlobalByteSlices: 3, // creatorAddress, rarefiAddress, tinymanPoolAddress
-    numGlobalInts: 12, // depositAsset, yieldAsset, swapAsset, creatorFeeRate, creatorUnclaimedYield, totalDeposits, yieldPerToken, minSwapThreshold, totalYieldGenerated, tinymanPoolAppId, farmBalance, farmEmissionRate
+    numGlobalInts: 14, // depositAsset, yieldAsset, swapAsset, creatorFeeRate, creatorUnclaimedYield, totalDeposits, yieldPerToken, minSwapThreshold, maxSlippageBps, totalYieldGenerated, tinymanPoolAppId, farmBalance, farmEmissionRate, assetsOptedIn
     numLocalByteSlices: 0,
     numLocalInts: 3, // depositedAmount, userYieldPerToken, earnedYield
     extraPages: 1,
@@ -631,7 +632,7 @@ export async function getPendingYield(
     const userYPT = localState.userYieldPerToken;
 
     if (currentYPT > userYPT) {
-      pending = pending + Math.floor((deposited * (currentYPT - userYPT)) / 1_000_000_000);
+      pending = pending + Math.floor((deposited * (currentYPT - userYPT)) / 1_000_000_000_000);
     }
   }
 
@@ -811,4 +812,143 @@ export async function getFarmStats(
     farmBalance: globalState['farmBalance'] || 0,
     farmEmissionRate: globalState['farmEmissionRate'] || 0,
   };
+}
+
+export async function performUpdateTinymanPool(
+  algod: algosdk.Algodv2,
+  deployment: VaultDeploymentResult,
+  sender: { addr: string | algosdk.Address; sk: Uint8Array },
+  newPoolAppId: number,
+  newPoolAddress: string,
+) {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const senderAddr = typeof sender.addr === 'string' ? sender.addr : sender.addr.toString();
+  const signer = algosdk.makeBasicAccountTransactionSigner({
+    sk: sender.sk,
+    addr: algosdk.decodeAddress(senderAddr),
+  });
+
+  const atc = new algosdk.AtomicTransactionComposer();
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('updateTinymanPool'),
+    methodArgs: [newPoolAppId, newPoolAddress],
+    sender: senderAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+    appForeignApps: [newPoolAppId],
+    appAccounts: [newPoolAddress],
+  });
+
+  await atc.execute(algod, 5);
+}
+
+/**
+ * Deploy a MockTinymanPool with specific assets for testing pool validation
+ */
+export async function deployMockPoolWithAssets(
+  algod: algosdk.Algodv2,
+  creator: { addr: string | algosdk.Address; sk: Uint8Array },
+  asset1Id: number,
+  asset2Id: number,
+  reserve1: number = 10_000_000_000,
+  reserve2: number = 10_000_000_000,
+  feeBps: number = 30,
+): Promise<{ poolAppId: number; poolAddress: string }> {
+  const creatorAddr = typeof creator.addr === 'string' ? creator.addr : creator.addr.toString();
+
+  const artifactsDir = path.resolve(__dirname, '../../contracts/artifacts');
+  const approvalPath = path.join(artifactsDir, 'MockTinymanPool.approval.teal');
+  const clearPath = path.join(artifactsDir, 'MockTinymanPool.clear.teal');
+
+  const approvalTeal = fs.readFileSync(approvalPath, 'utf8');
+  const clearTeal = fs.readFileSync(clearPath, 'utf8');
+
+  const approvalResponse = await algod.compile(approvalTeal).do();
+  const clearResponse = await algod.compile(clearTeal).do();
+
+  const approvalProgram = new Uint8Array(Buffer.from(approvalResponse.result, 'base64'));
+  const clearProgram = new Uint8Array(Buffer.from(clearResponse.result, 'base64'));
+
+  // Helper to encode uint64 as 8-byte big-endian
+  const encodeUint64 = (n: number): Uint8Array => {
+    const buf = Buffer.alloc(8);
+    buf.writeBigUInt64BE(BigInt(n));
+    return new Uint8Array(buf);
+  };
+
+  let suggestedParams = await algod.getTransactionParams().do();
+
+  const createPoolSelector = new Uint8Array([0x00, 0x00, 0x00, 0x00]);
+  const createPoolTxn = algosdk.makeApplicationCreateTxnFromObject({
+    sender: creatorAddr,
+    approvalProgram,
+    clearProgram,
+    numGlobalByteSlices: 1,
+    numGlobalInts: 3,
+    numLocalByteSlices: 0,
+    numLocalInts: 5,
+    extraPages: 0,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+    appArgs: [
+      createPoolSelector,
+      encodeUint64(asset1Id),
+      encodeUint64(asset2Id),
+      encodeUint64(reserve1),
+      encodeUint64(reserve2),
+      encodeUint64(feeBps),
+    ],
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+  });
+
+  const signedCreatePoolTxn = createPoolTxn.signTxn(creator.sk);
+  const createPoolTxID = await algod.sendRawTransaction(signedCreatePoolTxn).do();
+  const poolConfirmedTxn = await algosdk.waitForConfirmation(algod, createPoolTxID.txid, 5);
+  const poolAppId = safeToNumber(poolConfirmedTxn.applicationIndex);
+  const poolAddress = algosdk.getApplicationAddress(poolAppId).toString();
+
+  // Fund pool for MBR
+  suggestedParams = await algod.getTransactionParams().do();
+  const fundPoolTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    sender: creatorAddr,
+    receiver: poolAddress,
+    amount: 500_000,
+    suggestedParams,
+  });
+  const signedFundPoolTxn = fundPoolTxn.signTxn(creator.sk);
+  const fundPoolTxID = await algod.sendRawTransaction(signedFundPoolTxn).do();
+  await algosdk.waitForConfirmation(algod, fundPoolTxID.txid, 5);
+
+  // Creator opts into pool app (to become state holder)
+  suggestedParams = await algod.getTransactionParams().do();
+  const creatorOptInPoolTxn = algosdk.makeApplicationOptInTxnFromObject({
+    sender: creatorAddr,
+    appIndex: poolAppId,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+  const signedCreatorOptInPoolTxn = creatorOptInPoolTxn.signTxn(creator.sk);
+  const creatorOptInPoolTxID = await algod.sendRawTransaction(signedCreatorOptInPoolTxn).do();
+  await algosdk.waitForConfirmation(algod, creatorOptInPoolTxID.txid, 5);
+
+  // Initialize pool local state
+  suggestedParams = await algod.getTransactionParams().do();
+  const initPoolTxn = algosdk.makeApplicationCallTxnFromObject({
+    sender: creatorAddr,
+    appIndex: poolAppId,
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [
+      new TextEncoder().encode('initializePool'),
+      encodeUint64(reserve1),
+      encodeUint64(reserve2),
+      encodeUint64(feeBps),
+    ],
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+  const signedInitPoolTxn = initPoolTxn.signTxn(creator.sk);
+  const initPoolTxID = await algod.sendRawTransaction(signedInitPoolTxn).do();
+  await algosdk.waitForConfirmation(algod, initPoolTxID.txid, 5);
+
+  // Return creator address as pool state holder
+  return { poolAppId, poolAddress: creatorAddr };
 }

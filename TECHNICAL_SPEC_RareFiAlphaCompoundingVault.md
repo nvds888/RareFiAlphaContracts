@@ -1,73 +1,52 @@
 # RareFiAlphaCompoundingVault Technical Specification
 
-**Contract Type:** Auto-Compounding Yield Vault
-**Version:** 1.0
-**Last Updated:** January 2025
+**Contract:** Auto-Compounding Yield Vault (ERC4626-style)
+**Framework:** Algorand TypeScript (puya-ts)
+**Last Updated:** February 2025
 
 ---
 
 ## Overview
 
-RareFiAlphaCompoundingVault is an auto-compounding yield vault where users deposit Alpha tokens and earn yield in USDC, which is automatically swapped back to Alpha. Uses share-based accounting (similar to ERC4626): when yield compounds, the share price increases, so users withdraw more Alpha than they deposited.
+Users deposit Alpha tokens and earn yield in USDC, which is automatically swapped back to Alpha. Uses share-based accounting: when yield compounds, share price increases, so users withdraw more Alpha than they deposited.
 
-### Key Features
-- **Share-based accounting** - Yield compounds automatically into share value
-- **Auto-compound on deposit** - Flash deposit attack prevention
-- **Permissionless compounding** - Anyone can trigger yield processing
-- **On-chain price calculation** - Reads Tinyman pool state directly
-- **Farm bonus** - Optional boosted yields from sponsor contributions
+**Flow:** Alpha (deposit) → USDC (airdrop) → Swap via Tinyman → Alpha (compounded back)
 
 ---
 
-## Architecture
+## Assets (2)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                  RareFiAlphaCompoundingVault                    │
-├─────────────────────────────────────────────────────────────────┤
-│  Assets:                                                        │
-│  ┌─────────────┐  ┌─────────────┐                              │
-│  │   Alpha     │  │    USDC     │                              │
-│  │(deposit/out)│  │  (airdrop)  │                              │
-│  └─────────────┘  └─────────────┘                              │
-│         │               │                                       │
-│         ▼               ▼                                       │
-│  ┌─────────────────────────────────────────┐                   │
-│  │           Vault Logic                    │                   │
-│  │  • Deposit Alpha → Receive Shares       │                   │
-│  │  • Compound USDC → Alpha (via Tinyman)  │                   │
-│  │  • Withdraw Shares → Receive Alpha+Yield│                   │
-│  └─────────────────────────────────────────┘                   │
-│                                                                 │
-│  Share Price = totalAlpha / totalShares                        │
-│  (Increases with each compound)                                │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Asset | Role | Example |
+|-------|------|---------|
+| `alphaAsset` | Deposit & yield token | Alpha |
+| `usdcAsset` | Airdrop currency | USDC |
 
 ---
 
-## Global State
+## State
+
+### Global State (16 keys)
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `alphaAsset` | uint64 | Alpha ASA ID (deposit & yield) |
-| `usdcAsset` | uint64 | USDC ASA ID (airdrop asset) |
-| `creatorAddress` | Account | Vault creator receiving fees |
+| `alphaAsset` | uint64 | Alpha ASA ID |
+| `usdcAsset` | uint64 | USDC ASA ID |
+| `creatorAddress` | Account | Vault creator (receives fees) |
 | `rarefiAddress` | Account | RareFi platform address |
-| `creatorFeeRate` | uint64 | Fee percentage (0-6) |
-| `creatorUnclaimedAlpha` | uint64 | Accumulated fees for creator |
+| `creatorFeeRate` | uint64 | Fee percentage (0-6%) |
+| `creatorUnclaimedAlpha` | uint64 | Accumulated creator fees |
 | `totalShares` | uint64 | Total shares issued |
 | `totalAlpha` | uint64 | Total Alpha held (deposits + yield) |
-| `minSwapThreshold` | uint64 | Minimum USDC before compound |
+| `minSwapThreshold` | uint64 | Min USDC before compound |
+| `maxSlippageBps` | uint64 | Max slippage for swaps (bps) |
 | `totalYieldCompounded` | uint64 | Lifetime yield compounded |
 | `tinymanPoolAppId` | uint64 | Tinyman V2 pool app ID |
-| `tinymanPoolAddress` | Account | Tinyman pool address |
+| `tinymanPoolAddress` | Account | Tinyman pool state holder |
 | `farmBalance` | uint64 | Farm bonus pool |
 | `farmEmissionRate` | uint64 | Farm emission rate (bps) |
+| `assetsOptedIn` | uint64 | 1 if assets opted in |
 
----
-
-## Local State (Per User)
+### Local State (1 key per user)
 
 | Key | Type | Description |
 |-----|------|-------------|
@@ -79,502 +58,221 @@ RareFiAlphaCompoundingVault is an auto-compounding yield vault where users depos
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `SCALE` | 1,000,000,000,000 (1e12) | Share price precision |
-| `MAX_FEE_RATE` | 6 | Max fee (6 = 6%) |
-| `FEE_PERCENT_BASE` | 100 | Fee percentage denominator |
+| `SCALE` | 1e12 | Share price display precision |
+| `MAX_FEE_RATE` | 6 | Max creator fee (6%) |
 | `MIN_DEPOSIT_AMOUNT` | 1,000,000 | 1 token (6 decimals) |
-| `MIN_SWAP_AMOUNT` | 200,000 | 0.20 USDC minimum |
+| `MIN_SWAP_AMOUNT` | 200,000 | 0.20 USDC |
 | `FEE_BPS_BASE` | 10,000 | Basis points denominator |
-| `MAX_SLIPPAGE_BPS` | 10,000 | 100% max slippage |
+| `MIN_MAX_SLIPPAGE_BPS` | 500 | 5% min for maxSlippageBps |
+| `MAX_SLIPPAGE_BPS` | 10,000 | 100% absolute ceiling |
+| `MIN_FARM_EMISSION_BPS` | 1,000 | 10% min when farm funded |
 | `MAX_FARM_EMISSION_BPS` | 10,000 | 100% max farm rate |
-| `MIN_FARM_EMISSION_BPS` | 1,000 | 10% min emission when farm has balance |
 
 ---
 
-## ABI Methods
+## Methods
 
 ### Initialization
 
-#### `createVault()`
-Creates and initializes the vault. Called once at deployment.
+#### `createVault(alphaAssetId, usdcAssetId, creatorFeeRate, minSwapThreshold, maxSlippageBps, tinymanPoolAppId, tinymanPoolAddress, rarefiAddress)`
+**Action:** `onCreate` (required)
 
-**Parameters:**
-| Name | Type | Description |
-|------|------|-------------|
-| `alphaAssetId` | uint64 | Alpha ASA ID |
-| `usdcAssetId` | uint64 | USDC ASA ID |
-| `creatorFeeRate` | uint64 | Fee percentage (0-6) |
-| `minSwapThreshold` | uint64 | Min USDC before compound |
-| `tinymanPoolAppId` | uint64 | Tinyman pool app ID |
-| `tinymanPoolAddress` | Account | Tinyman pool address |
-| `rarefiAddress` | Account | RareFi platform address |
-
-**Validations:**
-- Creator fee rate ≤ 6%
-- Min swap threshold ≥ 0.20 USDC
-- Alpha and USDC asset IDs must be different
-
----
+Creates vault. Validates: fee ≤ 6%, threshold ≥ 0.20 USDC, slippage 5-100%, both asset IDs non-zero and different, pool app ID non-zero. Sets caller as creator.
 
 #### `optInAssets()`
-Opts contract into required assets.
-
-**Requirements:**
-- Caller must be creator
-- Must include 5.4 ALGO payment in preceding transaction
-
-**Actions:**
-- Opts into alphaAsset (Alpha)
-- Opts into usdcAsset (USDC)
-
----
+Creator opts contract into both assets. Requires 5.4 ALGO payment in preceding txn. Can only be called once (`assetsOptedIn` guard).
 
 ### User Operations
 
 #### `optIn()`
-User opts into the contract to enable local storage.
+**Action:** `OptIn` — Initializes `userShares` to 0.
 
-**Action:** `OptIn`
-**Initializes:** `userShares = 0`
+#### `deposit(slippageBps)`
+Deposits Alpha, receives shares proportional to current share price.
 
----
+**Auto-compound:** If USDC balance ≥ threshold AND existing shareholders, executes compound BEFORE crediting deposit. Share price increases for existing holders; new depositor buys at the higher price.
 
-#### `deposit(slippageBps: uint64)`
-User deposits Alpha tokens, receiving shares.
+**Share calculation:**
+- First deposit: `shares = alphaAmount` (1:1)
+- Otherwise: `shares = alphaAmount × totalShares / totalAlpha`
 
-**Auto-Compound Logic:**
-If `usdcBalance ≥ minSwapThreshold` AND `totalShares > 0`:
-1. Execute compound BEFORE deposit is credited
-2. Share price increases for existing holders
-3. New depositor buys at new (higher) share price
+Requires asset transfer in preceding txn, amount ≥ 1 token.
 
-**Requirements:**
-- Asset transfer of Alpha in preceding transaction
-- Amount ≥ MIN_DEPOSIT_AMOUNT (1 token)
-- slippageBps ≤ MAX_SLIPPAGE_BPS (10000)
+#### `withdraw(shareAmount)`
+Redeems shares for Alpha (deposit + compounded yield). Pass 0 to withdraw all.
 
-**Share Calculation:**
-```
-If first deposit:  shares = alphaAmount
-Otherwise:         shares = alphaAmount × totalShares / totalAlpha
-```
-
-**State Updates:**
-- `userShares[user] += sharesToMint`
-- `totalShares += sharesToMint`
-- `totalAlpha += amount`
-
----
-
-#### `withdraw(shareAmount: uint64)`
-User redeems shares for Alpha (deposit + compounded yield).
-
-**Parameters:**
-- `shareAmount`: Shares to redeem (0 = redeem all)
-
-**Requirements:**
-- `shareAmount ≤ userShares[user]`
-
-**Alpha Calculation:**
-```
-alphaAmount = shareAmount × totalAlpha / totalShares
-```
-
-**State Updates:**
-- `userShares[user] -= shareAmount`
-- `totalShares -= shareAmount`
-- `totalAlpha -= alphaAmount`
-
----
+`alphaAmount = shareAmount × totalAlpha / totalShares`
 
 #### `closeOut()`
-User closes out, receiving all Alpha for their shares.
-
-**Action:** `CloseOut`
-**Returns:** `userShares × totalAlpha / totalShares` Alpha
-
----
+**Action:** `CloseOut` — Redeems all shares and returns Alpha.
 
 ### Yield Processing
 
-#### `compoundYield(slippageBps: uint64)`
-Swaps accumulated USDC to Alpha and adds to vault.
+#### `compoundYield(slippageBps)`
+**Permissionless.** Swaps USDC → Alpha via Tinyman V2.
 
-**Access:** Permissionless (anyone can call)
+Requirements: USDC ≥ threshold, shareholders > 0, slippage ≤ maxSlippageBps.
 
-**Requirements:**
-- `usdcBalance ≥ minSwapThreshold`
-- `totalShares > 0`
-- `slippageBps ≤ MAX_SLIPPAGE_BPS`
+Uses `executeCompound` helper:
+1. Read pool reserves on-chain → calculate expected output
+2. Apply slippage → execute swap via inner txn group
+3. Calculate farm bonus (capped by farmBalance)
+4. Split `totalOutput` between creator fee and vault
+5. Add vault's cut to `totalAlpha` (share price increases)
 
-**On-Chain Price Calculation:**
-1. Reads pool reserves from Tinyman local state
-2. Calculates expected output using AMM formula
-3. Applies slippage tolerance
-
-**Yield Distribution:**
-```
-creatorCut = totalOutput × creatorFeeRate / 100
-vaultCut = totalOutput - creatorCut
-totalAlpha += vaultCut  (share price increases)
-```
-
-**Auto-Compounding Effect:**
-- totalShares stays the same
-- totalAlpha increases
-- Share price = totalAlpha / totalShares increases
-
-**Farm Bonus:**
-If `farmEmissionRate > 0` AND `farmBalance > 0`:
-```
-farmBonus = min(swapOutput × farmEmissionRate / 10000, farmBalance)
-totalOutput = swapOutput + farmBonus
-```
-
----
+**Compounding effect:** `totalShares` stays the same, `totalAlpha` increases → share price goes up.
 
 ### Creator Operations
 
 #### `claimCreator()`
 Creator claims accumulated fees in Alpha.
 
-**Access:** Creator only
+#### `updateCreatorFeeRate(newFeeRate)`
+Creator only. Must be 0-6%.
 
-**Requirements:**
-- `creatorUnclaimedAlpha > 0`
+### Admin Operations (Creator or RareFi)
 
----
+#### `updateMinSwapThreshold(newThreshold)`
+Must be ≥ 0.20 USDC.
 
-### Admin Operations
+#### `updateMaxSlippage(newMaxSlippageBps)`
+Creator only. Must be 5-100% (500-10000 bps).
 
-#### `updateMinSwapThreshold(newThreshold: uint64)`
-Updates minimum swap threshold.
-
-**Access:** Creator or RareFi
-
-**Requirements:**
-- `newThreshold ≥ MIN_SWAP_AMOUNT`
-
----
-
-#### `updateTinymanPool(newPoolAppId: uint64, newPoolAddress: Account)`
-Updates Tinyman pool configuration (for migrations).
-
-**Access:** Creator or RareFi
-
----
-
-#### `updateCreatorFeeRate(newFeeRate: uint64)`
-Updates the creator fee rate.
-
-**Access:** Creator only
-
-**Requirements:**
-- `newFeeRate ≤ MAX_FEE_RATE (6%)`
-
----
+#### `updateTinymanPool(newPoolAppId, newPoolAddress)`
+Validates new pool contains both usdcAsset and alphaAsset by reading on-chain local state.
 
 ### Farm Operations
 
 #### `contributeFarm()`
-Anyone can contribute Alpha to the farm.
+Anyone sends Alpha to fund the farm. Requires asset transfer in preceding txn.
 
-**Requirements:**
-- Asset transfer of Alpha in preceding transaction
-- Amount > 0
-
----
-
-#### `setFarmEmissionRate(emissionRateBps: uint64)`
-Sets farm emission rate.
-
-**Access:** Creator or RareFi
-
-**Requirements:**
-- `emissionRateBps ≤ MAX_FARM_EMISSION_BPS (10000)`
-- If `farmBalance > 0`: `emissionRateBps ≥ MIN_FARM_EMISSION_BPS (1000 = 10%)`
-
-**Note:** This protects farm contributors from having their incentives disabled by creator setting emission to 0%.
-
----
+#### `setFarmEmissionRate(emissionRateBps)`
+Creator or RareFi. Max 100%. Min 10% when farm has balance (protects contributors).
 
 ### Read-Only Methods
 
-#### `getVaultStats()`
-**Returns:** `[totalShares, totalAlpha, creatorUnclaimedAlpha, usdcBalance, totalYieldCompounded, sharePrice]`
+| Method | Returns |
+|--------|---------|
+| `getVaultStats()` | `[totalShares, totalAlpha, creatorUnclaimed, usdcBal, totalYieldCompounded, sharePrice]` |
+| `getUserAlphaBalance(user)` | User's Alpha value (shares × price) |
+| `getUserShares(user)` | User's share count |
+| `previewDeposit(alphaAmount)` | Shares that would be minted |
+| `previewWithdraw(shareAmount)` | Alpha that would be received |
+| `getCompoundQuote()` | `[usdcBal, expectedAlpha, minAt50bps]` |
+| `getFarmStats()` | `[farmBalance, farmEmissionRate]` |
 
-Note: `sharePrice` is scaled by SCALE (1e12)
+Note: `sharePrice` in `getVaultStats` is scaled by SCALE (1e12).
 
-#### `getUserAlphaBalance(user: Account)`
-**Returns:** User's current Alpha value (shares converted)
+### Security (Bare Methods)
 
-#### `getUserShares(user: Account)`
-**Returns:** User's share balance
-
-#### `previewDeposit(alphaAmount: uint64)`
-**Returns:** Shares that would be minted for deposit
-
-#### `previewWithdraw(shareAmount: uint64)`
-**Returns:** Alpha that would be received for shares
-
-#### `getCompoundQuote()`
-**Returns:** `[usdcBalance, expectedAlphaOutput, minOutputAt50bps]`
-
-#### `getFarmStats()`
-**Returns:** `[farmBalance, farmEmissionRate]`
+- `updateApplication()` → always fails
+- `deleteApplication()` → always fails
 
 ---
 
-## Mathematical Formulas
+## Core Formulas
 
-### Share Calculation
+**Share price:**
+```
+sharePrice = totalAlpha × SCALE / totalShares
+```
 
 **Deposit (Alpha → Shares):**
 ```
-If totalShares == 0:
-    shares = alphaAmount
-Else:
-    shares = alphaAmount × totalShares / totalAlpha
+If totalShares == 0: shares = alphaAmount
+Else: shares = alphaAmount × totalShares / totalAlpha
 ```
 
 **Withdraw (Shares → Alpha):**
 ```
-If totalShares == 0:
-    alphaAmount = 0
-Else:
-    alphaAmount = shares × totalAlpha / totalShares
+alphaAmount = shares × totalAlpha / totalShares
 ```
 
-### Share Price
+**AMM swap (constant product):**
 ```
-sharePrice = totalAlpha × SCALE / totalShares
-```
-Where SCALE = 1e12 for precision
-
-### Compound Effect
-
-Before compound:
-```
-totalShares = S
-totalAlpha = A
-sharePrice = A / S
+netInput = input × (10000 - feeBps) / 10000
+output = (outputReserves × netInput) / (inputReserves + netInput)
 ```
 
-After compound (vaultCut = V):
+**Safe math:** All multiplications use `mulw` (128-bit) + `divmodw` (128-bit division), asserts no overflow.
+
+---
+
+## Access Control
+
+| Method | Anyone | Creator | RareFi |
+|--------|--------|---------|--------|
+| deposit, withdraw, closeOut | ✓ | ✓ | ✓ |
+| compoundYield, contributeFarm | ✓ | ✓ | ✓ |
+| claimCreator, updateCreatorFeeRate | | ✓ | |
+| updateMaxSlippage | | ✓ | |
+| updateMinSwapThreshold, updateTinymanPool | | ✓ | ✓ |
+| setFarmEmissionRate | | ✓ | ✓ |
+
+---
+
+## Transaction Groups
+
+**Deposit:**
 ```
-totalShares = S  (unchanged)
-totalAlpha = A + V
-sharePrice = (A + V) / S  (increased)
+[0] AssetTransfer: Alpha → Vault
+[1] AppCall: deposit(slippageBps)
+    foreignApps: [tinymanPoolAppId]  (if auto-compound possible)
+    foreignAssets: [alphaAsset]
+    accounts: [poolAddress]
+    fee: 5000 (covers inner txns)
 ```
 
-### AMM Swap Calculation
-
+**Compound:**
 ```
-net_input = input × (10000 - fee_bps) / 10000
-output = (output_reserves × net_input) / (input_reserves + net_input)
-min_output = output × (10000 - slippage_bps) / 10000
-```
-
-### Safe Math (mulDivFloor)
-
-Uses `mulw` for 128-bit multiplication and `divmodw` for 128-bit division:
-```
-[hi, lo] = mulw(n1, n2)
-[q_hi, q_lo, r_hi, r_lo] = divmodw(hi, lo, 0, d)
-result = q_lo (asserts q_hi == 0)
+[0] AppCall: compoundYield(slippageBps)
+    foreignApps: [tinymanPoolAppId]
+    foreignAssets: [usdcAsset, alphaAsset]
+    accounts: [poolAddress]
+    fee: 5000
 ```
 
 ---
 
 ## Security Features
 
-### 1. Flash Deposit Attack Prevention
-- Auto-compound executes BEFORE deposit is credited
-- New depositor buys shares at post-compound price
-- Cannot capture pre-existing yield
-
-### 2. On-Chain Price Calculation
-- Reads Tinyman pool reserves directly
-- No off-chain oracle dependency
-- Prevents fake quote attacks
-
-### 3. Permissionless Compounding with High Slippage
-- 100% max slippage allows compounding in illiquid pools
-- On-chain calculation ensures fair minimum output
-- No operational bottleneck
-
-### 4. Immutability
-- Contract updates disabled
-- Contract deletion disabled
-
-### 5. Safe Integer Arithmetic
-- 128-bit precision for all multiplications
-- Floor division prevents rounding exploits
+1. **Flash deposit prevention** — Auto-compound executes BEFORE deposit is credited
+2. **On-chain pricing** — Reads Tinyman pool reserves directly, no oracle dependency
+3. **Slippage cap** — Creator sets maxSlippageBps (min 5%), all swaps bounded
+4. **Immutable** — Update and delete always fail
+5. **128-bit safe math** — `mulw`/`divmodw` prevents overflow, floor division throughout
+6. **Asset opt-in guard** — `optInAssets` can only be called once
+7. **Pool validation** — `updateTinymanPool` verifies asset pair on-chain
 
 ---
 
-## Access Control Matrix
+## Deployment
 
-| Method | Anyone | Creator | RareFi |
-|--------|--------|---------|--------|
-| `deposit` | ✓ | ✓ | ✓ |
-| `withdraw` | ✓ | ✓ | ✓ |
-| `closeOut` | ✓ | ✓ | ✓ |
-| `compoundYield` | ✓ | ✓ | ✓ |
-| `contributeFarm` | ✓ | ✓ | ✓ |
-| `claimCreator` | ✗ | ✓ | ✗ |
-| `updateCreatorFeeRate` | ✗ | ✓ | ✗ |
-| `setFarmEmissionRate` | ✗ | ✓ | ✓ |
-| `updateMinSwapThreshold` | ✗ | ✓ | ✓ |
-| `updateTinymanPool` | ✗ | ✓ | ✓ |
-
----
-
-## Transaction Requirements
-
-### Deposit Transaction
-```
-Group:
-  [0] Asset Transfer: Alpha → Vault
-  [1] App Call: deposit(slippageBps)
-
-If auto-compound may trigger:
-  - appForeignApps: [tinymanPoolAppId]
-  - appForeignAssets: [alphaAsset]
-  - appAccounts: [poolStateHolderAddress]
-  - fee: 5000 micro-ALGO (covers inner txns)
-```
-
-### Compound Transaction
-```
-Group:
-  [0] App Call: compoundYield(slippageBps)
-
-Required:
-  - appForeignApps: [tinymanPoolAppId]
-  - appForeignAssets: [usdcAsset, alphaAsset]
-  - appAccounts: [tinymanPoolAddress]
-  - fee: 5000 micro-ALGO (covers inner txns)
-```
-
----
-
-## State Diagram
-
-```
-User Lifecycle:
-  ┌──────────┐
-  │  Start   │
-  └────┬─────┘
-       │ optIn()
-       ▼
-  ┌──────────┐
-  │ Opted In │ ◄─────────────────────────┐
-  └────┬─────┘                           │
-       │ deposit()                       │
-       ▼                                 │
-  ┌──────────┐   withdraw()    ┌─────────┴───┐
-  │Shareholder│◄──────────────►│ Partial     │
-  └────┬─────┘   (partial)     │ Withdrawal  │
-       │                       └─────────────┘
-       │ closeOut()
-       ▼
-  ┌──────────┐
-  │  Closed  │
-  └──────────┘
-
-Share Price Over Time:
-  ────────────────────────────────────────►
-  1.0    1.05    1.12    1.20    1.35   time
-   │      │       │       │       │
-   ▼      ▼       ▼       ▼       ▼
-  [C1]   [C2]    [C3]    [C4]    [C5]  compounds
-```
-
----
-
-## Comparison: RareFiVault vs RareFiAlphaCompoundingVault
-
-| Feature | RareFiVault | RareFiAlphaCompoundingVault |
-|---------|-------------|----------------------------|
-| **Assets** | 3 (Alpha, USDC, Project) | 2 (Alpha, USDC) |
-| **Yield Token** | Project's ASA | Alpha (same as deposit) |
-| **Accounting** | Yield-per-token accumulator | Share-based |
-| **Yield Collection** | Manual claim required | Auto-compounded |
-| **Share Price** | N/A | Increases over time |
-| **Local State** | 3 variables | 1 variable |
-| **Use Case** | Earn project tokens | Grow Alpha position |
-
----
-
-## Deployment Checklist
-
-1. Deploy contract with `createVault()` parameters
+1. Deploy with `createVault()` parameters
 2. Creator calls `optInAssets()` with 5.4 ALGO payment
-3. Verify Alpha and USDC are opted-in
-4. (Optional) Fund farm with `contributeFarm()`
-5. (Optional) Set farm rate with `setFarmEmissionRate()`
-6. Users can begin depositing
+3. (Optional) Fund farm with `contributeFarm()` + set rate with `setFarmEmissionRate()`
+4. Team performs first deposit
+5. Users can begin depositing
+
+---
+
+## Comparison with RareFiVault
+
+| Feature | RareFiVault | CompoundingVault |
+|---------|-------------|------------------|
+| Assets | 3 (Alpha, USDC, Project) | 2 (Alpha, USDC) |
+| Yield token | Project ASA | Alpha (same as deposit) |
+| Accounting | Yield-per-token accumulator | Share-based |
+| Yield collection | Manual claim | Auto-compounded |
+| Local state | 3 vars | 1 var |
+| Use case | Earn project tokens | Grow Alpha position |
 
 ---
 
 ## Known Limitations
 
-1. **MEV Exposure** - High slippage tolerance means sandwich attacks are possible on mainnet
-2. **Pool Dependency** - Compounding fails if Tinyman pool state is unreadable
-3. **No Emergency Pause** - Contract cannot be paused (users can always withdraw)
-4. **Single Pool** - Only one Tinyman pool per vault (can be updated by admin)
-5. **Share Price Only Increases** - No mechanism to handle losses (by design)
-
----
-
-## Example Scenarios
-
-### Scenario 1: Basic Deposit and Compound
-
-1. Alice deposits 1000 Alpha
-   - `totalShares = 1000`, `totalAlpha = 1000`
-   - Alice receives 1000 shares
-   - Share price = 1.0
-
-2. 100 USDC airdrop arrives, compound triggered
-   - Swap yields 95 Alpha
-   - Creator fee (20%): 19 Alpha
-   - Vault receives: 76 Alpha
-   - `totalAlpha = 1076`, `totalShares = 1000`
-   - Share price = 1.076
-
-3. Alice withdraws all shares
-   - Receives: 1000 × 1076 / 1000 = 1076 Alpha
-   - Profit: 76 Alpha
-
-### Scenario 2: Late Depositor Fair Price
-
-1. Alice has 1000 shares, share price = 1.1
-   - `totalAlpha = 1100`, `totalShares = 1000`
-
-2. Bob deposits 550 Alpha
-   - Shares received: 550 × 1000 / 1100 = 500 shares
-   - `totalAlpha = 1650`, `totalShares = 1500`
-   - Share price still = 1.1
-
-3. Both users withdraw:
-   - Alice: 1000 × 1650 / 1500 = 1100 Alpha
-   - Bob: 500 × 1650 / 1500 = 550 Alpha
-
----
-
-## Audit Recommendations
-
-### Priority Areas
-1. Share calculation arithmetic (minting, burning)
-2. Auto-compound timing (before deposit credit)
-3. Tinyman V2 integration (swap execution, state reading)
-4. Farm bonus calculation and deduction
-
-### Test Scenarios
-- Share price progression over multiple compounds
-- Late depositor does not steal yield
-- Dust handling on withdrawals
-- Pool state reading failures
-- Edge cases (first deposit, last withdrawal)
+1. **Pool dependency** — Compounding fails if Tinyman pool state is unreadable
+2. **No emergency pause** — Contract cannot be paused (users can always withdraw)
+3. **Single pool** — One Tinyman pool per vault (updatable by admin)
+4. **Share price only increases** — No mechanism to handle losses (by design)
+5. **Stranded USDC** — If all shareholders withdraw while USDC is in vault, it's stranded until someone deposits again

@@ -14,6 +14,8 @@ import {
   performContributeFarm,
   performSetFarmEmissionRate,
   performUpdateCreatorFeeRate,
+  performUpdateTinymanPool,
+  deployMockPoolWithAssets,
   getFarmStats,
   VaultDeploymentResult,
 } from './utils/vault';
@@ -2562,6 +2564,200 @@ describe('RareFiVault Contract Tests', () => {
       expect(farmStatsFinal.farmEmissionRate).toBe(1000);
 
       console.log('Contribution works at 0% emission, then requires min 10% to update - OK');
+    });
+  });
+
+  /**
+   * POOL VALIDATION TESTS
+   * Tests that updateTinymanPool correctly validates pool assets
+   */
+  describe('Pool Validation', () => {
+    it('should allow updating to a valid pool with correct assets', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Deploy a new valid pool with same assets (USDC/IBUS)
+      const newPool = await deployMockPoolWithAssets(
+        algod,
+        creator,
+        deployment.usdcAssetId,  // yieldAsset
+        deployment.ibusAssetId,  // swapAsset
+      );
+
+      // Update should succeed
+      await performUpdateTinymanPool(
+        algod,
+        deployment,
+        creator,
+        newPool.poolAppId,
+        newPool.poolAddress,
+      );
+
+      console.log('Pool update with valid assets (USDC/IBUS) - OK');
+    });
+
+    it('should reject updating to a pool with wrong assets', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Deploy a pool with wrong assets (Alpha/IBUS instead of USDC/IBUS)
+      const invalidPool = await deployMockPoolWithAssets(
+        algod,
+        creator,
+        deployment.alphaAssetId,  // Wrong! Should be yieldAsset (USDC)
+        deployment.ibusAssetId,
+      );
+
+      // Update should fail - pool doesn't contain yieldAsset (USDC)
+      await expect(
+        performUpdateTinymanPool(
+          algod,
+          deployment,
+          creator,
+          invalidPool.poolAppId,
+          invalidPool.poolAddress,
+        )
+      ).rejects.toThrow();
+
+      console.log('Pool update with wrong assets (Alpha/IBUS) rejected - OK');
+    });
+
+    it('should reject updating to a pool missing the swap asset', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Deploy a pool with USDC but wrong second asset (Alpha instead of IBUS)
+      const invalidPool = await deployMockPoolWithAssets(
+        algod,
+        creator,
+        deployment.usdcAssetId,
+        deployment.alphaAssetId,  // Wrong! Should be swapAsset (IBUS)
+      );
+
+      // Update should fail - pool doesn't contain swapAsset (IBUS)
+      await expect(
+        performUpdateTinymanPool(
+          algod,
+          deployment,
+          creator,
+          invalidPool.poolAppId,
+          invalidPool.poolAddress,
+        )
+      ).rejects.toThrow();
+
+      console.log('Pool update missing swap asset rejected - OK');
+    });
+
+    it('should allow pool update with assets in reversed order', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Deploy a pool with assets in reversed order (IBUS/USDC instead of USDC/IBUS)
+      const reversedPool = await deployMockPoolWithAssets(
+        algod,
+        creator,
+        deployment.ibusAssetId,  // swapAsset first
+        deployment.usdcAssetId,  // yieldAsset second
+      );
+
+      // Update should succeed - order doesn't matter, both assets are present
+      await performUpdateTinymanPool(
+        algod,
+        deployment,
+        creator,
+        reversedPool.poolAppId,
+        reversedPool.poolAddress,
+      );
+
+      console.log('Pool update with reversed asset order (IBUS/USDC) - OK');
+    });
+  });
+
+  /**
+   * SENDER VALIDATION TESTS
+   * Tests that contributeFarm validates the sender matches the asset transfer
+   */
+  describe('Sender Validation', () => {
+    let senderAlice: { addr: string; sk: Uint8Array };
+    let senderBob: { addr: string; sk: Uint8Array };
+
+    beforeAll(async () => {
+      // Get accounts from KMD
+      const wallets = await kmd.listWallets();
+      const defaultWallet = wallets.wallets.find((w: any) => w.name === 'unencrypted-default-wallet');
+      const walletHandle = (await kmd.initWalletHandle(defaultWallet.id, '')).wallet_handle_token;
+      const addresses = (await kmd.listKeys(walletHandle)).addresses;
+
+      const getAccount = async (index: number) => {
+        const addr = addresses[index];
+        const keyResponse = await kmd.exportKey(walletHandle, '', addr);
+        return { addr, sk: keyResponse.private_key };
+      };
+
+      senderAlice = await getAccount(1);
+      senderBob = await getAccount(2);
+      await kmd.releaseWalletHandle(walletHandle);
+    });
+
+    it('should reject contributeFarm when asset transfer sender differs from caller', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Fund Alice with IBUS
+      await optInToAsset(algod, senderAlice, deployment.ibusAssetId);
+      await fundAsset(algod, creator, senderAlice.addr, deployment.ibusAssetId, 100_000_000);
+
+      // Try to have Alice send the asset but Bob call contributeFarm
+      // This should fail because the sender validation requires transfer.sender === Txn.sender
+      const contract = new algosdk.ABIContract(deployment.arc56Spec);
+      const suggestedParams = await algod.getTransactionParams().do();
+
+      const aliceSigner = algosdk.makeBasicAccountTransactionSigner({
+        sk: senderAlice.sk,
+        addr: algosdk.decodeAddress(senderAlice.addr),
+      });
+      const bobSigner = algosdk.makeBasicAccountTransactionSigner({
+        sk: senderBob.sk,
+        addr: algosdk.decodeAddress(senderBob.addr),
+      });
+
+      // Alice creates and signs asset transfer
+      const ibusTransfer = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+        sender: senderAlice.addr,
+        receiver: deployment.vaultAddress,
+        amount: 10_000_000,
+        assetIndex: deployment.ibusAssetId,
+        suggestedParams,
+      });
+
+      const atc = new algosdk.AtomicTransactionComposer();
+      atc.addTransaction({ txn: ibusTransfer, signer: aliceSigner });
+
+      // Bob calls contributeFarm (different sender than asset transfer)
+      atc.addMethodCall({
+        appID: deployment.vaultAppId,
+        method: contract.getMethodByName('contributeFarm'),
+        methodArgs: [],
+        sender: senderBob.addr,  // Bob is calling, but Alice sent the asset
+        signer: bobSigner,
+        suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+        appForeignAssets: [deployment.ibusAssetId],
+      });
+
+      // This should fail because transfer.sender (Alice) !== Txn.sender (Bob)
+      await expect(atc.execute(algod, 5)).rejects.toThrow();
+
+      console.log('contributeFarm sender mismatch rejected - OK');
     });
   });
 });

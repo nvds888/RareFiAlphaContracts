@@ -3,7 +3,7 @@
 
 // MockTinymanPool.algo.ts::MockTinymanPool.clearStateProgram() -> uint64:
 main:
-    // MockTinymanPool.algo.ts:133
+    // MockTinymanPool.algo.ts:134
     // return true;
     pushint 1 // 1
     return
