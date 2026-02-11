@@ -14,8 +14,6 @@ import {
   performContributeFarm,
   performSetFarmEmissionRate,
   performUpdateCreatorFeeRate,
-  performUpdateTinymanPool,
-  deployMockPoolWithAssets,
   getFarmStats,
   VaultDeploymentResult,
 } from './utils/vault';
@@ -2564,120 +2562,6 @@ describe('RareFiVault Contract Tests', () => {
       expect(farmStatsFinal.farmEmissionRate).toBe(1000);
 
       console.log('Contribution works at 0% emission, then requires min 10% to update - OK');
-    });
-  });
-
-  /**
-   * POOL VALIDATION TESTS
-   * Tests that updateTinymanPool correctly validates pool assets
-   */
-  describe('Pool Validation', () => {
-    it('should allow updating to a valid pool with correct assets', async () => {
-      const deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Deploy a new valid pool with same assets (USDC/IBUS)
-      const newPool = await deployMockPoolWithAssets(
-        algod,
-        creator,
-        deployment.usdcAssetId,  // yieldAsset
-        deployment.ibusAssetId,  // swapAsset
-      );
-
-      // Update should succeed
-      await performUpdateTinymanPool(
-        algod,
-        deployment,
-        creator,
-        newPool.poolAppId,
-        newPool.poolAddress,
-      );
-
-      console.log('Pool update with valid assets (USDC/IBUS) - OK');
-    });
-
-    it('should reject updating to a pool with wrong assets', async () => {
-      const deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Deploy a pool with wrong assets (Alpha/IBUS instead of USDC/IBUS)
-      const invalidPool = await deployMockPoolWithAssets(
-        algod,
-        creator,
-        deployment.alphaAssetId,  // Wrong! Should be yieldAsset (USDC)
-        deployment.ibusAssetId,
-      );
-
-      // Update should fail - pool doesn't contain yieldAsset (USDC)
-      await expect(
-        performUpdateTinymanPool(
-          algod,
-          deployment,
-          creator,
-          invalidPool.poolAppId,
-          invalidPool.poolAddress,
-        )
-      ).rejects.toThrow();
-
-      console.log('Pool update with wrong assets (Alpha/IBUS) rejected - OK');
-    });
-
-    it('should reject updating to a pool missing the swap asset', async () => {
-      const deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Deploy a pool with USDC but wrong second asset (Alpha instead of IBUS)
-      const invalidPool = await deployMockPoolWithAssets(
-        algod,
-        creator,
-        deployment.usdcAssetId,
-        deployment.alphaAssetId,  // Wrong! Should be swapAsset (IBUS)
-      );
-
-      // Update should fail - pool doesn't contain swapAsset (IBUS)
-      await expect(
-        performUpdateTinymanPool(
-          algod,
-          deployment,
-          creator,
-          invalidPool.poolAppId,
-          invalidPool.poolAddress,
-        )
-      ).rejects.toThrow();
-
-      console.log('Pool update missing swap asset rejected - OK');
-    });
-
-    it('should allow pool update with assets in reversed order', async () => {
-      const deployment = await deployVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Deploy a pool with assets in reversed order (IBUS/USDC instead of USDC/IBUS)
-      const reversedPool = await deployMockPoolWithAssets(
-        algod,
-        creator,
-        deployment.ibusAssetId,  // swapAsset first
-        deployment.usdcAssetId,  // yieldAsset second
-      );
-
-      // Update should succeed - order doesn't matter, both assets are present
-      await performUpdateTinymanPool(
-        algod,
-        deployment,
-        creator,
-        reversedPool.poolAppId,
-        reversedPool.poolAddress,
-      );
-
-      console.log('Pool update with reversed asset order (IBUS/USDC) - OK');
     });
   });
 

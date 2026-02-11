@@ -13,12 +13,10 @@ import {
   performContributeFarm,
   performSetFarmEmissionRate,
   performUpdateCreatorFeeRate,
-  performUpdateTinymanPool,
-  deployMockPoolWithAssets,
   getFarmStats,
   CompoundingVaultDeploymentResult,
 } from './utils/compoundingVault';
-import { getAssetBalance, optInToAsset, fundAsset, createTestAsset } from './utils/assets';
+import { getAssetBalance, optInToAsset, fundAsset } from './utils/assets';
 
 // Localnet configuration
 const ALGOD_SERVER = 'http://localhost';
@@ -1883,125 +1881,6 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
   });
 
-  /**
-   * POOL VALIDATION TESTS
-   * Tests that updateTinymanPool correctly validates pool assets
-   */
-  describe('Pool Validation', () => {
-    it('should allow updating to a valid pool with correct assets', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Deploy a new valid pool with same assets (USDC/Alpha)
-      const newPool = await deployMockPoolWithAssets(
-        algod,
-        creator,
-        deployment.usdcAssetId,  // usdcAsset
-        deployment.alphaAssetId, // alphaAsset
-      );
-
-      // Update should succeed
-      await performUpdateTinymanPool(
-        algod,
-        deployment,
-        creator,
-        newPool.poolAppId,
-        newPool.poolAddress,
-      );
-
-      console.log('Pool update with valid assets (USDC/Alpha) - OK');
-    });
-
-    it('should reject updating to a pool with wrong assets', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Create a dummy asset to use as wrong asset
-      const dummyAsset = await createTestAsset(algod, creator, 'Dummy', 'DUMMY', 1_000_000_000);
-
-      // Deploy a pool with wrong assets (USDC/Dummy instead of USDC/Alpha)
-      const invalidPool = await deployMockPoolWithAssets(
-        algod,
-        creator,
-        deployment.usdcAssetId,
-        dummyAsset,  // Wrong! Should be alphaAsset
-      );
-
-      // Update should fail - pool doesn't contain alphaAsset
-      await expect(
-        performUpdateTinymanPool(
-          algod,
-          deployment,
-          creator,
-          invalidPool.poolAppId,
-          invalidPool.poolAddress,
-        )
-      ).rejects.toThrow();
-
-      console.log('Pool update with wrong assets (USDC/Dummy) rejected - OK');
-    });
-
-    it('should reject updating to a pool missing the USDC asset', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Create a dummy asset
-      const dummyAsset = await createTestAsset(algod, creator, 'Dummy2', 'DMY2', 1_000_000_000);
-
-      // Deploy a pool with Alpha but wrong first asset (Dummy instead of USDC)
-      const invalidPool = await deployMockPoolWithAssets(
-        algod,
-        creator,
-        dummyAsset,              // Wrong! Should be usdcAsset
-        deployment.alphaAssetId,
-      );
-
-      // Update should fail - pool doesn't contain usdcAsset
-      await expect(
-        performUpdateTinymanPool(
-          algod,
-          deployment,
-          creator,
-          invalidPool.poolAppId,
-          invalidPool.poolAddress,
-        )
-      ).rejects.toThrow();
-
-      console.log('Pool update missing USDC asset rejected - OK');
-    });
-
-    it('should allow pool update with assets in reversed order', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Deploy a pool with assets in reversed order (Alpha/USDC instead of USDC/Alpha)
-      const reversedPool = await deployMockPoolWithAssets(
-        algod,
-        creator,
-        deployment.alphaAssetId, // Alpha first
-        deployment.usdcAssetId,  // USDC second
-      );
-
-      // Update should succeed - order doesn't matter, both assets are present
-      await performUpdateTinymanPool(
-        algod,
-        deployment,
-        creator,
-        reversedPool.poolAppId,
-        reversedPool.poolAddress,
-      );
-
-      console.log('Pool update with reversed asset order (Alpha/USDC) - OK');
-    });
-  });
 
   /**
    * SENDER VALIDATION TESTS

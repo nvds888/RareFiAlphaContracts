@@ -615,7 +615,6 @@ export class RareFiAlphaCompoundingVault extends arc4.Contract {
   /**
    * Update Tinyman pool configuration
    * Use only if the pool needs to be changed (e.g., migration)
-   * Validates that the new pool contains the correct asset pair (usdcAsset/alphaAsset)
    */
   @arc4.abimethod()
   updateTinymanPool(newPoolAppId: uint64, newPoolAddress: Account): void {
@@ -623,16 +622,6 @@ export class RareFiAlphaCompoundingVault extends arc4.Contract {
     const isRarefi = Txn.sender === this.rarefiAddress.value;
     assert(isCreator || isRarefi, 'Only creator or RareFi can update');
     assert(newPoolAppId !== Uint64(0), 'Invalid pool app ID');
-
-    // Validate pool contains the correct asset pair
-    const [asset1Id, hasAsset1] = AppLocal.getExUint64(newPoolAddress, newPoolAppId, Bytes('asset_1_id'));
-    const [asset2Id, hasAsset2] = AppLocal.getExUint64(newPoolAddress, newPoolAppId, Bytes('asset_2_id'));
-    assert(hasAsset1 && hasAsset2, 'Cannot read pool assets');
-
-    // Verify pool contains both usdcAsset and alphaAsset
-    const hasUsdcAsset = asset1Id === this.usdcAsset.value || asset2Id === this.usdcAsset.value;
-    const hasAlphaAsset = asset1Id === this.alphaAsset.value || asset2Id === this.alphaAsset.value;
-    assert(hasUsdcAsset && hasAlphaAsset, 'Pool must contain USDC and Alpha assets');
 
     this.tinymanPoolAppId.value = newPoolAppId;
     this.tinymanPoolAddress.value = newPoolAddress;

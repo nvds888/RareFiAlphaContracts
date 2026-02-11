@@ -138,7 +138,7 @@ Must be ≥ 0.20 USDC.
 Creator only. Must be 5-100% (500-10000 bps).
 
 #### `updateTinymanPool(newPoolAppId, newPoolAddress)`
-Validates new pool contains both yieldAsset and swapAsset by reading on-chain local state.
+Updates the Tinyman pool app ID and address. Use only if the pool needs to be changed (e.g., migration).
 
 ### Farm Operations
 
@@ -236,7 +236,6 @@ output = (outputReserves × netInput) / (inputReserves + netInput)
 5. **Immutable** — Update and delete always fail
 6. **128-bit safe math** — `mulw`/`divmodw` prevents overflow, floor division throughout
 7. **Asset opt-in guard** — `optInAssets` can only be called once
-8. **Pool validation** — `updateTinymanPool` verifies asset pair on-chain
 
 ### Security Validation
 
