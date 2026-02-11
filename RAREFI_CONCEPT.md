@@ -113,14 +113,14 @@ For users who want to **grow their Alpha position** automatically.
 | **Yield routing** | Redirect ecosystem yield flows toward your token |
 | **Community earning** | Your supporters earn your token seamlessly |
 | **Engaged holders** | Users actively chose your project's vault |
-| **Configurable fees** | Take a percentage of swapped yield as project revenue |
+| **Creator fees** | Configurable fee (0-6%) on swapped yield as project revenue |
 
 ### For RareFi
 
 | Revenue Stream | Description |
 |----------------|-------------|
-| **Setup fee** | 5.4-5.5 ALGO per vault deployment (MBR + operational) |
-| **Swap execution** | Platform controls swap timing for optimal execution |
+| **Vault deployment** | RareFi deploys vault contracts for projects (5.4-5.5 ALGO MBR) |
+| **Platform fee** | Performance fee on yield swapped via default dApp |
 
 ---
 
@@ -288,35 +288,6 @@ Both vaults support an optional farm bonus that sponsors can fund.
 - **Example:** If creator fee is 5% and 100 USDC yield is swapped:
   - 5 USDC worth of output -> Creator
   - 95 USDC worth of output -> Users
-
----
-
-## Deployment Flow
-
-### For Projects (Vault Creators)
-
-1. **Prepare:**
-   - Have your project ASA created (for RareFiVault)
-   - Ensure Tinyman pool exists (USDC/YourToken or USDC/Alpha)
-   - Prepare 5.5 ALGO for setup
-
-2. **Deploy:**
-   - Call `createVault()` with configuration
-   - Call `optInAssets()` with ALGO payment
-
-3. **Operate:**
-   - Monitor for yield accumulation
-   - Call `swapYield()` / `compoundYield()` when threshold met
-   - Claim creator fees periodically
-
-### For Users
-
-1. **Choose a vault** for a project you like (or compounding vault)
-2. **Opt in** to the vault contract
-3. **Deposit** Alpha tokens
-4. **Wait** for yield to accumulate
-5. **Claim** tokens (RareFiVault) or **withdraw** with gains (Compounding)
-6. **Withdraw** principal whenever you want
 
 ---
 

@@ -325,39 +325,7 @@ private mulDivFloor(n1: uint64, n2: uint64, d: uint64): uint64 {
 
 ---
 
-## 5. Recommendations
-
-### 5.1 Immediate Actions
-- ✅ Deploy updated contracts with phishing protections
-- ✅ Recompile and re-deploy both vaults
-- ⚠️ Consider updating documentation to warn users about clear state risks
-
-### 5.2 Testing Requirements
-
-Before mainnet deployment, verify:
-- [ ] Unit test: Reject transactions with rekeyTo set
-- [ ] Unit test: Reject transactions with closeRemainderTo set
-- [ ] Unit test: Reject transactions with assetCloseTo set
-- [ ] Integration test: Attempt rekey attack via malicious transaction group
-- [ ] Integration test: Verify update/delete operations fail
-
-### 5.3 Monitoring
-
-Post-deployment monitoring:
-- Monitor for failed transactions with dangerous fields (security events)
-- Track swap slippage to detect manipulation attempts
-- Monitor farm emission rates for economic attacks
-
-### 5.4 Future Enhancements
-
-Consider implementing:
-- Emergency pause mechanism (requires contract redesign)
-- Upgrade path via proxy pattern (requires architecture change)
-- Maximum deposit limits per user (spam prevention)
-
----
-
-## 6. Conclusion
+## 5. Conclusion
 
 ### Critical Finding: RESOLVED ✅
 
