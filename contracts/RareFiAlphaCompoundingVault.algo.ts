@@ -301,6 +301,10 @@ export class RareFiAlphaCompoundingVault extends arc4.Contract {
     assert(algoPayment.amount >= totalRequired, 'Insufficient ALGO (need 5.4 ALGO)');
     assert(algoPayment.sender === Txn.sender, 'Payment must be from caller');
 
+    // SECURITY: Prevent phishing attacks - reject dangerous fields
+    assert(algoPayment.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
+    assert(algoPayment.closeRemainderTo === Global.zeroAddress, 'closeRemainderTo must be zero');
+
     // Opt-in to Alpha asset
     itxn.assetTransfer({
       assetReceiver: appAddr,
@@ -393,6 +397,10 @@ export class RareFiAlphaCompoundingVault extends arc4.Contract {
     assert(depositTransfer.xferAsset === Asset(this.alphaAsset.value), 'Must transfer Alpha asset');
     assert(depositTransfer.assetReceiver === appAddr, 'Must send to contract');
     assert(depositTransfer.sender === Txn.sender, 'Transfer must be from caller');
+
+    // SECURITY: Prevent phishing attacks - reject dangerous fields
+    assert(depositTransfer.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
+    assert(depositTransfer.assetCloseTo === Global.zeroAddress, 'assetCloseTo must be zero');
 
     const amount = depositTransfer.assetAmount;
     assert(amount >= MIN_DEPOSIT_AMOUNT, 'Deposit too small');
@@ -663,6 +671,10 @@ export class RareFiAlphaCompoundingVault extends arc4.Contract {
     assert(farmTransfer.xferAsset === Asset(this.alphaAsset.value), 'Must transfer Alpha asset');
     assert(farmTransfer.assetReceiver === appAddr, 'Must send to contract');
     assert(farmTransfer.sender === Txn.sender, 'Transfer must be from caller');
+
+    // SECURITY: Prevent phishing attacks - reject dangerous fields
+    assert(farmTransfer.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
+    assert(farmTransfer.assetCloseTo === Global.zeroAddress, 'assetCloseTo must be zero');
 
     const amount = farmTransfer.assetAmount;
     assert(amount > Uint64(0), 'Contribution must be positive');

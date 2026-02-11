@@ -219,6 +219,10 @@ Both vaults use Tinyman V2 for swaps.
 
 ### Safety Features
 
+- **Phishing attack prevention:** All incoming transactions validated for dangerous fields:
+  - `rekeyTo` must be zero (prevents account takeover)
+  - `closeRemainderTo` must be zero (prevents fund drain)
+  - `assetCloseTo` must be zero (prevents asset drain)
 - **No upgrades:** Contracts cannot be modified after deployment
 - **No deletion:** Contracts cannot be deleted (user funds always accessible)
 - **Slippage protection:** Swaps revert if output below minimum

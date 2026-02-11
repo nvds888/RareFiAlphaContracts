@@ -17,3 +17,8 @@ contracts/out/
 
 # Claude Code session data
 .claude/
+
+# Prevent duplicate artifact folders
+contracts/out/
+contracts/contracts/
+tealer-export/

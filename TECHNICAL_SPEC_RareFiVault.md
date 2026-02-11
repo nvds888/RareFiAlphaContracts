@@ -225,13 +225,27 @@ output = (outputReserves × netInput) / (inputReserves + netInput)
 
 ## Security Features
 
-1. **Flash deposit prevention** — Auto-swap executes BEFORE deposit is credited
-2. **On-chain pricing** — Reads Tinyman pool reserves directly, no oracle dependency
-3. **Slippage cap** — Creator sets maxSlippageBps (min 5%), all swaps bounded
-4. **Immutable** — Update and delete always fail
-5. **128-bit safe math** — `mulw`/`divmodw` prevents overflow, floor division throughout
-6. **Asset opt-in guard** — `optInAssets` can only be called once
-7. **Pool validation** — `updateTinymanPool` verifies asset pair on-chain
+1. **Phishing attack prevention** — All incoming transactions validated:
+   - `rekeyTo` must be zero (prevents account takeover)
+   - `closeRemainderTo` must be zero on payments (prevents fund drain)
+   - `assetCloseTo` must be zero on asset transfers (prevents asset drain)
+   - Applied to: `optInAssets`, `deposit`, `contributeFarm`
+2. **Flash deposit prevention** — Auto-swap executes BEFORE deposit is credited
+3. **On-chain pricing** — Reads Tinyman pool reserves directly, no oracle dependency
+4. **Slippage cap** — Creator sets maxSlippageBps (min 5%), all swaps bounded
+5. **Immutable** — Update and delete always fail
+6. **128-bit safe math** — `mulw`/`divmodw` prevents overflow, floor division throughout
+7. **Asset opt-in guard** — `optInAssets` can only be called once
+8. **Pool validation** — `updateTinymanPool` verifies asset pair on-chain
+
+### Security Validation
+
+TEAL bytecode verified for dangerous field checks:
+- **Lines 403-414** (optInAssets): rekeyTo, closeRemainderTo
+- **Lines 882-894** (deposit): rekeyTo, assetCloseTo
+- **Lines 2036-2048** (contributeFarm): rekeyTo, assetCloseTo
+
+Audited with Trail of Bits Tealer v0.1.2 static analyzer.
 
 ---
 

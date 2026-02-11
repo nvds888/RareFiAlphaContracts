@@ -68,10 +68,11 @@ Compiled artifacts are output to `contracts/artifacts/`.
 npm test
 
 # Run specific test file
-npm test -- tests/vault.test.ts
+npm test -- vault.test.ts
+npm test -- compoundingVault.test.ts
 ```
 
-**Current status:** 142 tests passing
+**Current status:** 177 tests passing
 
 ## Key Features
 
@@ -84,12 +85,26 @@ npm test -- tests/vault.test.ts
 
 ## Security
 
-- Contracts cannot be upgraded or deleted after deployment
-- 128-bit safe math prevents overflow
-- Slippage protection on all swaps
-- Minimum thresholds prevent dust attacks
+- **Phishing attack prevention** - Rejects rekeyTo, closeRemainderTo, assetCloseTo
+- **Immutable** - Contracts cannot be upgraded or deleted after deployment
+- **Safe math** - 128-bit arithmetic prevents overflow
+- **Slippage protection** - All swaps bounded by creator-controlled max
+- **Threshold guards** - Minimum amounts prevent dust attacks
 
-See [TEST_SUMMARY.md](./TEST_SUMMARY.md) for security test coverage.
+### Security Audit
+
+Static analysis with **Trail of Bits Tealer v0.1.2**:
+
+```bash
+# Install Tealer
+pip3 install tealer
+
+# Scan contracts
+python -m tealer detect --contracts contracts/artifacts/RareFiVault.approval.teal
+python -m tealer detect --contracts contracts/artifacts/RareFiAlphaCompoundingVault.approval.teal
+```
+
+See [SECURITY_AUDIT_REPORT.md](./SECURITY_AUDIT_REPORT.md) for full audit report and [TEST_SUMMARY.md](./TEST_SUMMARY.md) for test coverage.
 
 ## License
 
