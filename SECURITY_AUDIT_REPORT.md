@@ -321,7 +321,7 @@ private mulDivFloor(n1: uint64, n2: uint64, d: uint64): uint64 {
 - Pool state read directly on-chain (no oracle manipulation)
 - Slippage protection enforced
 - Minimum output validated post-swap
-- Pool asset validation before updates
+- Pool configuration is immutable (set at deployment, cannot be changed)
 
 ---
 
@@ -331,13 +331,14 @@ private mulDivFloor(n1: uint64, n2: uint64, d: uint64): uint64 {
 
 The critical phishing vulnerability has been **successfully patched**. All dangerous transaction fields (rekeyTo, closeRemainderTo, assetCloseTo) are now validated against zero address in all methods that accept external transactions.
 
-### Security Posture: STRONG 🔒
+### Security Posture: STRONG
 
 - Contracts are immutable and non-deletable
 - No admin backdoors or privilege escalation paths
-- Comprehensive input validation
+- All inputs validated at entry points
 - Safe arithmetic with overflow protection
 - Proper access controls
+- Tinyman pool configuration immutable after deployment
 
 ### Tealer Findings: FALSE POSITIVES
 
@@ -346,10 +347,10 @@ The automated scanner findings are false positives:
 - Fee checks not applicable (stateful apps, not logic sigs)
 - Rekey checks not applicable (stateful apps, not logic sigs)
 
-### Deployment Readiness: APPROVED ✅
+### Deployment Readiness: APPROVED
 
-Both contracts are secure and ready for production deployment after:
-1. Comprehensive unit testing of security patches
+Remaining steps before deployment:
+1. Unit testing of security patches
 2. Integration testing with malicious transaction groups
 3. Final code review by additional security auditor (recommended)
 

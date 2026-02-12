@@ -2532,6 +2532,43 @@ describe('RareFiVault Contract Tests', () => {
       console.log('Set emission rate to 50% with funded farm - OK');
     });
 
+    it('should allow setting emission rate up to 500% (max)', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Contribute to farm
+      await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 100_000_000);
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      // Set to 500% (50000 bps) - should succeed (max allowed)
+      await performSetFarmEmissionRate(algod, deployment, creator, 50000);
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.farmEmissionRate).toBe(50000);
+
+      console.log('Set emission rate to 500% (max) - OK');
+    });
+
+    it('should reject setting emission rate above 500%', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Contribute to farm
+      await fundAsset(algod, creator, creator.addr, deployment.ibusAssetId, 100_000_000);
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+
+      // Set to 501% (50100 bps) - should fail
+      await expect(
+        performSetFarmEmissionRate(algod, deployment, creator, 50100)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected emission rate above 500%');
+    });
+
     it('should allow contributions when emission rate is 0, but then require min 10% to change', async () => {
       const deployment = await deployVaultForTest(algod, creator, {
         creatorFeeRate: 0,

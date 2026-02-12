@@ -814,36 +814,6 @@ export async function getFarmStats(
   };
 }
 
-export async function performUpdateTinymanPool(
-  algod: algosdk.Algodv2,
-  deployment: VaultDeploymentResult,
-  sender: { addr: string | algosdk.Address; sk: Uint8Array },
-  newPoolAppId: number,
-  newPoolAddress: string,
-) {
-  const contract = new algosdk.ABIContract(deployment.arc56Spec);
-  const suggestedParams = await algod.getTransactionParams().do();
-  const senderAddr = typeof sender.addr === 'string' ? sender.addr : sender.addr.toString();
-  const signer = algosdk.makeBasicAccountTransactionSigner({
-    sk: sender.sk,
-    addr: algosdk.decodeAddress(senderAddr),
-  });
-
-  const atc = new algosdk.AtomicTransactionComposer();
-  atc.addMethodCall({
-    appID: deployment.vaultAppId,
-    method: contract.getMethodByName('updateTinymanPool'),
-    methodArgs: [newPoolAppId, newPoolAddress],
-    sender: senderAddr,
-    signer,
-    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
-    appForeignApps: [newPoolAppId],
-    appAccounts: [newPoolAddress],
-  });
-
-  await atc.execute(algod, 5);
-}
-
 /**
  * Deploy a MockTinymanPool with specific assets for testing pool validation
  */

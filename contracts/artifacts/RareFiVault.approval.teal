@@ -4,11 +4,11 @@
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
     intcblock 0 1 8 4 10000 1000000000000 200000
-    bytecblock "totalDeposits" "farmBalance" "depositedAmount" "yieldAsset" "swapAsset" "creatorAddress" "yieldPerToken" "earnedYield" "creatorUnclaimedYield" "depositAsset" "farmEmissionRate" 0x151f7c75 "rarefiAddress" "minSwapThreshold" "maxSlippageBps" "totalYieldGenerated" "tinymanPoolAppId" "tinymanPoolAddress" "userYieldPerToken" "creatorFeeRate" "assetsOptedIn"
+    bytecblock "totalDeposits" "farmBalance" "depositedAmount" "yieldAsset" "swapAsset" "creatorAddress" "yieldPerToken" "earnedYield" "creatorUnclaimedYield" "depositAsset" "farmEmissionRate" 0x151f7c75 "minSwapThreshold" "maxSlippageBps" "totalYieldGenerated" "userYieldPerToken" "rarefiAddress" "creatorFeeRate" "tinymanPoolAppId" "tinymanPoolAddress" "assetsOptedIn"
     // RareFiVault.algo.ts:36
     // export class RareFiVault extends arc4.Contract {
     txn NumAppArgs
-    bz main_bare_routing@29
+    bz main_bare_routing@28
     pushbytess 0x29314d95 0x6a691fe2 // method "optIn()void", method "closeOut()void"
     txna ApplicationArgs 0
     match main_optIn_route@3 main_closeOut_route@4
@@ -20,13 +20,13 @@ main_switch_case_next@5:
     !
     assert // OnCompletion must be NoOp
     txn ApplicationID
-    bz main_create_NoOp@25
-    pushbytess 0x414e41b5 0x6e2ebc9b 0x21f1ddff 0xf1577726 0xbc99449e 0x36f3b2f4 0x003597a2 0xb0df5c0f 0x3fb8a927 0xf41da35d 0xab6ef73b 0xaae2cad2 0x1ef7b586 0xbc5e38c6 0xafebfcac 0x12785065 0x3845a71d // method "optInAssets()void", method "deposit(uint64)void", method "withdraw(uint64)void", method "claim()void", method "claimCreator()void", method "swapYield(uint64)void", method "getVaultStats()(uint64,uint64,uint64,uint64,uint64,uint64)", method "getPendingYield(address)uint64", method "getUserDeposit(address)uint64", method "getSwapQuote()(uint64,uint64,uint64)", method "updateMinSwapThreshold(uint64)void", method "updateMaxSlippage(uint64)void", method "updateTinymanPool(uint64,address)void", method "updateCreatorFeeRate(uint64)void", method "contributeFarm()void", method "setFarmEmissionRate(uint64)void", method "getFarmStats()(uint64,uint64)"
+    bz main_create_NoOp@24
+    pushbytess 0x414e41b5 0x6e2ebc9b 0x21f1ddff 0xf1577726 0xbc99449e 0x36f3b2f4 0x003597a2 0xb0df5c0f 0x3fb8a927 0xf41da35d 0xab6ef73b 0xaae2cad2 0xbc5e38c6 0xafebfcac 0x12785065 0x3845a71d // method "optInAssets()void", method "deposit(uint64)void", method "withdraw(uint64)void", method "claim()void", method "claimCreator()void", method "swapYield(uint64)void", method "getVaultStats()(uint64,uint64,uint64,uint64,uint64,uint64)", method "getPendingYield(address)uint64", method "getUserDeposit(address)uint64", method "getSwapQuote()(uint64,uint64,uint64)", method "updateMinSwapThreshold(uint64)void", method "updateMaxSlippage(uint64)void", method "updateCreatorFeeRate(uint64)void", method "contributeFarm()void", method "setFarmEmissionRate(uint64)void", method "getFarmStats()(uint64,uint64)"
     txna ApplicationArgs 0
-    match optInAssets deposit withdraw claim claimCreator swapYield getVaultStats getPendingYield getUserDeposit getSwapQuote updateMinSwapThreshold updateMaxSlippage updateTinymanPool updateCreatorFeeRate contributeFarm setFarmEmissionRate getFarmStats
+    match optInAssets deposit withdraw claim claimCreator swapYield getVaultStats getPendingYield getUserDeposit getSwapQuote updateMinSwapThreshold updateMaxSlippage updateCreatorFeeRate contributeFarm setFarmEmissionRate getFarmStats
     err
 
-main_create_NoOp@25:
+main_create_NoOp@24:
     // RareFiVault.algo.ts:36
     // export class RareFiVault extends arc4.Contract {
     pushbytes 0xea707319 // method "createVault(uint64,uint64,uint64,uint64,uint64,uint64,uint64,address,address)void"
@@ -56,30 +56,30 @@ main_optIn_route@3:
     assert // OnCompletion must be OptIn && can only call when not creating
     b optIn
 
-main_bare_routing@29:
+main_bare_routing@28:
     // RareFiVault.algo.ts:36
     // export class RareFiVault extends arc4.Contract {
     intc_3 // UpdateApplication
     pushint 5 // DeleteApplication
     txn OnCompletion
-    match main_updateApplication@30 main_deleteApplication@31
+    match main_updateApplication@29 main_deleteApplication@30
     err
 
-main_deleteApplication@31:
-    // RareFiVault.algo.ts:756
+main_deleteApplication@30:
+    // RareFiVault.algo.ts:741
     // @baremethod({ allowActions: 'DeleteApplication' })
     txn ApplicationID
     assert // can only call when not creating
-    // RareFiVault.algo.ts:758
+    // RareFiVault.algo.ts:743
     // assert(false, 'Contract deletion disabled');
     err // Contract deletion disabled
 
-main_updateApplication@30:
-    // RareFiVault.algo.ts:751
+main_updateApplication@29:
+    // RareFiVault.algo.ts:736
     // @baremethod({ allowActions: 'UpdateApplication' })
     txn ApplicationID
     assert // can only call when not creating
-    // RareFiVault.algo.ts:753
+    // RareFiVault.algo.ts:738
     // assert(false, 'Contract updates disabled');
     err // Contract updates disabled
 
@@ -237,14 +237,14 @@ createVault:
     app_global_put
     // RareFiVault.algo.ts:48
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
-    bytec 12 // "rarefiAddress"
+    bytec 16 // "rarefiAddress"
     // RareFiVault.algo.ts:272
     // this.rarefiAddress.value = rarefiAddress;
     swap
     app_global_put
     // RareFiVault.algo.ts:49
     // creatorFeeRate = GlobalState<uint64>();    // 0-100, percentage of yield to creator
-    bytec 19 // "creatorFeeRate"
+    bytec 17 // "creatorFeeRate"
     // RareFiVault.algo.ts:273
     // this.creatorFeeRate.value = creatorFeeRate;
     uncover 5
@@ -272,35 +272,35 @@ createVault:
     app_global_put
     // RareFiVault.algo.ts:55
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
-    bytec 13 // "minSwapThreshold"
+    bytec 12 // "minSwapThreshold"
     // RareFiVault.algo.ts:279
     // this.minSwapThreshold.value = minSwapThreshold;
     uncover 4
     app_global_put
     // RareFiVault.algo.ts:56
     // maxSlippageBps = GlobalState<uint64>();    // Maximum slippage tolerance in basis points
-    bytec 14 // "maxSlippageBps"
+    bytec 13 // "maxSlippageBps"
     // RareFiVault.algo.ts:280
     // this.maxSlippageBps.value = maxSlippageBps;
     uncover 3
     app_global_put
     // RareFiVault.algo.ts:57
     // totalYieldGenerated = GlobalState<uint64>(); // Total yield generated from swaps (swap output in swapAsset)
-    bytec 15 // "totalYieldGenerated"
+    bytec 14 // "totalYieldGenerated"
     // RareFiVault.algo.ts:281
     // this.totalYieldGenerated.value = Uint64(0);
     intc_0 // 0
     app_global_put
     // RareFiVault.algo.ts:60
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
-    bytec 16 // "tinymanPoolAppId"
+    bytec 18 // "tinymanPoolAppId"
     // RareFiVault.algo.ts:284
     // this.tinymanPoolAppId.value = tinymanPoolAppId;
     uncover 2
     app_global_put
     // RareFiVault.algo.ts:61
     // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
-    bytec 17 // "tinymanPoolAddress"
+    bytec 19 // "tinymanPoolAddress"
     // RareFiVault.algo.ts:285
     // this.tinymanPoolAddress.value = tinymanPoolAddress;
     swap
@@ -579,7 +579,7 @@ optIn:
     txn Sender
     // RareFiVault.algo.ts:75
     // userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-    bytec 18 // "userYieldPerToken"
+    bytec 15 // "userYieldPerToken"
     // RareFiVault.algo.ts:359
     // this.userYieldPerToken(Txn.sender).value = Uint64(0);
     intc_0 // 0
@@ -780,7 +780,7 @@ deposit:
     intc_0 // 0
     // RareFiVault.algo.ts:56
     // maxSlippageBps = GlobalState<uint64>();    // Maximum slippage tolerance in basis points
-    bytec 14 // "maxSlippageBps"
+    bytec 13 // "maxSlippageBps"
     // RareFiVault.algo.ts:413
     // assert(slippageBps <= this.maxSlippageBps.value, 'Slippage exceeds maximum allowed');
     app_global_get_ex
@@ -811,7 +811,7 @@ deposit:
     intc_0 // 0
     // RareFiVault.algo.ts:55
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
-    bytec 13 // "minSwapThreshold"
+    bytec 12 // "minSwapThreshold"
     // RareFiVault.algo.ts:420
     // if (usdcBalance >= this.minSwapThreshold.value && this.totalDeposits.value > Uint64(0)) {
     app_global_get_ex
@@ -1271,7 +1271,7 @@ swapYield:
     intc_0 // 0
     // RareFiVault.algo.ts:56
     // maxSlippageBps = GlobalState<uint64>();    // Maximum slippage tolerance in basis points
-    bytec 14 // "maxSlippageBps"
+    bytec 13 // "maxSlippageBps"
     // RareFiVault.algo.ts:543
     // assert(slippageBps <= this.maxSlippageBps.value, 'Slippage exceeds maximum allowed');
     app_global_get_ex
@@ -1299,7 +1299,7 @@ swapYield:
     intc_0 // 0
     // RareFiVault.algo.ts:55
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
-    bytec 13 // "minSwapThreshold"
+    bytec 12 // "minSwapThreshold"
     // RareFiVault.algo.ts:548
     // assert(usdcBalance >= this.minSwapThreshold.value, 'Below minimum swap threshold');
     app_global_get_ex
@@ -1396,7 +1396,7 @@ getVaultStats:
     intc_0 // 0
     // RareFiVault.algo.ts:57
     // totalYieldGenerated = GlobalState<uint64>(); // Total yield generated from swaps (swap output in swapAsset)
-    bytec 15 // "totalYieldGenerated"
+    bytec 14 // "totalYieldGenerated"
     // RareFiVault.algo.ts:574
     // this.totalYieldGenerated.value
     app_global_get_ex
@@ -1499,7 +1499,7 @@ getPendingYield:
     intc_0 // 0
     // RareFiVault.algo.ts:75
     // userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-    bytec 18 // "userYieldPerToken"
+    bytec 15 // "userYieldPerToken"
     // RareFiVault.algo.ts:588
     // const userYPT = this.userYieldPerToken(user).value;
     app_local_get_ex
@@ -1696,7 +1696,7 @@ updateMinSwapThreshold:
     intc_0 // 0
     // RareFiVault.algo.ts:48
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
-    bytec 12 // "rarefiAddress"
+    bytec 16 // "rarefiAddress"
     // RareFiVault.algo.ts:637
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     app_global_get_ex
@@ -1714,7 +1714,7 @@ updateMinSwapThreshold:
     assert // Threshold too low
     // RareFiVault.algo.ts:55
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
-    bytec 13 // "minSwapThreshold"
+    bytec 12 // "minSwapThreshold"
     // RareFiVault.algo.ts:640
     // this.minSwapThreshold.value = newThreshold;
     swap
@@ -1763,7 +1763,7 @@ updateMaxSlippage:
     assert // Max slippage too high
     // RareFiVault.algo.ts:56
     // maxSlippageBps = GlobalState<uint64>();    // Maximum slippage tolerance in basis points
-    bytec 14 // "maxSlippageBps"
+    bytec 13 // "maxSlippageBps"
     // RareFiVault.algo.ts:652
     // this.maxSlippageBps.value = newMaxSlippageBps;
     swap
@@ -1774,78 +1774,9 @@ updateMaxSlippage:
     return
 
 
-// RareFiVault.algo.ts::RareFiVault.updateTinymanPool[routing]() -> void:
-updateTinymanPool:
-    // RareFiVault.algo.ts:659
-    // @arc4.abimethod()
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
-    txna ApplicationArgs 2
-    dup
-    len
-    pushint 32 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // RareFiVault.algo.ts:661
-    // const isCreator = Txn.sender === this.creatorAddress.value;
-    txn Sender
-    intc_0 // 0
-    // RareFiVault.algo.ts:47
-    // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
-    bytec 5 // "creatorAddress"
-    // RareFiVault.algo.ts:661
-    // const isCreator = Txn.sender === this.creatorAddress.value;
-    app_global_get_ex
-    assert // check GlobalState exists
-    ==
-    // RareFiVault.algo.ts:662
-    // const isRarefi = Txn.sender === this.rarefiAddress.value;
-    txn Sender
-    intc_0 // 0
-    // RareFiVault.algo.ts:48
-    // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
-    bytec 12 // "rarefiAddress"
-    // RareFiVault.algo.ts:662
-    // const isRarefi = Txn.sender === this.rarefiAddress.value;
-    app_global_get_ex
-    assert // check GlobalState exists
-    ==
-    // RareFiVault.algo.ts:663
-    // assert(isCreator || isRarefi, 'Only creator or RareFi can update');
-    ||
-    assert // Only creator or RareFi can update
-    // RareFiVault.algo.ts:664
-    // assert(newPoolAppId !== Uint64(0), 'Invalid pool app ID');
-    dig 1
-    assert // Invalid pool app ID
-    // RareFiVault.algo.ts:60
-    // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
-    bytec 16 // "tinymanPoolAppId"
-    // RareFiVault.algo.ts:666
-    // this.tinymanPoolAppId.value = newPoolAppId;
-    uncover 2
-    app_global_put
-    // RareFiVault.algo.ts:61
-    // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
-    bytec 17 // "tinymanPoolAddress"
-    // RareFiVault.algo.ts:667
-    // this.tinymanPoolAddress.value = newPoolAddress;
-    swap
-    app_global_put
-    // RareFiVault.algo.ts:659
-    // @arc4.abimethod()
-    intc_1 // 1
-    return
-
-
 // RareFiVault.algo.ts::RareFiVault.updateCreatorFeeRate[routing]() -> void:
 updateCreatorFeeRate:
-    // RareFiVault.algo.ts:674
+    // RareFiVault.algo.ts:659
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1854,20 +1785,20 @@ updateCreatorFeeRate:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // RareFiVault.algo.ts:676
+    // RareFiVault.algo.ts:661
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can update fee rate');
     txn Sender
     intc_0 // 0
     // RareFiVault.algo.ts:47
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 5 // "creatorAddress"
-    // RareFiVault.algo.ts:676
+    // RareFiVault.algo.ts:661
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can update fee rate');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Only creator can update fee rate
-    // RareFiVault.algo.ts:677
+    // RareFiVault.algo.ts:662
     // assert(newFeeRate <= MAX_FEE_RATE, 'Fee rate exceeds maximum (6%)');
     dup
     pushint 6 // 6
@@ -1875,12 +1806,12 @@ updateCreatorFeeRate:
     assert // Fee rate exceeds maximum (6%)
     // RareFiVault.algo.ts:49
     // creatorFeeRate = GlobalState<uint64>();    // 0-100, percentage of yield to creator
-    bytec 19 // "creatorFeeRate"
-    // RareFiVault.algo.ts:678
+    bytec 17 // "creatorFeeRate"
+    // RareFiVault.algo.ts:663
     // this.creatorFeeRate.value = newFeeRate;
     swap
     app_global_put
-    // RareFiVault.algo.ts:674
+    // RareFiVault.algo.ts:659
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1888,17 +1819,17 @@ updateCreatorFeeRate:
 
 // RareFiVault.algo.ts::RareFiVault.contributeFarm[routing]() -> void:
 contributeFarm:
-    // RareFiVault.algo.ts:694
+    // RareFiVault.algo.ts:679
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // RareFiVault.algo.ts:695
+    // RareFiVault.algo.ts:680
     // const currentIndex = Txn.groupIndex;
     txn GroupIndex
-    // RareFiVault.algo.ts:696
+    // RareFiVault.algo.ts:681
     // assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
     dup
     assert // App call must follow asset transfer
-    // RareFiVault.algo.ts:699
+    // RareFiVault.algo.ts:684
     // const farmTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
     intc_1 // 1
     -
@@ -1907,7 +1838,7 @@ contributeFarm:
     intc_3 // axfer
     ==
     assert // transaction type is axfer
-    // RareFiVault.algo.ts:700
+    // RareFiVault.algo.ts:685
     // assert(farmTransfer.xferAsset === Asset(this.swapAsset.value), 'Must transfer swap asset');
     dup
     gtxns XferAsset
@@ -1915,54 +1846,54 @@ contributeFarm:
     // RareFiVault.algo.ts:44
     // swapAsset = GlobalState<uint64>();         // Project's ASA ID (what yield is swapped to)
     bytec 4 // "swapAsset"
-    // RareFiVault.algo.ts:700
+    // RareFiVault.algo.ts:685
     // assert(farmTransfer.xferAsset === Asset(this.swapAsset.value), 'Must transfer swap asset');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Must transfer swap asset
-    // RareFiVault.algo.ts:701
+    // RareFiVault.algo.ts:686
     // assert(farmTransfer.assetReceiver === appAddr, 'Must send to contract');
     dup
     gtxns AssetReceiver
     uncover 2
     ==
     assert // Must send to contract
-    // RareFiVault.algo.ts:702
+    // RareFiVault.algo.ts:687
     // assert(farmTransfer.sender === Txn.sender, 'Transfer must be from caller');
     dup
     gtxns Sender
     txn Sender
     ==
     assert // Transfer must be from caller
-    // RareFiVault.algo.ts:705
+    // RareFiVault.algo.ts:690
     // assert(farmTransfer.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     dup
     gtxns RekeyTo
     global ZeroAddress
     ==
     assert // rekeyTo must be zero
-    // RareFiVault.algo.ts:706
+    // RareFiVault.algo.ts:691
     // assert(farmTransfer.assetCloseTo === Global.zeroAddress, 'assetCloseTo must be zero');
     dup
     gtxns AssetCloseTo
     global ZeroAddress
     ==
     assert // assetCloseTo must be zero
-    // RareFiVault.algo.ts:708
+    // RareFiVault.algo.ts:693
     // const amount = farmTransfer.assetAmount;
     gtxns AssetAmount
-    // RareFiVault.algo.ts:709
+    // RareFiVault.algo.ts:694
     // assert(amount > Uint64(0), 'Contribution must be positive');
     dup
     assert // Contribution must be positive
-    // RareFiVault.algo.ts:712
+    // RareFiVault.algo.ts:697
     // this.farmBalance.value = this.farmBalance.value + amount;
     intc_0 // 0
     // RareFiVault.algo.ts:64
     // farmBalance = GlobalState<uint64>();         // Total swapAsset available for farm bonus
     bytec_1 // "farmBalance"
-    // RareFiVault.algo.ts:712
+    // RareFiVault.algo.ts:697
     // this.farmBalance.value = this.farmBalance.value + amount;
     app_global_get_ex
     assert // check GlobalState exists
@@ -1970,11 +1901,11 @@ contributeFarm:
     // RareFiVault.algo.ts:64
     // farmBalance = GlobalState<uint64>();         // Total swapAsset available for farm bonus
     bytec_1 // "farmBalance"
-    // RareFiVault.algo.ts:712
+    // RareFiVault.algo.ts:697
     // this.farmBalance.value = this.farmBalance.value + amount;
     swap
     app_global_put
-    // RareFiVault.algo.ts:692
+    // RareFiVault.algo.ts:677
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1982,7 +1913,7 @@ contributeFarm:
 
 // RareFiVault.algo.ts::RareFiVault.setFarmEmissionRate[routing]() -> void:
 setFarmEmissionRate:
-    // RareFiVault.algo.ts:723
+    // RareFiVault.algo.ts:708
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1992,51 +1923,51 @@ setFarmEmissionRate:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    // RareFiVault.algo.ts:725
+    // RareFiVault.algo.ts:710
     // const isCreator = Txn.sender === this.creatorAddress.value;
     txn Sender
     intc_0 // 0
     // RareFiVault.algo.ts:47
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 5 // "creatorAddress"
-    // RareFiVault.algo.ts:725
+    // RareFiVault.algo.ts:710
     // const isCreator = Txn.sender === this.creatorAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // RareFiVault.algo.ts:726
+    // RareFiVault.algo.ts:711
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     txn Sender
     intc_0 // 0
     // RareFiVault.algo.ts:48
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
-    bytec 12 // "rarefiAddress"
-    // RareFiVault.algo.ts:726
+    bytec 16 // "rarefiAddress"
+    // RareFiVault.algo.ts:711
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // RareFiVault.algo.ts:727
+    // RareFiVault.algo.ts:712
     // assert(isCreator || isRarefi, 'Only creator or RareFi can set farm rate');
     ||
     assert // Only creator or RareFi can set farm rate
-    // RareFiVault.algo.ts:728
-    // assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 100%)');
-    intc 4 // 10000
+    // RareFiVault.algo.ts:713
+    // assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 500%)');
+    pushint 50000 // 50000
     <=
-    assert // Emission rate too high (max 100%)
-    // RareFiVault.algo.ts:731
+    assert // Emission rate too high (max 500%)
+    // RareFiVault.algo.ts:716
     // if (this.farmBalance.value > Uint64(0)) {
     intc_0 // 0
     // RareFiVault.algo.ts:64
     // farmBalance = GlobalState<uint64>();         // Total swapAsset available for farm bonus
     bytec_1 // "farmBalance"
-    // RareFiVault.algo.ts:731
+    // RareFiVault.algo.ts:716
     // if (this.farmBalance.value > Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     bz setFarmEmissionRate_after_if_else@3
-    // RareFiVault.algo.ts:732
+    // RareFiVault.algo.ts:717
     // assert(emissionRateBps >= MIN_FARM_EMISSION_BPS, 'Emission rate too low (min 10% when farm has balance)');
     dup
     pushint 1000 // 1000
@@ -2047,11 +1978,11 @@ setFarmEmissionRate_after_if_else@3:
     // RareFiVault.algo.ts:65
     // farmEmissionRate = GlobalState<uint64>();    // Basis points of swap output to add from farm (e.g., 1000 = 10%)
     bytec 10 // "farmEmissionRate"
-    // RareFiVault.algo.ts:735
+    // RareFiVault.algo.ts:720
     // this.farmEmissionRate.value = emissionRateBps;
     dig 1
     app_global_put
-    // RareFiVault.algo.ts:723
+    // RareFiVault.algo.ts:708
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -2059,13 +1990,13 @@ setFarmEmissionRate_after_if_else@3:
 
 // RareFiVault.algo.ts::RareFiVault.getFarmStats[routing]() -> void:
 getFarmStats:
-    // RareFiVault.algo.ts:744
+    // RareFiVault.algo.ts:729
     // return [this.farmBalance.value, this.farmEmissionRate.value];
     intc_0 // 0
     // RareFiVault.algo.ts:64
     // farmBalance = GlobalState<uint64>();         // Total swapAsset available for farm bonus
     bytec_1 // "farmBalance"
-    // RareFiVault.algo.ts:744
+    // RareFiVault.algo.ts:729
     // return [this.farmBalance.value, this.farmEmissionRate.value];
     app_global_get_ex
     assert // check GlobalState exists
@@ -2073,7 +2004,7 @@ getFarmStats:
     // RareFiVault.algo.ts:65
     // farmEmissionRate = GlobalState<uint64>();    // Basis points of swap output to add from farm (e.g., 1000 = 10%)
     bytec 10 // "farmEmissionRate"
-    // RareFiVault.algo.ts:744
+    // RareFiVault.algo.ts:729
     // return [this.farmBalance.value, this.farmEmissionRate.value];
     app_global_get_ex
     assert // check GlobalState exists
@@ -2082,7 +2013,7 @@ getFarmStats:
     swap
     itob
     concat
-    // RareFiVault.algo.ts:742
+    // RareFiVault.algo.ts:727
     // @arc4.abimethod({ readonly: true })
     bytec 11 // 0x151f7c75
     swap
@@ -2136,7 +2067,7 @@ updateEarnedYield:
     intc_0 // 0
     // RareFiVault.algo.ts:75
     // userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-    bytec 18 // "userYieldPerToken"
+    bytec 15 // "userYieldPerToken"
     // RareFiVault.algo.ts:103
     // const userYPT = this.userYieldPerToken(user).value;
     app_local_get_ex
@@ -2208,7 +2139,7 @@ updateEarnedYield_after_if_else@4:
     frame_dig -1
     // RareFiVault.algo.ts:75
     // userYieldPerToken = LocalState<uint64>();  // Snapshot of yieldPerToken at last action
-    bytec 18 // "userYieldPerToken"
+    bytec 15 // "userYieldPerToken"
     // RareFiVault.algo.ts:112
     // this.userYieldPerToken(user).value = this.yieldPerToken.value;
     uncover 2
@@ -2227,7 +2158,7 @@ getExpectedSwapOutput:
     intc_0 // 0
     // RareFiVault.algo.ts:60
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
-    bytec 16 // "tinymanPoolAppId"
+    bytec 18 // "tinymanPoolAppId"
     // RareFiVault.algo.ts:123
     // const poolApp = this.tinymanPoolAppId.value;
     app_global_get_ex
@@ -2237,7 +2168,7 @@ getExpectedSwapOutput:
     intc_0 // 0
     // RareFiVault.algo.ts:61
     // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
-    bytec 17 // "tinymanPoolAddress"
+    bytec 19 // "tinymanPoolAddress"
     // RareFiVault.algo.ts:124
     // const poolAddr = this.tinymanPoolAddress.value;
     app_global_get_ex
@@ -2431,7 +2362,7 @@ executeSwapAndDistribute:
     intc_0 // 0
     // RareFiVault.algo.ts:61
     // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
-    bytec 17 // "tinymanPoolAddress"
+    bytec 19 // "tinymanPoolAddress"
     // RareFiVault.algo.ts:183
     // assetReceiver: this.tinymanPoolAddress.value,
     app_global_get_ex
@@ -2478,7 +2409,7 @@ executeSwapAndDistribute:
     intc_0 // 0
     // RareFiVault.algo.ts:60
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
-    bytec 16 // "tinymanPoolAppId"
+    bytec 18 // "tinymanPoolAppId"
     // RareFiVault.algo.ts:189
     // appId: Application(this.tinymanPoolAppId.value),
     app_global_get_ex
@@ -2644,7 +2575,7 @@ executeSwapAndDistribute_after_if_else@8:
     intc_0 // 0
     // RareFiVault.algo.ts:57
     // totalYieldGenerated = GlobalState<uint64>(); // Total yield generated from swaps (swap output in swapAsset)
-    bytec 15 // "totalYieldGenerated"
+    bytec 14 // "totalYieldGenerated"
     // RareFiVault.algo.ts:214
     // this.totalYieldGenerated.value = this.totalYieldGenerated.value + totalOutput;
     app_global_get_ex
@@ -2653,7 +2584,7 @@ executeSwapAndDistribute_after_if_else@8:
     +
     // RareFiVault.algo.ts:57
     // totalYieldGenerated = GlobalState<uint64>(); // Total yield generated from swaps (swap output in swapAsset)
-    bytec 15 // "totalYieldGenerated"
+    bytec 14 // "totalYieldGenerated"
     // RareFiVault.algo.ts:214
     // this.totalYieldGenerated.value = this.totalYieldGenerated.value + totalOutput;
     swap
@@ -2663,7 +2594,7 @@ executeSwapAndDistribute_after_if_else@8:
     intc_0 // 0
     // RareFiVault.algo.ts:49
     // creatorFeeRate = GlobalState<uint64>();    // 0-100, percentage of yield to creator
-    bytec 19 // "creatorFeeRate"
+    bytec 17 // "creatorFeeRate"
     // RareFiVault.algo.ts:217
     // const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, FEE_PERCENT_BASE);
     app_global_get_ex

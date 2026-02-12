@@ -70,7 +70,7 @@ Users deposit Alpha tokens and earn yield in a project's ASA token. USDC airdrop
 | `MIN_MAX_SLIPPAGE_BPS` | 500 | 5% min for maxSlippageBps |
 | `MAX_SLIPPAGE_BPS` | 10,000 | 100% absolute ceiling |
 | `MIN_FARM_EMISSION_BPS` | 1,000 | 10% min when farm funded |
-| `MAX_FARM_EMISSION_BPS` | 10,000 | 100% max farm rate |
+| `MAX_FARM_EMISSION_BPS` | 50,000 | 500% max farm rate |
 
 ---
 
@@ -137,16 +137,13 @@ Must be ≥ 0.20 USDC.
 #### `updateMaxSlippage(newMaxSlippageBps)`
 Creator only. Must be 5-100% (500-10000 bps).
 
-#### `updateTinymanPool(newPoolAppId, newPoolAddress)`
-Updates the Tinyman pool app ID and address. Use only if the pool needs to be changed (e.g., migration).
-
 ### Farm Operations
 
 #### `contributeFarm()`
 Anyone sends swapAsset to fund the farm. Requires asset transfer in preceding txn.
 
 #### `setFarmEmissionRate(emissionRateBps)`
-Creator or RareFi. Max 100%. Min 10% when farm has balance (protects contributors).
+Creator or RareFi. Max 500%. Min 10% when farm has balance (protects contributors).
 
 ### Read-Only Methods
 
@@ -195,7 +192,7 @@ output = (outputReserves × netInput) / (inputReserves + netInput)
 | swapYield, contributeFarm | ✓ | ✓ | ✓ |
 | claimCreator, updateCreatorFeeRate | | ✓ | |
 | updateMaxSlippage | | ✓ | |
-| updateMinSwapThreshold, updateTinymanPool | | ✓ | ✓ |
+| updateMinSwapThreshold | | ✓ | ✓ |
 | setFarmEmissionRate | | ✓ | ✓ |
 
 ---
@@ -262,5 +259,5 @@ Audited with Trail of Bits Tealer v0.1.2 static analyzer.
 
 1. **Pool dependency** — Swaps fail if Tinyman pool state is unreadable
 2. **No emergency pause** — Contract cannot be paused (users can always withdraw)
-3. **Single pool** — One Tinyman pool per vault (updatable by admin)
+3. **Single pool** — One Tinyman pool per vault (set at deployment, immutable)
 4. **Stranded USDC** — If all depositors withdraw while USDC is in vault, it's stranded until someone deposits again

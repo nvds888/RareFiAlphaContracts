@@ -31,7 +31,7 @@ const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
 const MAX_SLIPPAGE_BPS: uint64 = Uint64(10_000);        // Absolute ceiling for maxSlippageBps setting
 const MIN_MAX_SLIPPAGE_BPS: uint64 = Uint64(500);       // 5% minimum for maxSlippageBps (prevents creator from setting too low)
-const MAX_FARM_EMISSION_BPS: uint64 = Uint64(10_000);  // Max 100% farm emission rate
+const MAX_FARM_EMISSION_BPS: uint64 = Uint64(50_000);  // Max 500% farm emission rate
 
 export class RareFiVault extends arc4.Contract {
   // ============================================
@@ -653,21 +653,6 @@ export class RareFiVault extends arc4.Contract {
   }
 
   /**
-   * Update Tinyman pool configuration
-   * Use only if the pool needs to be changed (e.g., migration)
-   */
-  @arc4.abimethod()
-  updateTinymanPool(newPoolAppId: uint64, newPoolAddress: Account): void {
-    const isCreator = Txn.sender === this.creatorAddress.value;
-    const isRarefi = Txn.sender === this.rarefiAddress.value;
-    assert(isCreator || isRarefi, 'Only creator or RareFi can update');
-    assert(newPoolAppId !== Uint64(0), 'Invalid pool app ID');
-
-    this.tinymanPoolAppId.value = newPoolAppId;
-    this.tinymanPoolAddress.value = newPoolAddress;
-  }
-
-  /**
    * Update the creator fee rate
    * Only callable by creator, constrained to 0-6% range
    */
@@ -717,7 +702,7 @@ export class RareFiVault extends arc4.Contract {
    * Only callable by creator or RareFi
    *
    * @param emissionRateBps - Emission rate in basis points (e.g., 1000 = 10%, 5000 = 50%)
-   *                          Maximum 10000 (100%) - matches swap output 1:1
+   *                          Maximum 50000 (500%) - up to 5x swap output from farm
    *                          Minimum 1000 (10%) when farm has balance (to protect contributors)
    */
   @arc4.abimethod()
@@ -725,7 +710,7 @@ export class RareFiVault extends arc4.Contract {
     const isCreator = Txn.sender === this.creatorAddress.value;
     const isRarefi = Txn.sender === this.rarefiAddress.value;
     assert(isCreator || isRarefi, 'Only creator or RareFi can set farm rate');
-    assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 100%)');
+    assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 500%)');
 
     // If farm has balance, enforce minimum emission rate to protect contributors
     if (this.farmBalance.value > Uint64(0)) {

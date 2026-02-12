@@ -367,4 +367,4 @@ Both vaults support an optional farm bonus that sponsors can fund.
 - Tinyman V2 (swaps)
 - Alpha Arcade (yield source)
 
-**Status:** Smart contracts complete and tested on localnet. Ready for testnet deployment.
+**Status:** Smart contracts complete and tested on localnet.
