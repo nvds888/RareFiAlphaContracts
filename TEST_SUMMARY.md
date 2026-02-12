@@ -3,7 +3,7 @@
 **Date:** February 2025
 **Contracts:** RareFiVault, RareFiAlphaCompoundingVault
 **Framework:** Jest + Algorand Localnet
-**Total Tests:** 177 passing
+**Total Tests:** 173 passing
 **Security:** Audited with Trail of Bits Tealer v0.1.2
 
 ---
@@ -22,7 +22,7 @@
 
 ---
 
-## RareFiVault Tests (105 tests)
+## RareFiVault Tests (91 tests)
 
 ### Deployment (2 tests)
 - Deploy vault and pool successfully
@@ -82,22 +82,19 @@ Multi-user scenario (Alice, Bob, Charlie, Dave):
 - optInAssets succeeds on first call
 - Rejects second call (already opted in)
 
-### Farm Emission Rate (6 tests)
+### Farm Emission Rate (8 tests)
 - Set to 0% when balance is 0
 - Set any rate when balance is 0
 - Reject < 10% when farm has balance
 - Allow exactly 10% when farm has balance
 - Allow > 10% when farm has balance
+- Allow 500% (max) when farm has balance
+- Reject above 500%
 - Reject 0% when farm has balance
-
-### Tinyman Pool Update (3 tests)
-- Creator can update pool
-- Validates pool contains correct assets
-- Rejects non-creator/non-RareFi
 
 ---
 
-## RareFiAlphaCompoundingVault Tests (85 tests)
+## RareFiAlphaCompoundingVault Tests (82 tests)
 
 ### Deployment (2 tests)
 - Deploy vault and pool successfully
@@ -141,11 +138,8 @@ Multi-user scenario (Alice, Bob, Charlie, Dave):
 ### Asset Opt-In Guard (2 tests)
 - Same pattern as RareFiVault
 
-### Farm Emission Rate (6 tests)
-- Same pattern as RareFiVault
-
-### Tinyman Pool Update (3 tests)
-- Same pattern as RareFiVault
+### Farm Emission Rate (8 tests)
+- Same pattern as RareFiVault (includes 500% max boundary tests)
 
 ### Comprehensive Integration (6 tests)
 1. Initial deposits (3 users: 1000 + 500 + 500 = 2000 shares)
@@ -197,7 +191,7 @@ Auto-swap/compound executes BEFORE deposit is credited. New depositor cannot cap
 
 ### Farm Emission Constraints
 - Min 10% when farm has balance (protects contributors)
-- Max 100%, only creator or RareFi can set
+- Max 500%, only creator or RareFi can set
 
 ### Immutability
 - Contract updates and deletions always fail
@@ -267,4 +261,4 @@ python -m tealer detect --contracts contracts/artifacts/RareFiAlphaCompoundingVa
 
 ## Conclusion
 
-All 177 tests pass. Both contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (phishing prevention, auto-swap/compound protection, slippage caps, access controls, immutability) function as designed and verified in compiled TEAL bytecode.
+All 173 tests pass. Both contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (phishing prevention, auto-swap/compound protection, slippage caps, access controls, immutability) function as designed and verified in compiled TEAL bytecode.
