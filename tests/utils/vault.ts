@@ -759,6 +759,33 @@ export async function performSetFarmEmissionRate(
   await atc.execute(algod, 5);
 }
 
+export async function performUpdateMinSwapThreshold(
+  algod: algosdk.Algodv2,
+  deployment: VaultDeploymentResult,
+  sender: { addr: string | algosdk.Address; sk: Uint8Array },
+  newThreshold: number,
+) {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const senderAddr = typeof sender.addr === 'string' ? sender.addr : sender.addr.toString();
+  const signer = algosdk.makeBasicAccountTransactionSigner({
+    sk: sender.sk,
+    addr: algosdk.decodeAddress(senderAddr),
+  });
+
+  const atc = new algosdk.AtomicTransactionComposer();
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('updateMinSwapThreshold'),
+    methodArgs: [newThreshold],
+    sender: senderAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+
+  await atc.execute(algod, 5);
+}
+
 export async function performUpdateCreatorFeeRate(
   algod: algosdk.Algodv2,
   deployment: VaultDeploymentResult,

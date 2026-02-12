@@ -13,6 +13,7 @@ import {
   performContributeFarm,
   performSetFarmEmissionRate,
   performUpdateCreatorFeeRate,
+  performUpdateMinSwapThreshold,
   getFarmStats,
   CompoundingVaultDeploymentResult,
 } from './utils/compoundingVault';
@@ -474,6 +475,24 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       const stats = await getVaultStats(algod, deployment);
       expect(stats.usdcBalance).toBe(0); // USDC was swapped
       expect(stats.totalYieldCompounded).toBeGreaterThan(0);
+    });
+
+    it('should reject compoundYield when slippage exceeds maxSlippageBps', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 100_000_000);
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000);
+
+      // maxSlippageBps is 5000 (50%) - try 5001
+      await expect(
+        performCompoundYield(algod, deployment, creator, 10_000_000, 5001)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected slippage above maxSlippageBps');
     });
   });
 
@@ -1916,6 +1935,89 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
   });
 
+
+  /**
+   * MIN SWAP THRESHOLD UPDATE TESTS
+   * Tests the updateMinSwapThreshold method with 0.20-50 USDC constraint
+   */
+  describe('Min Swap Threshold Update', () => {
+    it('should allow creator to update threshold within valid range', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Update to 10 USDC
+      await performUpdateMinSwapThreshold(algod, deployment, creator, 10_000_000);
+
+      console.log('Threshold updated to 10 USDC');
+    });
+
+    it('should allow setting threshold to minimum (0.20 USDC)', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        minSwapThreshold: 2_000_000,
+      });
+
+      await performUpdateMinSwapThreshold(algod, deployment, creator, 200_000);
+
+      console.log('Threshold set to minimum 0.20 USDC');
+    });
+
+    it('should allow setting threshold to maximum (50 USDC)', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        minSwapThreshold: 2_000_000,
+      });
+
+      await performUpdateMinSwapThreshold(algod, deployment, creator, 50_000_000);
+
+      console.log('Threshold set to maximum 50 USDC');
+    });
+
+    it('should reject threshold above 50 USDC', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateMinSwapThreshold(algod, deployment, creator, 50_000_001)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected threshold above 50 USDC');
+    });
+
+    it('should reject threshold below minimum (0.20 USDC)', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateMinSwapThreshold(algod, deployment, creator, 100_000)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected threshold below 0.20 USDC');
+    });
+
+    it('should reject createVault with threshold above 50 USDC', async () => {
+      await expect(
+        deployCompoundingVaultForTest(algod, creator, {
+          minSwapThreshold: 50_000_001,
+        })
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected createVault with threshold above 50 USDC');
+    });
+
+    it('should reject non-creator/non-rarefi updating threshold', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateMinSwapThreshold(algod, deployment, alice, 5_000_000)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected non-creator threshold update');
+    });
+  });
 
   /**
    * SENDER VALIDATION TESTS

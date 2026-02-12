@@ -3,9 +3,9 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    intcblock 0 1 8 4 10000 200000 1000000000000
+    intcblock 0 1 8 4 10000 200000 50000000 1000000000000
     bytecblock "totalShares" "totalAlpha" "farmBalance" "alphaAsset" "usdcAsset" "userShares" "creatorAddress" 0x151f7c75 "creatorUnclaimedAlpha" "farmEmissionRate" "minSwapThreshold" "maxSlippageBps" "totalYieldCompounded" "rarefiAddress" "creatorFeeRate" "tinymanPoolAppId" "tinymanPoolAddress" "assetsOptedIn"
-    // RareFiAlphaCompoundingVault.algo.ts:37
+    // RareFiAlphaCompoundingVault.algo.ts:38
     // export class RareFiAlphaCompoundingVault extends arc4.Contract {
     txn NumAppArgs
     bz main_bare_routing@29
@@ -14,7 +14,7 @@ main:
     match main_optIn_route@3 main_closeOut_route@4
 
 main_switch_case_next@5:
-    // RareFiAlphaCompoundingVault.algo.ts:37
+    // RareFiAlphaCompoundingVault.algo.ts:38
     // export class RareFiAlphaCompoundingVault extends arc4.Contract {
     txn OnCompletion
     !
@@ -27,7 +27,7 @@ main_switch_case_next@5:
     err
 
 main_create_NoOp@25:
-    // RareFiAlphaCompoundingVault.algo.ts:37
+    // RareFiAlphaCompoundingVault.algo.ts:38
     // export class RareFiAlphaCompoundingVault extends arc4.Contract {
     pushbytes 0x4d03cb29 // method "createVault(uint64,uint64,uint64,uint64,uint64,uint64,address,address)void"
     txna ApplicationArgs 0
@@ -35,7 +35,7 @@ main_create_NoOp@25:
     err
 
 main_closeOut_route@4:
-    // RareFiAlphaCompoundingVault.algo.ts:343
+    // RareFiAlphaCompoundingVault.algo.ts:345
     // @arc4.abimethod({ allowActions: 'CloseOut' })
     txn OnCompletion
     pushint 2 // CloseOut
@@ -46,7 +46,7 @@ main_closeOut_route@4:
     b closeOut
 
 main_optIn_route@3:
-    // RareFiAlphaCompoundingVault.algo.ts:334
+    // RareFiAlphaCompoundingVault.algo.ts:336
     // @arc4.abimethod({ allowActions: 'OptIn' })
     txn OnCompletion
     intc_1 // OptIn
@@ -57,7 +57,7 @@ main_optIn_route@3:
     b optIn
 
 main_bare_routing@29:
-    // RareFiAlphaCompoundingVault.algo.ts:37
+    // RareFiAlphaCompoundingVault.algo.ts:38
     // export class RareFiAlphaCompoundingVault extends arc4.Contract {
     intc_3 // UpdateApplication
     pushint 5 // DeleteApplication
@@ -66,27 +66,27 @@ main_bare_routing@29:
     err
 
 main_deleteApplication@31:
-    // RareFiAlphaCompoundingVault.algo.ts:701
+    // RareFiAlphaCompoundingVault.algo.ts:704
     // @baremethod({ allowActions: 'DeleteApplication' })
     txn ApplicationID
     assert // can only call when not creating
-    // RareFiAlphaCompoundingVault.algo.ts:703
+    // RareFiAlphaCompoundingVault.algo.ts:706
     // assert(false, 'Contract deletion disabled');
     err // Contract deletion disabled
 
 main_updateApplication@30:
-    // RareFiAlphaCompoundingVault.algo.ts:696
+    // RareFiAlphaCompoundingVault.algo.ts:699
     // @baremethod({ allowActions: 'UpdateApplication' })
     txn ApplicationID
     assert // can only call when not creating
-    // RareFiAlphaCompoundingVault.algo.ts:698
+    // RareFiAlphaCompoundingVault.algo.ts:701
     // assert(false, 'Contract updates disabled');
     err // Contract updates disabled
 
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.createVault[routing]() -> void:
 createVault:
-    // RareFiAlphaCompoundingVault.algo.ts:232
+    // RareFiAlphaCompoundingVault.algo.ts:233
     // @arc4.abimethod({ onCreate: 'require' })
     txna ApplicationArgs 1
     dup
@@ -142,161 +142,167 @@ createVault:
     pushint 32 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // RareFiAlphaCompoundingVault.algo.ts:244
+    // RareFiAlphaCompoundingVault.algo.ts:245
     // assert(creatorFeeRate <= MAX_FEE_RATE, 'Creator fee rate exceeds maximum (6%)');
     dig 5
     pushint 6 // 6
     <=
     assert // Creator fee rate exceeds maximum (6%)
-    // RareFiAlphaCompoundingVault.algo.ts:245
+    // RareFiAlphaCompoundingVault.algo.ts:246
     // assert(minSwapThreshold >= MIN_SWAP_AMOUNT, 'Swap threshold too low');
     dig 4
     intc 5 // 200000
     >=
     assert // Swap threshold too low
-    // RareFiAlphaCompoundingVault.algo.ts:246
+    // RareFiAlphaCompoundingVault.algo.ts:247
+    // assert(minSwapThreshold <= MAX_SWAP_THRESHOLD, 'Swap threshold too high (max 50 USDC)');
+    dig 4
+    intc 6 // 50000000
+    <=
+    assert // Swap threshold too high (max 50 USDC)
+    // RareFiAlphaCompoundingVault.algo.ts:248
     // assert(maxSlippageBps >= MIN_MAX_SLIPPAGE_BPS, 'Max slippage too low (min 5%)');
     dig 3
     pushint 500 // 500
     >=
     assert // Max slippage too low (min 5%)
-    // RareFiAlphaCompoundingVault.algo.ts:247
+    // RareFiAlphaCompoundingVault.algo.ts:249
     // assert(maxSlippageBps <= MAX_SLIPPAGE_BPS, 'Max slippage too high');
     dig 3
     intc 4 // 10000
     <=
     assert // Max slippage too high
-    // RareFiAlphaCompoundingVault.algo.ts:248
+    // RareFiAlphaCompoundingVault.algo.ts:250
     // assert(alphaAssetId !== Uint64(0), 'Invalid Alpha asset');
     dig 7
     assert // Invalid Alpha asset
-    // RareFiAlphaCompoundingVault.algo.ts:249
+    // RareFiAlphaCompoundingVault.algo.ts:251
     // assert(usdcAssetId !== Uint64(0), 'Invalid USDC asset');
     dig 6
     assert // Invalid USDC asset
-    // RareFiAlphaCompoundingVault.algo.ts:250
+    // RareFiAlphaCompoundingVault.algo.ts:252
     // assert(alphaAssetId !== usdcAssetId, 'Alpha and USDC must be different');
     dig 7
     dig 7
     !=
     assert // Alpha and USDC must be different
-    // RareFiAlphaCompoundingVault.algo.ts:251
+    // RareFiAlphaCompoundingVault.algo.ts:253
     // assert(tinymanPoolAppId !== Uint64(0), 'Invalid Tinyman pool app ID');
     dig 2
     assert // Invalid Tinyman pool app ID
-    // RareFiAlphaCompoundingVault.algo.ts:43
+    // RareFiAlphaCompoundingVault.algo.ts:44
     // alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
     bytec_3 // "alphaAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:254
+    // RareFiAlphaCompoundingVault.algo.ts:256
     // this.alphaAsset.value = alphaAssetId;
     uncover 8
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:44
+    // RareFiAlphaCompoundingVault.algo.ts:45
     // usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
     bytec 4 // "usdcAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:255
+    // RareFiAlphaCompoundingVault.algo.ts:257
     // this.usdcAsset.value = usdcAssetId;
     uncover 7
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:47
+    // RareFiAlphaCompoundingVault.algo.ts:48
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:258
+    // RareFiAlphaCompoundingVault.algo.ts:260
     // this.creatorAddress.value = Txn.sender;
     txn Sender
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:48
+    // RareFiAlphaCompoundingVault.algo.ts:49
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
     bytec 13 // "rarefiAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:259
+    // RareFiAlphaCompoundingVault.algo.ts:261
     // this.rarefiAddress.value = rarefiAddress;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:49
+    // RareFiAlphaCompoundingVault.algo.ts:50
     // creatorFeeRate = GlobalState<uint64>();    // 0-100, percentage of yield to creator
     bytec 14 // "creatorFeeRate"
-    // RareFiAlphaCompoundingVault.algo.ts:260
+    // RareFiAlphaCompoundingVault.algo.ts:262
     // this.creatorFeeRate.value = creatorFeeRate;
     uncover 5
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:50
+    // RareFiAlphaCompoundingVault.algo.ts:51
     // creatorUnclaimedAlpha = GlobalState<uint64>(); // Accumulated Alpha for creator to claim
     bytec 8 // "creatorUnclaimedAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:261
+    // RareFiAlphaCompoundingVault.algo.ts:263
     // this.creatorUnclaimedAlpha.value = Uint64(0);
     intc_0 // 0
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:264
+    // RareFiAlphaCompoundingVault.algo.ts:266
     // this.totalShares.value = Uint64(0);
     intc_0 // 0
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:265
+    // RareFiAlphaCompoundingVault.algo.ts:267
     // this.totalAlpha.value = Uint64(0);
     intc_0 // 0
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:55
+    // RareFiAlphaCompoundingVault.algo.ts:56
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
     bytec 10 // "minSwapThreshold"
-    // RareFiAlphaCompoundingVault.algo.ts:266
+    // RareFiAlphaCompoundingVault.algo.ts:268
     // this.minSwapThreshold.value = minSwapThreshold;
     uncover 4
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:56
+    // RareFiAlphaCompoundingVault.algo.ts:57
     // maxSlippageBps = GlobalState<uint64>();    // Maximum slippage tolerance in basis points
     bytec 11 // "maxSlippageBps"
-    // RareFiAlphaCompoundingVault.algo.ts:267
+    // RareFiAlphaCompoundingVault.algo.ts:269
     // this.maxSlippageBps.value = maxSlippageBps;
     uncover 3
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:57
+    // RareFiAlphaCompoundingVault.algo.ts:58
     // totalYieldCompounded = GlobalState<uint64>(); // Total yield compounded (for stats)
     bytec 12 // "totalYieldCompounded"
-    // RareFiAlphaCompoundingVault.algo.ts:268
+    // RareFiAlphaCompoundingVault.algo.ts:270
     // this.totalYieldCompounded.value = Uint64(0);
     intc_0 // 0
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:60
+    // RareFiAlphaCompoundingVault.algo.ts:61
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID
     bytec 15 // "tinymanPoolAppId"
-    // RareFiAlphaCompoundingVault.algo.ts:271
+    // RareFiAlphaCompoundingVault.algo.ts:273
     // this.tinymanPoolAppId.value = tinymanPoolAppId;
     uncover 2
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:61
+    // RareFiAlphaCompoundingVault.algo.ts:62
     // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
     bytec 16 // "tinymanPoolAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:272
+    // RareFiAlphaCompoundingVault.algo.ts:274
     // this.tinymanPoolAddress.value = tinymanPoolAddress;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:275
+    // RareFiAlphaCompoundingVault.algo.ts:277
     // this.farmBalance.value = Uint64(0);
     intc_0 // 0
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:65
+    // RareFiAlphaCompoundingVault.algo.ts:66
     // farmEmissionRate = GlobalState<uint64>();    // Basis points of compound output to add from farm (e.g., 1000 = 10%)
     bytec 9 // "farmEmissionRate"
-    // RareFiAlphaCompoundingVault.algo.ts:276
+    // RareFiAlphaCompoundingVault.algo.ts:278
     // this.farmEmissionRate.value = Uint64(0); // Disabled by default
     intc_0 // 0
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:68
+    // RareFiAlphaCompoundingVault.algo.ts:69
     // assetsOptedIn = GlobalState<uint64>();      // 1 if assets are opted in, 0 otherwise
     bytec 17 // "assetsOptedIn"
-    // RareFiAlphaCompoundingVault.algo.ts:279
+    // RareFiAlphaCompoundingVault.algo.ts:281
     // this.assetsOptedIn.value = Uint64(0);
     intc_0 // 0
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:232
+    // RareFiAlphaCompoundingVault.algo.ts:233
     // @arc4.abimethod({ onCreate: 'require' })
     intc_1 // 1
     return
@@ -304,42 +310,42 @@ createVault:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.optInAssets[routing]() -> void:
 optInAssets:
-    // RareFiAlphaCompoundingVault.algo.ts:289
+    // RareFiAlphaCompoundingVault.algo.ts:291
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can opt-in assets');
     txn Sender
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:47
+    // RareFiAlphaCompoundingVault.algo.ts:48
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:289
+    // RareFiAlphaCompoundingVault.algo.ts:291
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can opt-in assets');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Only creator can opt-in assets
-    // RareFiAlphaCompoundingVault.algo.ts:290
+    // RareFiAlphaCompoundingVault.algo.ts:292
     // assert(this.assetsOptedIn.value === Uint64(0), 'Assets already opted in');
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:68
+    // RareFiAlphaCompoundingVault.algo.ts:69
     // assetsOptedIn = GlobalState<uint64>();      // 1 if assets are opted in, 0 otherwise
     bytec 17 // "assetsOptedIn"
-    // RareFiAlphaCompoundingVault.algo.ts:290
+    // RareFiAlphaCompoundingVault.algo.ts:292
     // assert(this.assetsOptedIn.value === Uint64(0), 'Assets already opted in');
     app_global_get_ex
     assert // check GlobalState exists
     !
     assert // Assets already opted in
-    // RareFiAlphaCompoundingVault.algo.ts:292
+    // RareFiAlphaCompoundingVault.algo.ts:294
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // RareFiAlphaCompoundingVault.algo.ts:296
+    // RareFiAlphaCompoundingVault.algo.ts:298
     // const currentIndex = Txn.groupIndex;
     txn GroupIndex
-    // RareFiAlphaCompoundingVault.algo.ts:297
+    // RareFiAlphaCompoundingVault.algo.ts:299
     // assert(currentIndex >= Uint64(1), 'App call must follow payment');
     dup
     assert // App call must follow payment
-    // RareFiAlphaCompoundingVault.algo.ts:299
+    // RareFiAlphaCompoundingVault.algo.ts:301
     // const algoPayment = gtxn.PaymentTxn(currentIndex - Uint64(1));
     intc_1 // 1
     -
@@ -348,41 +354,41 @@ optInAssets:
     intc_1 // pay
     ==
     assert // transaction type is pay
-    // RareFiAlphaCompoundingVault.algo.ts:300
+    // RareFiAlphaCompoundingVault.algo.ts:302
     // assert(algoPayment.receiver === appAddr, 'Payment must be to app');
     dup
     gtxns Receiver
     dig 2
     ==
     assert // Payment must be to app
-    // RareFiAlphaCompoundingVault.algo.ts:301
+    // RareFiAlphaCompoundingVault.algo.ts:303
     // assert(algoPayment.amount >= totalRequired, 'Insufficient ALGO (need 5.4 ALGO)');
     dup
     gtxns Amount
     pushint 5400000 // 5400000
     >=
     assert // Insufficient ALGO (need 5.4 ALGO)
-    // RareFiAlphaCompoundingVault.algo.ts:302
+    // RareFiAlphaCompoundingVault.algo.ts:304
     // assert(algoPayment.sender === Txn.sender, 'Payment must be from caller');
     dup
     gtxns Sender
     txn Sender
     ==
     assert // Payment must be from caller
-    // RareFiAlphaCompoundingVault.algo.ts:305
+    // RareFiAlphaCompoundingVault.algo.ts:307
     // assert(algoPayment.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     dup
     gtxns RekeyTo
     global ZeroAddress
     ==
     assert // rekeyTo must be zero
-    // RareFiAlphaCompoundingVault.algo.ts:306
+    // RareFiAlphaCompoundingVault.algo.ts:308
     // assert(algoPayment.closeRemainderTo === Global.zeroAddress, 'closeRemainderTo must be zero');
     gtxns CloseRemainderTo
     global ZeroAddress
     ==
     assert // closeRemainderTo must be zero
-    // RareFiAlphaCompoundingVault.algo.ts:309-314
+    // RareFiAlphaCompoundingVault.algo.ts:311-316
     // itxn.assetTransfer({
     //   assetReceiver: appAddr,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -390,24 +396,24 @@ optInAssets:
     //   fee: Uint64(0),
     // }).submit();
     itxn_begin
-    // RareFiAlphaCompoundingVault.algo.ts:311
+    // RareFiAlphaCompoundingVault.algo.ts:313
     // xferAsset: Asset(this.alphaAsset.value),
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:43
+    // RareFiAlphaCompoundingVault.algo.ts:44
     // alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
     bytec_3 // "alphaAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:311
+    // RareFiAlphaCompoundingVault.algo.ts:313
     // xferAsset: Asset(this.alphaAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:312
+    // RareFiAlphaCompoundingVault.algo.ts:314
     // assetAmount: Uint64(0),
     intc_0 // 0
     itxn_field AssetAmount
     itxn_field XferAsset
     dup
     itxn_field AssetReceiver
-    // RareFiAlphaCompoundingVault.algo.ts:309-314
+    // RareFiAlphaCompoundingVault.algo.ts:311-316
     // itxn.assetTransfer({
     //   assetReceiver: appAddr,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -416,11 +422,11 @@ optInAssets:
     // }).submit();
     intc_3 // 4
     itxn_field TypeEnum
-    // RareFiAlphaCompoundingVault.algo.ts:313
+    // RareFiAlphaCompoundingVault.algo.ts:315
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // RareFiAlphaCompoundingVault.algo.ts:309-314
+    // RareFiAlphaCompoundingVault.algo.ts:311-316
     // itxn.assetTransfer({
     //   assetReceiver: appAddr,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -428,7 +434,7 @@ optInAssets:
     //   fee: Uint64(0),
     // }).submit();
     itxn_submit
-    // RareFiAlphaCompoundingVault.algo.ts:317-322
+    // RareFiAlphaCompoundingVault.algo.ts:319-324
     // itxn.assetTransfer({
     //   assetReceiver: appAddr,
     //   xferAsset: Asset(this.usdcAsset.value),
@@ -436,23 +442,23 @@ optInAssets:
     //   fee: Uint64(0),
     // }).submit();
     itxn_begin
-    // RareFiAlphaCompoundingVault.algo.ts:319
+    // RareFiAlphaCompoundingVault.algo.ts:321
     // xferAsset: Asset(this.usdcAsset.value),
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:44
+    // RareFiAlphaCompoundingVault.algo.ts:45
     // usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
     bytec 4 // "usdcAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:319
+    // RareFiAlphaCompoundingVault.algo.ts:321
     // xferAsset: Asset(this.usdcAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:320
+    // RareFiAlphaCompoundingVault.algo.ts:322
     // assetAmount: Uint64(0),
     intc_0 // 0
     itxn_field AssetAmount
     itxn_field XferAsset
     itxn_field AssetReceiver
-    // RareFiAlphaCompoundingVault.algo.ts:317-322
+    // RareFiAlphaCompoundingVault.algo.ts:319-324
     // itxn.assetTransfer({
     //   assetReceiver: appAddr,
     //   xferAsset: Asset(this.usdcAsset.value),
@@ -461,11 +467,11 @@ optInAssets:
     // }).submit();
     intc_3 // 4
     itxn_field TypeEnum
-    // RareFiAlphaCompoundingVault.algo.ts:321
+    // RareFiAlphaCompoundingVault.algo.ts:323
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // RareFiAlphaCompoundingVault.algo.ts:317-322
+    // RareFiAlphaCompoundingVault.algo.ts:319-324
     // itxn.assetTransfer({
     //   assetReceiver: appAddr,
     //   xferAsset: Asset(this.usdcAsset.value),
@@ -473,14 +479,14 @@ optInAssets:
     //   fee: Uint64(0),
     // }).submit();
     itxn_submit
-    // RareFiAlphaCompoundingVault.algo.ts:68
+    // RareFiAlphaCompoundingVault.algo.ts:69
     // assetsOptedIn = GlobalState<uint64>();      // 1 if assets are opted in, 0 otherwise
     bytec 17 // "assetsOptedIn"
-    // RareFiAlphaCompoundingVault.algo.ts:324
+    // RareFiAlphaCompoundingVault.algo.ts:326
     // this.assetsOptedIn.value = Uint64(1);
     intc_1 // 1
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:287
+    // RareFiAlphaCompoundingVault.algo.ts:289
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -488,17 +494,17 @@ optInAssets:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.optIn[routing]() -> void:
 optIn:
-    // RareFiAlphaCompoundingVault.algo.ts:337
+    // RareFiAlphaCompoundingVault.algo.ts:339
     // this.userShares(Txn.sender).value = Uint64(0);
     txn Sender
-    // RareFiAlphaCompoundingVault.algo.ts:74
+    // RareFiAlphaCompoundingVault.algo.ts:75
     // userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
     bytec 5 // "userShares"
-    // RareFiAlphaCompoundingVault.algo.ts:337
+    // RareFiAlphaCompoundingVault.algo.ts:339
     // this.userShares(Txn.sender).value = Uint64(0);
     intc_0 // 0
     app_local_put
-    // RareFiAlphaCompoundingVault.algo.ts:334
+    // RareFiAlphaCompoundingVault.algo.ts:336
     // @arc4.abimethod({ allowActions: 'OptIn' })
     intc_1 // 1
     return
@@ -506,66 +512,66 @@ optIn:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.closeOut[routing]() -> void:
 closeOut:
-    // RareFiAlphaCompoundingVault.algo.ts:345
+    // RareFiAlphaCompoundingVault.algo.ts:347
     // const shares = this.userShares(Txn.sender).value;
     txn Sender
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:74
+    // RareFiAlphaCompoundingVault.algo.ts:75
     // userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
     bytec 5 // "userShares"
-    // RareFiAlphaCompoundingVault.algo.ts:345
+    // RareFiAlphaCompoundingVault.algo.ts:347
     // const shares = this.userShares(Txn.sender).value;
     app_local_get_ex
     swap
     dup
     uncover 2
     assert // check LocalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:347
+    // RareFiAlphaCompoundingVault.algo.ts:349
     // if (shares > Uint64(0)) {
     bz closeOut_after_if_else@4
-    // RareFiAlphaCompoundingVault.algo.ts:349
+    // RareFiAlphaCompoundingVault.algo.ts:351
     // const alphaAmount = this.sharesToAlpha(shares);
     dupn 2
     callsub sharesToAlpha
-    // RareFiAlphaCompoundingVault.algo.ts:352
+    // RareFiAlphaCompoundingVault.algo.ts:354
     // this.totalShares.value = this.totalShares.value - shares;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:352
+    // RareFiAlphaCompoundingVault.algo.ts:354
     // this.totalShares.value = this.totalShares.value - shares;
     app_global_get_ex
     assert // check GlobalState exists
     uncover 2
     -
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:352
+    // RareFiAlphaCompoundingVault.algo.ts:354
     // this.totalShares.value = this.totalShares.value - shares;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:353
+    // RareFiAlphaCompoundingVault.algo.ts:355
     // this.totalAlpha.value = this.totalAlpha.value - alphaAmount;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:353
+    // RareFiAlphaCompoundingVault.algo.ts:355
     // this.totalAlpha.value = this.totalAlpha.value - alphaAmount;
     app_global_get_ex
     assert // check GlobalState exists
     dig 1
     -
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:353
+    // RareFiAlphaCompoundingVault.algo.ts:355
     // this.totalAlpha.value = this.totalAlpha.value - alphaAmount;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:356-361
+    // RareFiAlphaCompoundingVault.algo.ts:358-363
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -573,16 +579,16 @@ closeOut:
     //   fee: Uint64(0),
     // }).submit();
     itxn_begin
-    // RareFiAlphaCompoundingVault.algo.ts:357
+    // RareFiAlphaCompoundingVault.algo.ts:359
     // assetReceiver: Txn.sender,
     txn Sender
-    // RareFiAlphaCompoundingVault.algo.ts:358
+    // RareFiAlphaCompoundingVault.algo.ts:360
     // xferAsset: Asset(this.alphaAsset.value),
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:43
+    // RareFiAlphaCompoundingVault.algo.ts:44
     // alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
     bytec_3 // "alphaAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:358
+    // RareFiAlphaCompoundingVault.algo.ts:360
     // xferAsset: Asset(this.alphaAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
@@ -590,7 +596,7 @@ closeOut:
     itxn_field AssetAmount
     itxn_field XferAsset
     itxn_field AssetReceiver
-    // RareFiAlphaCompoundingVault.algo.ts:356-361
+    // RareFiAlphaCompoundingVault.algo.ts:358-363
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -599,11 +605,11 @@ closeOut:
     // }).submit();
     intc_3 // 4
     itxn_field TypeEnum
-    // RareFiAlphaCompoundingVault.algo.ts:360
+    // RareFiAlphaCompoundingVault.algo.ts:362
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // RareFiAlphaCompoundingVault.algo.ts:356-361
+    // RareFiAlphaCompoundingVault.algo.ts:358-363
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -613,7 +619,7 @@ closeOut:
     itxn_submit
 
 closeOut_after_if_else@4:
-    // RareFiAlphaCompoundingVault.algo.ts:343
+    // RareFiAlphaCompoundingVault.algo.ts:345
     // @arc4.abimethod({ allowActions: 'CloseOut' })
     intc_1 // 1
     return
@@ -621,7 +627,7 @@ closeOut_after_if_else@4:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.deposit[routing]() -> void:
 deposit:
-    // RareFiAlphaCompoundingVault.algo.ts:379
+    // RareFiAlphaCompoundingVault.algo.ts:381
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -631,29 +637,29 @@ deposit:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    // RareFiAlphaCompoundingVault.algo.ts:381
+    // RareFiAlphaCompoundingVault.algo.ts:383
     // assert(slippageBps <= this.maxSlippageBps.value, 'Slippage exceeds maximum allowed');
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:56
+    // RareFiAlphaCompoundingVault.algo.ts:57
     // maxSlippageBps = GlobalState<uint64>();    // Maximum slippage tolerance in basis points
     bytec 11 // "maxSlippageBps"
-    // RareFiAlphaCompoundingVault.algo.ts:381
+    // RareFiAlphaCompoundingVault.algo.ts:383
     // assert(slippageBps <= this.maxSlippageBps.value, 'Slippage exceeds maximum allowed');
     app_global_get_ex
     assert // check GlobalState exists
     <=
     assert // Slippage exceeds maximum allowed
-    // RareFiAlphaCompoundingVault.algo.ts:383
+    // RareFiAlphaCompoundingVault.algo.ts:385
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
     dup
-    // RareFiAlphaCompoundingVault.algo.ts:384
+    // RareFiAlphaCompoundingVault.algo.ts:386
     // const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:44
+    // RareFiAlphaCompoundingVault.algo.ts:45
     // usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
     bytec 4 // "usdcAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:384
+    // RareFiAlphaCompoundingVault.algo.ts:386
     // const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
@@ -662,42 +668,42 @@ deposit:
     dup
     uncover 2
     assert // account opted into asset
-    // RareFiAlphaCompoundingVault.algo.ts:388
+    // RareFiAlphaCompoundingVault.algo.ts:390
     // if (usdcBalance >= this.minSwapThreshold.value && this.totalShares.value > Uint64(0)) {
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:55
+    // RareFiAlphaCompoundingVault.algo.ts:56
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
     bytec 10 // "minSwapThreshold"
-    // RareFiAlphaCompoundingVault.algo.ts:388
+    // RareFiAlphaCompoundingVault.algo.ts:390
     // if (usdcBalance >= this.minSwapThreshold.value && this.totalShares.value > Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     >=
     bz deposit_after_if_else@4
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:388
+    // RareFiAlphaCompoundingVault.algo.ts:390
     // if (usdcBalance >= this.minSwapThreshold.value && this.totalShares.value > Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     bz deposit_after_if_else@4
-    // RareFiAlphaCompoundingVault.algo.ts:389
+    // RareFiAlphaCompoundingVault.algo.ts:391
     // this.executeCompound(usdcBalance, slippageBps);
     dup
     dig 3
     callsub executeCompound
 
 deposit_after_if_else@4:
-    // RareFiAlphaCompoundingVault.algo.ts:393
+    // RareFiAlphaCompoundingVault.algo.ts:395
     // const currentIndex = Txn.groupIndex;
     txn GroupIndex
-    // RareFiAlphaCompoundingVault.algo.ts:394
+    // RareFiAlphaCompoundingVault.algo.ts:396
     // assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
     dup
     assert // App call must follow asset transfer
-    // RareFiAlphaCompoundingVault.algo.ts:396
+    // RareFiAlphaCompoundingVault.algo.ts:398
     // const depositTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
     intc_1 // 1
     -
@@ -706,123 +712,123 @@ deposit_after_if_else@4:
     intc_3 // axfer
     ==
     assert // transaction type is axfer
-    // RareFiAlphaCompoundingVault.algo.ts:397
+    // RareFiAlphaCompoundingVault.algo.ts:399
     // assert(depositTransfer.xferAsset === Asset(this.alphaAsset.value), 'Must transfer Alpha asset');
     dup
     gtxns XferAsset
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:43
+    // RareFiAlphaCompoundingVault.algo.ts:44
     // alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
     bytec_3 // "alphaAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:397
+    // RareFiAlphaCompoundingVault.algo.ts:399
     // assert(depositTransfer.xferAsset === Asset(this.alphaAsset.value), 'Must transfer Alpha asset');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Must transfer Alpha asset
-    // RareFiAlphaCompoundingVault.algo.ts:398
+    // RareFiAlphaCompoundingVault.algo.ts:400
     // assert(depositTransfer.assetReceiver === appAddr, 'Must send to contract');
     dup
     gtxns AssetReceiver
     dig 3
     ==
     assert // Must send to contract
-    // RareFiAlphaCompoundingVault.algo.ts:399
+    // RareFiAlphaCompoundingVault.algo.ts:401
     // assert(depositTransfer.sender === Txn.sender, 'Transfer must be from caller');
     dup
     gtxns Sender
     txn Sender
     ==
     assert // Transfer must be from caller
-    // RareFiAlphaCompoundingVault.algo.ts:402
+    // RareFiAlphaCompoundingVault.algo.ts:404
     // assert(depositTransfer.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     dup
     gtxns RekeyTo
     global ZeroAddress
     ==
     assert // rekeyTo must be zero
-    // RareFiAlphaCompoundingVault.algo.ts:403
+    // RareFiAlphaCompoundingVault.algo.ts:405
     // assert(depositTransfer.assetCloseTo === Global.zeroAddress, 'assetCloseTo must be zero');
     dup
     gtxns AssetCloseTo
     global ZeroAddress
     ==
     assert // assetCloseTo must be zero
-    // RareFiAlphaCompoundingVault.algo.ts:405
+    // RareFiAlphaCompoundingVault.algo.ts:407
     // const amount = depositTransfer.assetAmount;
     gtxns AssetAmount
-    // RareFiAlphaCompoundingVault.algo.ts:406
+    // RareFiAlphaCompoundingVault.algo.ts:408
     // assert(amount >= MIN_DEPOSIT_AMOUNT, 'Deposit too small');
     dup
     pushint 1000000 // 1000000
     >=
     assert // Deposit too small
-    // RareFiAlphaCompoundingVault.algo.ts:409
+    // RareFiAlphaCompoundingVault.algo.ts:411
     // const sharesToMint = this.alphaToShares(amount);
     dup
     callsub alphaToShares
-    // RareFiAlphaCompoundingVault.algo.ts:410
+    // RareFiAlphaCompoundingVault.algo.ts:412
     // assert(sharesToMint > Uint64(0), 'Shares to mint is zero');
     dup
     assert // Shares to mint is zero
-    // RareFiAlphaCompoundingVault.algo.ts:413
+    // RareFiAlphaCompoundingVault.algo.ts:415
     // this.userShares(Txn.sender).value = this.userShares(Txn.sender).value + sharesToMint;
     txn Sender
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:74
+    // RareFiAlphaCompoundingVault.algo.ts:75
     // userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
     bytec 5 // "userShares"
-    // RareFiAlphaCompoundingVault.algo.ts:413
+    // RareFiAlphaCompoundingVault.algo.ts:415
     // this.userShares(Txn.sender).value = this.userShares(Txn.sender).value + sharesToMint;
     app_local_get_ex
     assert // check LocalState exists
     dig 1
     +
     txn Sender
-    // RareFiAlphaCompoundingVault.algo.ts:74
+    // RareFiAlphaCompoundingVault.algo.ts:75
     // userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
     bytec 5 // "userShares"
-    // RareFiAlphaCompoundingVault.algo.ts:413
+    // RareFiAlphaCompoundingVault.algo.ts:415
     // this.userShares(Txn.sender).value = this.userShares(Txn.sender).value + sharesToMint;
     uncover 2
     app_local_put
-    // RareFiAlphaCompoundingVault.algo.ts:414
+    // RareFiAlphaCompoundingVault.algo.ts:416
     // this.totalShares.value = this.totalShares.value + sharesToMint;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:414
+    // RareFiAlphaCompoundingVault.algo.ts:416
     // this.totalShares.value = this.totalShares.value + sharesToMint;
     app_global_get_ex
     assert // check GlobalState exists
     +
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:414
+    // RareFiAlphaCompoundingVault.algo.ts:416
     // this.totalShares.value = this.totalShares.value + sharesToMint;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:415
+    // RareFiAlphaCompoundingVault.algo.ts:417
     // this.totalAlpha.value = this.totalAlpha.value + amount;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:415
+    // RareFiAlphaCompoundingVault.algo.ts:417
     // this.totalAlpha.value = this.totalAlpha.value + amount;
     app_global_get_ex
     assert // check GlobalState exists
     +
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:415
+    // RareFiAlphaCompoundingVault.algo.ts:417
     // this.totalAlpha.value = this.totalAlpha.value + amount;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:379
+    // RareFiAlphaCompoundingVault.algo.ts:381
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -830,7 +836,7 @@ deposit_after_if_else@4:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.withdraw[routing]() -> void:
 withdraw:
-    // RareFiAlphaCompoundingVault.algo.ts:423
+    // RareFiAlphaCompoundingVault.algo.ts:425
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -840,30 +846,30 @@ withdraw:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    // RareFiAlphaCompoundingVault.algo.ts:425
+    // RareFiAlphaCompoundingVault.algo.ts:427
     // const userShareBalance = this.userShares(Txn.sender).value;
     txn Sender
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:74
+    // RareFiAlphaCompoundingVault.algo.ts:75
     // userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
     bytec 5 // "userShares"
-    // RareFiAlphaCompoundingVault.algo.ts:425
+    // RareFiAlphaCompoundingVault.algo.ts:427
     // const userShareBalance = this.userShares(Txn.sender).value;
     app_local_get_ex
     swap
     cover 2
     assert // check LocalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:429
+    // RareFiAlphaCompoundingVault.algo.ts:431
     // if (sharesToRedeem === Uint64(0)) {
     bz withdraw_if_body@2
     dig 1
 
 withdraw_after_if_else@3:
-    // RareFiAlphaCompoundingVault.algo.ts:433
+    // RareFiAlphaCompoundingVault.algo.ts:435
     // assert(sharesToRedeem > Uint64(0), 'Nothing to withdraw');
     dup
     assert // Nothing to withdraw
-    // RareFiAlphaCompoundingVault.algo.ts:434
+    // RareFiAlphaCompoundingVault.algo.ts:436
     // assert(sharesToRedeem <= userShareBalance, 'Insufficient shares');
     dup
     dig 2
@@ -871,66 +877,66 @@ withdraw_after_if_else@3:
     cover 3
     <=
     assert // Insufficient shares
-    // RareFiAlphaCompoundingVault.algo.ts:437
+    // RareFiAlphaCompoundingVault.algo.ts:439
     // const alphaAmount = this.sharesToAlpha(sharesToRedeem);
     dup
     callsub sharesToAlpha
-    // RareFiAlphaCompoundingVault.algo.ts:438
+    // RareFiAlphaCompoundingVault.algo.ts:440
     // assert(alphaAmount > Uint64(0), 'Alpha amount is zero');
     dup
     assert // Alpha amount is zero
-    // RareFiAlphaCompoundingVault.algo.ts:441
+    // RareFiAlphaCompoundingVault.algo.ts:443
     // this.userShares(Txn.sender).value = userShareBalance - sharesToRedeem;
     uncover 2
     dig 2
     -
     txn Sender
-    // RareFiAlphaCompoundingVault.algo.ts:74
+    // RareFiAlphaCompoundingVault.algo.ts:75
     // userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
     bytec 5 // "userShares"
-    // RareFiAlphaCompoundingVault.algo.ts:441
+    // RareFiAlphaCompoundingVault.algo.ts:443
     // this.userShares(Txn.sender).value = userShareBalance - sharesToRedeem;
     uncover 2
     app_local_put
-    // RareFiAlphaCompoundingVault.algo.ts:442
+    // RareFiAlphaCompoundingVault.algo.ts:444
     // this.totalShares.value = this.totalShares.value - sharesToRedeem;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:442
+    // RareFiAlphaCompoundingVault.algo.ts:444
     // this.totalShares.value = this.totalShares.value - sharesToRedeem;
     app_global_get_ex
     assert // check GlobalState exists
     uncover 2
     -
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:442
+    // RareFiAlphaCompoundingVault.algo.ts:444
     // this.totalShares.value = this.totalShares.value - sharesToRedeem;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:443
+    // RareFiAlphaCompoundingVault.algo.ts:445
     // this.totalAlpha.value = this.totalAlpha.value - alphaAmount;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:443
+    // RareFiAlphaCompoundingVault.algo.ts:445
     // this.totalAlpha.value = this.totalAlpha.value - alphaAmount;
     app_global_get_ex
     assert // check GlobalState exists
     dig 1
     -
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:443
+    // RareFiAlphaCompoundingVault.algo.ts:445
     // this.totalAlpha.value = this.totalAlpha.value - alphaAmount;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:446-451
+    // RareFiAlphaCompoundingVault.algo.ts:448-453
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -938,16 +944,16 @@ withdraw_after_if_else@3:
     //   fee: Uint64(0),
     // }).submit();
     itxn_begin
-    // RareFiAlphaCompoundingVault.algo.ts:447
+    // RareFiAlphaCompoundingVault.algo.ts:449
     // assetReceiver: Txn.sender,
     txn Sender
-    // RareFiAlphaCompoundingVault.algo.ts:448
+    // RareFiAlphaCompoundingVault.algo.ts:450
     // xferAsset: Asset(this.alphaAsset.value),
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:43
+    // RareFiAlphaCompoundingVault.algo.ts:44
     // alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
     bytec_3 // "alphaAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:448
+    // RareFiAlphaCompoundingVault.algo.ts:450
     // xferAsset: Asset(this.alphaAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
@@ -955,7 +961,7 @@ withdraw_after_if_else@3:
     itxn_field AssetAmount
     itxn_field XferAsset
     itxn_field AssetReceiver
-    // RareFiAlphaCompoundingVault.algo.ts:446-451
+    // RareFiAlphaCompoundingVault.algo.ts:448-453
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -964,11 +970,11 @@ withdraw_after_if_else@3:
     // }).submit();
     intc_3 // 4
     itxn_field TypeEnum
-    // RareFiAlphaCompoundingVault.algo.ts:450
+    // RareFiAlphaCompoundingVault.algo.ts:452
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // RareFiAlphaCompoundingVault.algo.ts:446-451
+    // RareFiAlphaCompoundingVault.algo.ts:448-453
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -976,7 +982,7 @@ withdraw_after_if_else@3:
     //   fee: Uint64(0),
     // }).submit();
     itxn_submit
-    // RareFiAlphaCompoundingVault.algo.ts:423
+    // RareFiAlphaCompoundingVault.algo.ts:425
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -988,41 +994,41 @@ withdraw_if_body@2:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.claimCreator[routing]() -> void:
 claimCreator:
-    // RareFiAlphaCompoundingVault.algo.ts:463
+    // RareFiAlphaCompoundingVault.algo.ts:465
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can claim');
     txn Sender
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:47
+    // RareFiAlphaCompoundingVault.algo.ts:48
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:463
+    // RareFiAlphaCompoundingVault.algo.ts:465
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can claim');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Only creator can claim
-    // RareFiAlphaCompoundingVault.algo.ts:465
+    // RareFiAlphaCompoundingVault.algo.ts:467
     // const claimable = this.creatorUnclaimedAlpha.value;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:50
+    // RareFiAlphaCompoundingVault.algo.ts:51
     // creatorUnclaimedAlpha = GlobalState<uint64>(); // Accumulated Alpha for creator to claim
     bytec 8 // "creatorUnclaimedAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:465
+    // RareFiAlphaCompoundingVault.algo.ts:467
     // const claimable = this.creatorUnclaimedAlpha.value;
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:466
+    // RareFiAlphaCompoundingVault.algo.ts:468
     // assert(claimable > Uint64(0), 'Nothing to claim');
     dup
     assert // Nothing to claim
-    // RareFiAlphaCompoundingVault.algo.ts:50
+    // RareFiAlphaCompoundingVault.algo.ts:51
     // creatorUnclaimedAlpha = GlobalState<uint64>(); // Accumulated Alpha for creator to claim
     bytec 8 // "creatorUnclaimedAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:469
+    // RareFiAlphaCompoundingVault.algo.ts:471
     // this.creatorUnclaimedAlpha.value = Uint64(0);
     intc_0 // 0
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:472-477
+    // RareFiAlphaCompoundingVault.algo.ts:474-479
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -1030,16 +1036,16 @@ claimCreator:
     //   fee: Uint64(0),
     // }).submit();
     itxn_begin
-    // RareFiAlphaCompoundingVault.algo.ts:473
+    // RareFiAlphaCompoundingVault.algo.ts:475
     // assetReceiver: Txn.sender,
     txn Sender
-    // RareFiAlphaCompoundingVault.algo.ts:474
+    // RareFiAlphaCompoundingVault.algo.ts:476
     // xferAsset: Asset(this.alphaAsset.value),
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:43
+    // RareFiAlphaCompoundingVault.algo.ts:44
     // alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
     bytec_3 // "alphaAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:474
+    // RareFiAlphaCompoundingVault.algo.ts:476
     // xferAsset: Asset(this.alphaAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
@@ -1047,7 +1053,7 @@ claimCreator:
     itxn_field AssetAmount
     itxn_field XferAsset
     itxn_field AssetReceiver
-    // RareFiAlphaCompoundingVault.algo.ts:472-477
+    // RareFiAlphaCompoundingVault.algo.ts:474-479
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -1056,11 +1062,11 @@ claimCreator:
     // }).submit();
     intc_3 // 4
     itxn_field TypeEnum
-    // RareFiAlphaCompoundingVault.algo.ts:476
+    // RareFiAlphaCompoundingVault.algo.ts:478
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // RareFiAlphaCompoundingVault.algo.ts:472-477
+    // RareFiAlphaCompoundingVault.algo.ts:474-479
     // itxn.assetTransfer({
     //   assetReceiver: Txn.sender,
     //   xferAsset: Asset(this.alphaAsset.value),
@@ -1068,7 +1074,7 @@ claimCreator:
     //   fee: Uint64(0),
     // }).submit();
     itxn_submit
-    // RareFiAlphaCompoundingVault.algo.ts:461
+    // RareFiAlphaCompoundingVault.algo.ts:463
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1076,7 +1082,7 @@ claimCreator:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.compoundYield[routing]() -> void:
 compoundYield:
-    // RareFiAlphaCompoundingVault.algo.ts:491
+    // RareFiAlphaCompoundingVault.algo.ts:493
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1085,63 +1091,63 @@ compoundYield:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // RareFiAlphaCompoundingVault.algo.ts:493
+    // RareFiAlphaCompoundingVault.algo.ts:495
     // assert(slippageBps <= this.maxSlippageBps.value, 'Slippage exceeds maximum allowed');
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:56
+    // RareFiAlphaCompoundingVault.algo.ts:57
     // maxSlippageBps = GlobalState<uint64>();    // Maximum slippage tolerance in basis points
     bytec 11 // "maxSlippageBps"
-    // RareFiAlphaCompoundingVault.algo.ts:493
+    // RareFiAlphaCompoundingVault.algo.ts:495
     // assert(slippageBps <= this.maxSlippageBps.value, 'Slippage exceeds maximum allowed');
     app_global_get_ex
     assert // check GlobalState exists
     dig 1
     >=
     assert // Slippage exceeds maximum allowed
-    // RareFiAlphaCompoundingVault.algo.ts:495
+    // RareFiAlphaCompoundingVault.algo.ts:497
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // RareFiAlphaCompoundingVault.algo.ts:496
+    // RareFiAlphaCompoundingVault.algo.ts:498
     // const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:44
+    // RareFiAlphaCompoundingVault.algo.ts:45
     // usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
     bytec 4 // "usdcAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:496
+    // RareFiAlphaCompoundingVault.algo.ts:498
     // const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // RareFiAlphaCompoundingVault.algo.ts:498
+    // RareFiAlphaCompoundingVault.algo.ts:500
     // assert(usdcBalance >= this.minSwapThreshold.value, 'Below minimum swap threshold');
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:55
+    // RareFiAlphaCompoundingVault.algo.ts:56
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
     bytec 10 // "minSwapThreshold"
-    // RareFiAlphaCompoundingVault.algo.ts:498
+    // RareFiAlphaCompoundingVault.algo.ts:500
     // assert(usdcBalance >= this.minSwapThreshold.value, 'Below minimum swap threshold');
     app_global_get_ex
     assert // check GlobalState exists
     dig 1
     <=
     assert // Below minimum swap threshold
-    // RareFiAlphaCompoundingVault.algo.ts:499
+    // RareFiAlphaCompoundingVault.algo.ts:501
     // assert(this.totalShares.value > Uint64(0), 'No depositors to compound for');
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:499
+    // RareFiAlphaCompoundingVault.algo.ts:501
     // assert(this.totalShares.value > Uint64(0), 'No depositors to compound for');
     app_global_get_ex
     assert // check GlobalState exists
     assert // No depositors to compound for
-    // RareFiAlphaCompoundingVault.algo.ts:501
+    // RareFiAlphaCompoundingVault.algo.ts:503
     // this.executeCompound(usdcBalance, slippageBps);
     swap
     callsub executeCompound
-    // RareFiAlphaCompoundingVault.algo.ts:491
+    // RareFiAlphaCompoundingVault.algo.ts:493
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1149,117 +1155,117 @@ compoundYield:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getVaultStats[routing]() -> void:
 getVaultStats:
-    // RareFiAlphaCompoundingVault.algo.ts:515
+    // RareFiAlphaCompoundingVault.algo.ts:517
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // RareFiAlphaCompoundingVault.algo.ts:516
+    // RareFiAlphaCompoundingVault.algo.ts:518
     // const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:44
+    // RareFiAlphaCompoundingVault.algo.ts:45
     // usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
     bytec 4 // "usdcAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:516
+    // RareFiAlphaCompoundingVault.algo.ts:518
     // const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // RareFiAlphaCompoundingVault.algo.ts:519
+    // RareFiAlphaCompoundingVault.algo.ts:521
     // let sharePrice: uint64 = SCALE; // Default 1:1 if no shares
-    intc 6 // 1000000000000
-    // RareFiAlphaCompoundingVault.algo.ts:520
+    intc 7 // 1000000000000
+    // RareFiAlphaCompoundingVault.algo.ts:522
     // if (this.totalShares.value > Uint64(0)) {
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:520
+    // RareFiAlphaCompoundingVault.algo.ts:522
     // if (this.totalShares.value > Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     bz getVaultStats_after_if_else@3
-    // RareFiAlphaCompoundingVault.algo.ts:521
+    // RareFiAlphaCompoundingVault.algo.ts:523
     // sharePrice = this.mulDivFloor(this.totalAlpha.value, SCALE, this.totalShares.value);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:521
+    // RareFiAlphaCompoundingVault.algo.ts:523
     // sharePrice = this.mulDivFloor(this.totalAlpha.value, SCALE, this.totalShares.value);
     app_global_get_ex
     assert // check GlobalState exists
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:521
+    // RareFiAlphaCompoundingVault.algo.ts:523
     // sharePrice = this.mulDivFloor(this.totalAlpha.value, SCALE, this.totalShares.value);
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     swap
-    // RareFiAlphaCompoundingVault.algo.ts:521
+    // RareFiAlphaCompoundingVault.algo.ts:523
     // sharePrice = this.mulDivFloor(this.totalAlpha.value, SCALE, this.totalShares.value);
-    intc 6 // 1000000000000
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    intc 7 // 1000000000000
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
     uncover 3
     divmodw
     popn 2
     swap
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
     bury 1
 
 getVaultStats_after_if_else@3:
-    // RareFiAlphaCompoundingVault.algo.ts:525
+    // RareFiAlphaCompoundingVault.algo.ts:527
     // this.totalShares.value,
-    intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
-    // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
-    bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:525
-    // this.totalShares.value,
-    app_global_get_ex
-    assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:526
-    // this.totalAlpha.value,
     intc_0 // 0
     // RareFiAlphaCompoundingVault.algo.ts:54
+    // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
+    bytec_0 // "totalShares"
+    // RareFiAlphaCompoundingVault.algo.ts:527
+    // this.totalShares.value,
+    app_global_get_ex
+    assert // check GlobalState exists
+    // RareFiAlphaCompoundingVault.algo.ts:528
+    // this.totalAlpha.value,
+    intc_0 // 0
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:526
+    // RareFiAlphaCompoundingVault.algo.ts:528
     // this.totalAlpha.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:527
+    // RareFiAlphaCompoundingVault.algo.ts:529
     // this.creatorUnclaimedAlpha.value,
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:50
+    // RareFiAlphaCompoundingVault.algo.ts:51
     // creatorUnclaimedAlpha = GlobalState<uint64>(); // Accumulated Alpha for creator to claim
     bytec 8 // "creatorUnclaimedAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:527
+    // RareFiAlphaCompoundingVault.algo.ts:529
     // this.creatorUnclaimedAlpha.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:529
+    // RareFiAlphaCompoundingVault.algo.ts:531
     // this.totalYieldCompounded.value,
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:57
+    // RareFiAlphaCompoundingVault.algo.ts:58
     // totalYieldCompounded = GlobalState<uint64>(); // Total yield compounded (for stats)
     bytec 12 // "totalYieldCompounded"
-    // RareFiAlphaCompoundingVault.algo.ts:529
+    // RareFiAlphaCompoundingVault.algo.ts:531
     // this.totalYieldCompounded.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:524-531
+    // RareFiAlphaCompoundingVault.algo.ts:526-533
     // return [
     //   this.totalShares.value,
     //   this.totalAlpha.value,
@@ -1285,7 +1291,7 @@ getVaultStats_after_if_else@3:
     dig 1
     itob
     concat
-    // RareFiAlphaCompoundingVault.algo.ts:513
+    // RareFiAlphaCompoundingVault.algo.ts:515
     // @arc4.abimethod({ readonly: true })
     bytec 7 // 0x151f7c75
     swap
@@ -1297,7 +1303,7 @@ getVaultStats_after_if_else@3:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getUserAlphaBalance[routing]() -> void:
 getUserAlphaBalance:
-    // RareFiAlphaCompoundingVault.algo.ts:538
+    // RareFiAlphaCompoundingVault.algo.ts:540
     // @arc4.abimethod({ readonly: true })
     txna ApplicationArgs 1
     dup
@@ -1305,20 +1311,20 @@ getUserAlphaBalance:
     pushint 32 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // RareFiAlphaCompoundingVault.algo.ts:540
+    // RareFiAlphaCompoundingVault.algo.ts:542
     // const shares = this.userShares(user).value;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:74
+    // RareFiAlphaCompoundingVault.algo.ts:75
     // userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
     bytec 5 // "userShares"
-    // RareFiAlphaCompoundingVault.algo.ts:540
+    // RareFiAlphaCompoundingVault.algo.ts:542
     // const shares = this.userShares(user).value;
     app_local_get_ex
     assert // check LocalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:541
+    // RareFiAlphaCompoundingVault.algo.ts:543
     // return this.sharesToAlpha(shares);
     callsub sharesToAlpha
-    // RareFiAlphaCompoundingVault.algo.ts:538
+    // RareFiAlphaCompoundingVault.algo.ts:540
     // @arc4.abimethod({ readonly: true })
     itob
     bytec 7 // 0x151f7c75
@@ -1331,7 +1337,7 @@ getUserAlphaBalance:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getUserShares[routing]() -> void:
 getUserShares:
-    // RareFiAlphaCompoundingVault.algo.ts:547
+    // RareFiAlphaCompoundingVault.algo.ts:549
     // @arc4.abimethod({ readonly: true })
     txna ApplicationArgs 1
     dup
@@ -1339,17 +1345,17 @@ getUserShares:
     pushint 32 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // RareFiAlphaCompoundingVault.algo.ts:549
+    // RareFiAlphaCompoundingVault.algo.ts:551
     // return this.userShares(user).value;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:74
+    // RareFiAlphaCompoundingVault.algo.ts:75
     // userShares = LocalState<uint64>();         // User's share balance (represents proportional ownership)
     bytec 5 // "userShares"
-    // RareFiAlphaCompoundingVault.algo.ts:549
+    // RareFiAlphaCompoundingVault.algo.ts:551
     // return this.userShares(user).value;
     app_local_get_ex
     assert // check LocalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:547
+    // RareFiAlphaCompoundingVault.algo.ts:549
     // @arc4.abimethod({ readonly: true })
     itob
     bytec 7 // 0x151f7c75
@@ -1362,7 +1368,7 @@ getUserShares:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.previewDeposit[routing]() -> void:
 previewDeposit:
-    // RareFiAlphaCompoundingVault.algo.ts:555
+    // RareFiAlphaCompoundingVault.algo.ts:557
     // @arc4.abimethod({ readonly: true })
     txna ApplicationArgs 1
     dup
@@ -1371,10 +1377,10 @@ previewDeposit:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // RareFiAlphaCompoundingVault.algo.ts:557
+    // RareFiAlphaCompoundingVault.algo.ts:559
     // return this.alphaToShares(alphaAmount);
     callsub alphaToShares
-    // RareFiAlphaCompoundingVault.algo.ts:555
+    // RareFiAlphaCompoundingVault.algo.ts:557
     // @arc4.abimethod({ readonly: true })
     itob
     bytec 7 // 0x151f7c75
@@ -1387,7 +1393,7 @@ previewDeposit:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.previewWithdraw[routing]() -> void:
 previewWithdraw:
-    // RareFiAlphaCompoundingVault.algo.ts:563
+    // RareFiAlphaCompoundingVault.algo.ts:565
     // @arc4.abimethod({ readonly: true })
     txna ApplicationArgs 1
     dup
@@ -1396,10 +1402,10 @@ previewWithdraw:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // RareFiAlphaCompoundingVault.algo.ts:565
+    // RareFiAlphaCompoundingVault.algo.ts:567
     // return this.sharesToAlpha(shareAmount);
     callsub sharesToAlpha
-    // RareFiAlphaCompoundingVault.algo.ts:563
+    // RareFiAlphaCompoundingVault.algo.ts:565
     // @arc4.abimethod({ readonly: true })
     itob
     bytec 7 // 0x151f7c75
@@ -1412,16 +1418,16 @@ previewWithdraw:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getCompoundQuote[routing]() -> void:
 getCompoundQuote:
-    // RareFiAlphaCompoundingVault.algo.ts:574
+    // RareFiAlphaCompoundingVault.algo.ts:576
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // RareFiAlphaCompoundingVault.algo.ts:575
+    // RareFiAlphaCompoundingVault.algo.ts:577
     // const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:44
+    // RareFiAlphaCompoundingVault.algo.ts:45
     // usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
     bytec 4 // "usdcAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:575
+    // RareFiAlphaCompoundingVault.algo.ts:577
     // const usdcBalance = Asset(this.usdcAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
@@ -1430,15 +1436,15 @@ getCompoundQuote:
     dup
     uncover 2
     assert // account opted into asset
-    // RareFiAlphaCompoundingVault.algo.ts:577
+    // RareFiAlphaCompoundingVault.algo.ts:579
     // if (usdcBalance === Uint64(0)) {
     bnz getCompoundQuote_after_if_else@3
-    // RareFiAlphaCompoundingVault.algo.ts:578
+    // RareFiAlphaCompoundingVault.algo.ts:580
     // return [Uint64(0), Uint64(0), Uint64(0)];
     pushbytes 0x000000000000000000000000000000000000000000000000
 
 getCompoundQuote_after_inlined_RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getCompoundQuote@4:
-    // RareFiAlphaCompoundingVault.algo.ts:572
+    // RareFiAlphaCompoundingVault.algo.ts:574
     // @arc4.abimethod({ readonly: true })
     bytec 7 // 0x151f7c75
     swap
@@ -1448,35 +1454,35 @@ getCompoundQuote_after_inlined_RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaC
     return
 
 getCompoundQuote_after_if_else@3:
-    // RareFiAlphaCompoundingVault.algo.ts:581
+    // RareFiAlphaCompoundingVault.algo.ts:583
     // const expectedOutput = this.getExpectedSwapOutput(usdcBalance);
     dupn 2
     callsub getExpectedSwapOutput
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     dup
-    // RareFiAlphaCompoundingVault.algo.ts:582
+    // RareFiAlphaCompoundingVault.algo.ts:584
     // const minAt50Bps = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - Uint64(50), FEE_BPS_BASE);
     pushint 9950 // 9950
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:582
+    // RareFiAlphaCompoundingVault.algo.ts:584
     // const minAt50Bps = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - Uint64(50), FEE_BPS_BASE);
     intc 4 // 10000
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     divmodw
     popn 2
     swap
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // RareFiAlphaCompoundingVault.algo.ts:584
+    // RareFiAlphaCompoundingVault.algo.ts:586
     // return [usdcBalance, expectedOutput, minAt50Bps];
     uncover 2
     itob
@@ -1486,14 +1492,14 @@ getCompoundQuote_after_if_else@3:
     swap
     itob
     concat
-    // RareFiAlphaCompoundingVault.algo.ts:572
+    // RareFiAlphaCompoundingVault.algo.ts:574
     // @arc4.abimethod({ readonly: true })
     b getCompoundQuote_after_inlined_RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getCompoundQuote@4
 
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.updateMinSwapThreshold[routing]() -> void:
 updateMinSwapThreshold:
-    // RareFiAlphaCompoundingVault.algo.ts:594
+    // RareFiAlphaCompoundingVault.algo.ts:596
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1502,48 +1508,54 @@ updateMinSwapThreshold:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // RareFiAlphaCompoundingVault.algo.ts:596
+    // RareFiAlphaCompoundingVault.algo.ts:598
     // const isCreator = Txn.sender === this.creatorAddress.value;
-    txn Sender
-    intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:47
-    // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
-    bytec 6 // "creatorAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:596
-    // const isCreator = Txn.sender === this.creatorAddress.value;
-    app_global_get_ex
-    assert // check GlobalState exists
-    ==
-    // RareFiAlphaCompoundingVault.algo.ts:597
-    // const isRarefi = Txn.sender === this.rarefiAddress.value;
     txn Sender
     intc_0 // 0
     // RareFiAlphaCompoundingVault.algo.ts:48
+    // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
+    bytec 6 // "creatorAddress"
+    // RareFiAlphaCompoundingVault.algo.ts:598
+    // const isCreator = Txn.sender === this.creatorAddress.value;
+    app_global_get_ex
+    assert // check GlobalState exists
+    ==
+    // RareFiAlphaCompoundingVault.algo.ts:599
+    // const isRarefi = Txn.sender === this.rarefiAddress.value;
+    txn Sender
+    intc_0 // 0
+    // RareFiAlphaCompoundingVault.algo.ts:49
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
     bytec 13 // "rarefiAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:597
+    // RareFiAlphaCompoundingVault.algo.ts:599
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // RareFiAlphaCompoundingVault.algo.ts:598
+    // RareFiAlphaCompoundingVault.algo.ts:600
     // assert(isCreator || isRarefi, 'Only creator or RareFi can update');
     ||
     assert // Only creator or RareFi can update
-    // RareFiAlphaCompoundingVault.algo.ts:599
+    // RareFiAlphaCompoundingVault.algo.ts:601
     // assert(newThreshold >= MIN_SWAP_AMOUNT, 'Threshold too low');
     dup
     intc 5 // 200000
     >=
     assert // Threshold too low
-    // RareFiAlphaCompoundingVault.algo.ts:55
+    // RareFiAlphaCompoundingVault.algo.ts:602
+    // assert(newThreshold <= MAX_SWAP_THRESHOLD, 'Threshold too high (max 50 USDC)');
+    dup
+    intc 6 // 50000000
+    <=
+    assert // Threshold too high (max 50 USDC)
+    // RareFiAlphaCompoundingVault.algo.ts:56
     // minSwapThreshold = GlobalState<uint64>();  // Minimum USDC before swap allowed
     bytec 10 // "minSwapThreshold"
-    // RareFiAlphaCompoundingVault.algo.ts:600
+    // RareFiAlphaCompoundingVault.algo.ts:603
     // this.minSwapThreshold.value = newThreshold;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:594
+    // RareFiAlphaCompoundingVault.algo.ts:596
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1551,7 +1563,7 @@ updateMinSwapThreshold:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.updateMaxSlippage[routing]() -> void:
 updateMaxSlippage:
-    // RareFiAlphaCompoundingVault.algo.ts:607
+    // RareFiAlphaCompoundingVault.algo.ts:610
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1560,39 +1572,39 @@ updateMaxSlippage:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // RareFiAlphaCompoundingVault.algo.ts:609
+    // RareFiAlphaCompoundingVault.algo.ts:612
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can update max slippage');
     txn Sender
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:47
+    // RareFiAlphaCompoundingVault.algo.ts:48
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:609
+    // RareFiAlphaCompoundingVault.algo.ts:612
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can update max slippage');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Only creator can update max slippage
-    // RareFiAlphaCompoundingVault.algo.ts:610
+    // RareFiAlphaCompoundingVault.algo.ts:613
     // assert(newMaxSlippageBps >= MIN_MAX_SLIPPAGE_BPS, 'Max slippage too low (min 5%)');
     dup
     pushint 500 // 500
     >=
     assert // Max slippage too low (min 5%)
-    // RareFiAlphaCompoundingVault.algo.ts:611
+    // RareFiAlphaCompoundingVault.algo.ts:614
     // assert(newMaxSlippageBps <= MAX_SLIPPAGE_BPS, 'Max slippage too high');
     dup
     intc 4 // 10000
     <=
     assert // Max slippage too high
-    // RareFiAlphaCompoundingVault.algo.ts:56
+    // RareFiAlphaCompoundingVault.algo.ts:57
     // maxSlippageBps = GlobalState<uint64>();    // Maximum slippage tolerance in basis points
     bytec 11 // "maxSlippageBps"
-    // RareFiAlphaCompoundingVault.algo.ts:612
+    // RareFiAlphaCompoundingVault.algo.ts:615
     // this.maxSlippageBps.value = newMaxSlippageBps;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:607
+    // RareFiAlphaCompoundingVault.algo.ts:610
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1600,7 +1612,7 @@ updateMaxSlippage:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.updateCreatorFeeRate[routing]() -> void:
 updateCreatorFeeRate:
-    // RareFiAlphaCompoundingVault.algo.ts:619
+    // RareFiAlphaCompoundingVault.algo.ts:622
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1609,33 +1621,33 @@ updateCreatorFeeRate:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    // RareFiAlphaCompoundingVault.algo.ts:621
+    // RareFiAlphaCompoundingVault.algo.ts:624
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can update fee rate');
     txn Sender
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:47
+    // RareFiAlphaCompoundingVault.algo.ts:48
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec 6 // "creatorAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:621
+    // RareFiAlphaCompoundingVault.algo.ts:624
     // assert(Txn.sender === this.creatorAddress.value, 'Only creator can update fee rate');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Only creator can update fee rate
-    // RareFiAlphaCompoundingVault.algo.ts:622
+    // RareFiAlphaCompoundingVault.algo.ts:625
     // assert(newFeeRate <= MAX_FEE_RATE, 'Fee rate exceeds maximum (6%)');
     dup
     pushint 6 // 6
     <=
     assert // Fee rate exceeds maximum (6%)
-    // RareFiAlphaCompoundingVault.algo.ts:49
+    // RareFiAlphaCompoundingVault.algo.ts:50
     // creatorFeeRate = GlobalState<uint64>();    // 0-100, percentage of yield to creator
     bytec 14 // "creatorFeeRate"
-    // RareFiAlphaCompoundingVault.algo.ts:623
+    // RareFiAlphaCompoundingVault.algo.ts:626
     // this.creatorFeeRate.value = newFeeRate;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:619
+    // RareFiAlphaCompoundingVault.algo.ts:622
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1643,17 +1655,17 @@ updateCreatorFeeRate:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.contributeFarm[routing]() -> void:
 contributeFarm:
-    // RareFiAlphaCompoundingVault.algo.ts:639
+    // RareFiAlphaCompoundingVault.algo.ts:642
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // RareFiAlphaCompoundingVault.algo.ts:640
+    // RareFiAlphaCompoundingVault.algo.ts:643
     // const currentIndex = Txn.groupIndex;
     txn GroupIndex
-    // RareFiAlphaCompoundingVault.algo.ts:641
+    // RareFiAlphaCompoundingVault.algo.ts:644
     // assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
     dup
     assert // App call must follow asset transfer
-    // RareFiAlphaCompoundingVault.algo.ts:644
+    // RareFiAlphaCompoundingVault.algo.ts:647
     // const farmTransfer = gtxn.AssetTransferTxn(currentIndex - Uint64(1));
     intc_1 // 1
     -
@@ -1662,74 +1674,74 @@ contributeFarm:
     intc_3 // axfer
     ==
     assert // transaction type is axfer
-    // RareFiAlphaCompoundingVault.algo.ts:645
+    // RareFiAlphaCompoundingVault.algo.ts:648
     // assert(farmTransfer.xferAsset === Asset(this.alphaAsset.value), 'Must transfer Alpha asset');
     dup
     gtxns XferAsset
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:43
+    // RareFiAlphaCompoundingVault.algo.ts:44
     // alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
     bytec_3 // "alphaAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:645
+    // RareFiAlphaCompoundingVault.algo.ts:648
     // assert(farmTransfer.xferAsset === Asset(this.alphaAsset.value), 'Must transfer Alpha asset');
     app_global_get_ex
     assert // check GlobalState exists
     ==
     assert // Must transfer Alpha asset
-    // RareFiAlphaCompoundingVault.algo.ts:646
+    // RareFiAlphaCompoundingVault.algo.ts:649
     // assert(farmTransfer.assetReceiver === appAddr, 'Must send to contract');
     dup
     gtxns AssetReceiver
     uncover 2
     ==
     assert // Must send to contract
-    // RareFiAlphaCompoundingVault.algo.ts:647
+    // RareFiAlphaCompoundingVault.algo.ts:650
     // assert(farmTransfer.sender === Txn.sender, 'Transfer must be from caller');
     dup
     gtxns Sender
     txn Sender
     ==
     assert // Transfer must be from caller
-    // RareFiAlphaCompoundingVault.algo.ts:650
+    // RareFiAlphaCompoundingVault.algo.ts:653
     // assert(farmTransfer.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     dup
     gtxns RekeyTo
     global ZeroAddress
     ==
     assert // rekeyTo must be zero
-    // RareFiAlphaCompoundingVault.algo.ts:651
+    // RareFiAlphaCompoundingVault.algo.ts:654
     // assert(farmTransfer.assetCloseTo === Global.zeroAddress, 'assetCloseTo must be zero');
     dup
     gtxns AssetCloseTo
     global ZeroAddress
     ==
     assert // assetCloseTo must be zero
-    // RareFiAlphaCompoundingVault.algo.ts:653
+    // RareFiAlphaCompoundingVault.algo.ts:656
     // const amount = farmTransfer.assetAmount;
     gtxns AssetAmount
-    // RareFiAlphaCompoundingVault.algo.ts:654
+    // RareFiAlphaCompoundingVault.algo.ts:657
     // assert(amount > Uint64(0), 'Contribution must be positive');
     dup
     assert // Contribution must be positive
-    // RareFiAlphaCompoundingVault.algo.ts:657
+    // RareFiAlphaCompoundingVault.algo.ts:660
     // this.farmBalance.value = this.farmBalance.value + amount;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:657
+    // RareFiAlphaCompoundingVault.algo.ts:660
     // this.farmBalance.value = this.farmBalance.value + amount;
     app_global_get_ex
     assert // check GlobalState exists
     +
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:657
+    // RareFiAlphaCompoundingVault.algo.ts:660
     // this.farmBalance.value = this.farmBalance.value + amount;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:637
+    // RareFiAlphaCompoundingVault.algo.ts:640
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1737,7 +1749,7 @@ contributeFarm:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.setFarmEmissionRate[routing]() -> void:
 setFarmEmissionRate:
-    // RareFiAlphaCompoundingVault.algo.ts:668
+    // RareFiAlphaCompoundingVault.algo.ts:671
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1747,51 +1759,51 @@ setFarmEmissionRate:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    // RareFiAlphaCompoundingVault.algo.ts:670
+    // RareFiAlphaCompoundingVault.algo.ts:673
     // const isCreator = Txn.sender === this.creatorAddress.value;
-    txn Sender
-    intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:47
-    // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
-    bytec 6 // "creatorAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:670
-    // const isCreator = Txn.sender === this.creatorAddress.value;
-    app_global_get_ex
-    assert // check GlobalState exists
-    ==
-    // RareFiAlphaCompoundingVault.algo.ts:671
-    // const isRarefi = Txn.sender === this.rarefiAddress.value;
     txn Sender
     intc_0 // 0
     // RareFiAlphaCompoundingVault.algo.ts:48
+    // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
+    bytec 6 // "creatorAddress"
+    // RareFiAlphaCompoundingVault.algo.ts:673
+    // const isCreator = Txn.sender === this.creatorAddress.value;
+    app_global_get_ex
+    assert // check GlobalState exists
+    ==
+    // RareFiAlphaCompoundingVault.algo.ts:674
+    // const isRarefi = Txn.sender === this.rarefiAddress.value;
+    txn Sender
+    intc_0 // 0
+    // RareFiAlphaCompoundingVault.algo.ts:49
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
     bytec 13 // "rarefiAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:671
+    // RareFiAlphaCompoundingVault.algo.ts:674
     // const isRarefi = Txn.sender === this.rarefiAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
     ==
-    // RareFiAlphaCompoundingVault.algo.ts:672
+    // RareFiAlphaCompoundingVault.algo.ts:675
     // assert(isCreator || isRarefi, 'Only creator or RareFi can set farm rate');
     ||
     assert // Only creator or RareFi can set farm rate
-    // RareFiAlphaCompoundingVault.algo.ts:673
+    // RareFiAlphaCompoundingVault.algo.ts:676
     // assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 500%)');
     pushint 50000 // 50000
     <=
     assert // Emission rate too high (max 500%)
-    // RareFiAlphaCompoundingVault.algo.ts:676
+    // RareFiAlphaCompoundingVault.algo.ts:679
     // if (this.farmBalance.value > Uint64(0)) {
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:676
+    // RareFiAlphaCompoundingVault.algo.ts:679
     // if (this.farmBalance.value > Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     bz setFarmEmissionRate_after_if_else@3
-    // RareFiAlphaCompoundingVault.algo.ts:677
+    // RareFiAlphaCompoundingVault.algo.ts:680
     // assert(emissionRateBps >= MIN_FARM_EMISSION_BPS, 'Emission rate too low (min 10% when farm has balance)');
     dup
     pushint 1000 // 1000
@@ -1799,14 +1811,14 @@ setFarmEmissionRate:
     assert // Emission rate too low (min 10% when farm has balance)
 
 setFarmEmissionRate_after_if_else@3:
-    // RareFiAlphaCompoundingVault.algo.ts:65
+    // RareFiAlphaCompoundingVault.algo.ts:66
     // farmEmissionRate = GlobalState<uint64>();    // Basis points of compound output to add from farm (e.g., 1000 = 10%)
     bytec 9 // "farmEmissionRate"
-    // RareFiAlphaCompoundingVault.algo.ts:680
+    // RareFiAlphaCompoundingVault.algo.ts:683
     // this.farmEmissionRate.value = emissionRateBps;
     dig 1
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:668
+    // RareFiAlphaCompoundingVault.algo.ts:671
     // @arc4.abimethod()
     intc_1 // 1
     return
@@ -1814,21 +1826,21 @@ setFarmEmissionRate_after_if_else@3:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getFarmStats[routing]() -> void:
 getFarmStats:
-    // RareFiAlphaCompoundingVault.algo.ts:689
+    // RareFiAlphaCompoundingVault.algo.ts:692
     // return [this.farmBalance.value, this.farmEmissionRate.value];
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:689
+    // RareFiAlphaCompoundingVault.algo.ts:692
     // return [this.farmBalance.value, this.farmEmissionRate.value];
     app_global_get_ex
     assert // check GlobalState exists
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:65
+    // RareFiAlphaCompoundingVault.algo.ts:66
     // farmEmissionRate = GlobalState<uint64>();    // Basis points of compound output to add from farm (e.g., 1000 = 10%)
     bytec 9 // "farmEmissionRate"
-    // RareFiAlphaCompoundingVault.algo.ts:689
+    // RareFiAlphaCompoundingVault.algo.ts:692
     // return [this.farmBalance.value, this.farmEmissionRate.value];
     app_global_get_ex
     assert // check GlobalState exists
@@ -1837,7 +1849,7 @@ getFarmStats:
     swap
     itob
     concat
-    // RareFiAlphaCompoundingVault.algo.ts:687
+    // RareFiAlphaCompoundingVault.algo.ts:690
     // @arc4.abimethod({ readonly: true })
     bytec 7 // 0x151f7c75
     swap
@@ -1849,162 +1861,162 @@ getFarmStats:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.alphaToShares(alphaAmount: uint64) -> uint64:
 alphaToShares:
-    // RareFiAlphaCompoundingVault.algo.ts:96
+    // RareFiAlphaCompoundingVault.algo.ts:97
     // private alphaToShares(alphaAmount: uint64): uint64 {
     proto 1 1
-    // RareFiAlphaCompoundingVault.algo.ts:97
+    // RareFiAlphaCompoundingVault.algo.ts:98
     // if (this.totalShares.value === Uint64(0)) {
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:97
+    // RareFiAlphaCompoundingVault.algo.ts:98
     // if (this.totalShares.value === Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     bnz alphaToShares_after_if_else@2
-    // RareFiAlphaCompoundingVault.algo.ts:99
+    // RareFiAlphaCompoundingVault.algo.ts:100
     // return alphaAmount;
     frame_dig -1
     retsub
 
 alphaToShares_after_if_else@2:
-    // RareFiAlphaCompoundingVault.algo.ts:101
+    // RareFiAlphaCompoundingVault.algo.ts:102
     // return this.mulDivFloor(alphaAmount, this.totalShares.value, this.totalAlpha.value);
-    intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
-    // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
-    bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:101
-    // return this.mulDivFloor(alphaAmount, this.totalShares.value, this.totalAlpha.value);
-    app_global_get_ex
-    assert // check GlobalState exists
     intc_0 // 0
     // RareFiAlphaCompoundingVault.algo.ts:54
-    // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
-    bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:101
+    // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
+    bytec_0 // "totalShares"
+    // RareFiAlphaCompoundingVault.algo.ts:102
     // return this.mulDivFloor(alphaAmount, this.totalShares.value, this.totalAlpha.value);
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    intc_0 // 0
+    // RareFiAlphaCompoundingVault.algo.ts:55
+    // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
+    bytec_1 // "totalAlpha"
+    // RareFiAlphaCompoundingVault.algo.ts:102
+    // return this.mulDivFloor(alphaAmount, this.totalShares.value, this.totalAlpha.value);
+    app_global_get_ex
+    assert // check GlobalState exists
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     frame_dig -1
     uncover 2
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
     uncover 3
     divmodw
     popn 2
     swap
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // RareFiAlphaCompoundingVault.algo.ts:101
+    // RareFiAlphaCompoundingVault.algo.ts:102
     // return this.mulDivFloor(alphaAmount, this.totalShares.value, this.totalAlpha.value);
     retsub
 
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.sharesToAlpha(shares: uint64) -> uint64:
 sharesToAlpha:
-    // RareFiAlphaCompoundingVault.algo.ts:108
+    // RareFiAlphaCompoundingVault.algo.ts:109
     // private sharesToAlpha(shares: uint64): uint64 {
     proto 1 1
-    // RareFiAlphaCompoundingVault.algo.ts:109
+    // RareFiAlphaCompoundingVault.algo.ts:110
     // if (this.totalShares.value === Uint64(0)) {
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:109
+    // RareFiAlphaCompoundingVault.algo.ts:110
     // if (this.totalShares.value === Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     bnz sharesToAlpha_after_if_else@2
-    // RareFiAlphaCompoundingVault.algo.ts:110
+    // RareFiAlphaCompoundingVault.algo.ts:111
     // return Uint64(0);
     intc_0 // 0
     retsub
 
 sharesToAlpha_after_if_else@2:
-    // RareFiAlphaCompoundingVault.algo.ts:112
+    // RareFiAlphaCompoundingVault.algo.ts:113
     // return this.mulDivFloor(shares, this.totalAlpha.value, this.totalShares.value);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:112
+    // RareFiAlphaCompoundingVault.algo.ts:113
     // return this.mulDivFloor(shares, this.totalAlpha.value, this.totalShares.value);
     app_global_get_ex
     assert // check GlobalState exists
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:53
+    // RareFiAlphaCompoundingVault.algo.ts:54
     // totalShares = GlobalState<uint64>();       // Total shares issued to all depositors
     bytec_0 // "totalShares"
-    // RareFiAlphaCompoundingVault.algo.ts:112
+    // RareFiAlphaCompoundingVault.algo.ts:113
     // return this.mulDivFloor(shares, this.totalAlpha.value, this.totalShares.value);
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     frame_dig -1
     uncover 2
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
     uncover 3
     divmodw
     popn 2
     swap
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // RareFiAlphaCompoundingVault.algo.ts:112
+    // RareFiAlphaCompoundingVault.algo.ts:113
     // return this.mulDivFloor(shares, this.totalAlpha.value, this.totalShares.value);
     retsub
 
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getExpectedSwapOutput(inputAmount: uint64) -> uint64:
 getExpectedSwapOutput:
-    // RareFiAlphaCompoundingVault.algo.ts:119
+    // RareFiAlphaCompoundingVault.algo.ts:120
     // private getExpectedSwapOutput(inputAmount: uint64): uint64 {
     proto 1 1
     pushbytes ""
-    // RareFiAlphaCompoundingVault.algo.ts:120
-    // const poolApp = this.tinymanPoolAppId.value;
-    intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:60
-    // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID
-    bytec 15 // "tinymanPoolAppId"
-    // RareFiAlphaCompoundingVault.algo.ts:120
-    // const poolApp = this.tinymanPoolAppId.value;
-    app_global_get_ex
-    assert // check GlobalState exists
     // RareFiAlphaCompoundingVault.algo.ts:121
-    // const poolAddr = this.tinymanPoolAddress.value;
+    // const poolApp = this.tinymanPoolAppId.value;
     intc_0 // 0
     // RareFiAlphaCompoundingVault.algo.ts:61
+    // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID
+    bytec 15 // "tinymanPoolAppId"
+    // RareFiAlphaCompoundingVault.algo.ts:121
+    // const poolApp = this.tinymanPoolAppId.value;
+    app_global_get_ex
+    assert // check GlobalState exists
+    // RareFiAlphaCompoundingVault.algo.ts:122
+    // const poolAddr = this.tinymanPoolAddress.value;
+    intc_0 // 0
+    // RareFiAlphaCompoundingVault.algo.ts:62
     // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
     bytec 16 // "tinymanPoolAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:121
+    // RareFiAlphaCompoundingVault.algo.ts:122
     // const poolAddr = this.tinymanPoolAddress.value;
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:124
+    // RareFiAlphaCompoundingVault.algo.ts:125
     // const [asset1Id, hasAsset1Id] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('asset_1_id'));
     dup
     dig 2
     pushbytes "asset_1_id"
     app_local_get_ex
-    // RareFiAlphaCompoundingVault.algo.ts:125
+    // RareFiAlphaCompoundingVault.algo.ts:126
     // assert(hasAsset1Id, 'Cannot read pool asset_1_id');
     assert // Cannot read pool asset_1_id
-    // RareFiAlphaCompoundingVault.algo.ts:127
+    // RareFiAlphaCompoundingVault.algo.ts:128
     // const [asset1Reserves, hasAsset1Reserves] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('asset_1_reserves'));
     dig 1
     dig 3
@@ -2012,10 +2024,10 @@ getExpectedSwapOutput:
     app_local_get_ex
     swap
     cover 4
-    // RareFiAlphaCompoundingVault.algo.ts:128
+    // RareFiAlphaCompoundingVault.algo.ts:129
     // assert(hasAsset1Reserves, 'Cannot read pool asset_1_reserves');
     assert // Cannot read pool asset_1_reserves
-    // RareFiAlphaCompoundingVault.algo.ts:130
+    // RareFiAlphaCompoundingVault.algo.ts:131
     // const [asset2Reserves, hasAsset2Reserves] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('asset_2_reserves'));
     dig 1
     dig 3
@@ -2023,10 +2035,10 @@ getExpectedSwapOutput:
     app_local_get_ex
     swap
     cover 4
-    // RareFiAlphaCompoundingVault.algo.ts:131
+    // RareFiAlphaCompoundingVault.algo.ts:132
     // assert(hasAsset2Reserves, 'Cannot read pool asset_2_reserves');
     assert // Cannot read pool asset_2_reserves
-    // RareFiAlphaCompoundingVault.algo.ts:133
+    // RareFiAlphaCompoundingVault.algo.ts:134
     // const [totalFeeShare, hasTotalFeeShare] = AppLocal.getExUint64(poolAddr, poolApp, Bytes('total_fee_share'));
     swap
     uncover 2
@@ -2034,16 +2046,16 @@ getExpectedSwapOutput:
     app_local_get_ex
     swap
     cover 3
-    // RareFiAlphaCompoundingVault.algo.ts:134
+    // RareFiAlphaCompoundingVault.algo.ts:135
     // assert(hasTotalFeeShare, 'Cannot read pool total_fee_share');
     assert // Cannot read pool total_fee_share
-    // RareFiAlphaCompoundingVault.algo.ts:140
+    // RareFiAlphaCompoundingVault.algo.ts:141
     // if (asset1Id === this.usdcAsset.value) {
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:44
+    // RareFiAlphaCompoundingVault.algo.ts:45
     // usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
     bytec 4 // "usdcAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:140
+    // RareFiAlphaCompoundingVault.algo.ts:141
     // if (asset1Id === this.usdcAsset.value) {
     app_global_get_ex
     assert // check GlobalState exists
@@ -2053,51 +2065,51 @@ getExpectedSwapOutput:
     frame_bury 0
 
 getExpectedSwapOutput_after_if_else@3:
-    // RareFiAlphaCompoundingVault.algo.ts:152
+    // RareFiAlphaCompoundingVault.algo.ts:153
     // const netInput = this.mulDivFloor(inputAmount, FEE_BPS_BASE - feeBps, FEE_BPS_BASE);
     intc 4 // 10000
     frame_dig 2
     -
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     frame_dig -1
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:152
+    // RareFiAlphaCompoundingVault.algo.ts:153
     // const netInput = this.mulDivFloor(inputAmount, FEE_BPS_BASE - feeBps, FEE_BPS_BASE);
     intc 4 // 10000
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     divmodw
     popn 2
     swap
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // RareFiAlphaCompoundingVault.algo.ts:155
+    // RareFiAlphaCompoundingVault.algo.ts:156
     // const expectedOutput = this.mulDivFloor(outputReserves, netInput, inputReserves + netInput);
     frame_dig 0
     dig 1
     +
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     cover 2
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
     uncover 3
     divmodw
     popn 2
     swap
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // RareFiAlphaCompoundingVault.algo.ts:157
+    // RareFiAlphaCompoundingVault.algo.ts:158
     // return expectedOutput;
     frame_bury 0
     retsub
@@ -2110,58 +2122,58 @@ getExpectedSwapOutput_else_body@2:
 
 // RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.executeCompound(usdcBalance: uint64, slippageBps: uint64) -> void:
 executeCompound:
-    // RareFiAlphaCompoundingVault.algo.ts:164
+    // RareFiAlphaCompoundingVault.algo.ts:165
     // private executeCompound(usdcBalance: uint64, slippageBps: uint64): void {
     proto 2 0
     pushbytes ""
-    // RareFiAlphaCompoundingVault.algo.ts:165
+    // RareFiAlphaCompoundingVault.algo.ts:166
     // const appAddr: Account = Global.currentApplicationAddress;
     global CurrentApplicationAddress
-    // RareFiAlphaCompoundingVault.algo.ts:168
+    // RareFiAlphaCompoundingVault.algo.ts:169
     // const expectedOutput = this.getExpectedSwapOutput(usdcBalance);
     frame_dig -2
     callsub getExpectedSwapOutput
-    // RareFiAlphaCompoundingVault.algo.ts:169
+    // RareFiAlphaCompoundingVault.algo.ts:170
     // assert(expectedOutput > Uint64(0), 'Expected output is zero');
     dup
     assert // Expected output is zero
-    // RareFiAlphaCompoundingVault.algo.ts:172
+    // RareFiAlphaCompoundingVault.algo.ts:173
     // const minAmountOut = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - slippageBps, FEE_BPS_BASE);
     intc 4 // 10000
     frame_dig -1
     -
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:172
+    // RareFiAlphaCompoundingVault.algo.ts:173
     // const minAmountOut = this.mulDivFloor(expectedOutput, FEE_BPS_BASE - slippageBps, FEE_BPS_BASE);
     intc 4 // 10000
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     divmodw
     popn 2
     cover 2
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // RareFiAlphaCompoundingVault.algo.ts:175
+    // RareFiAlphaCompoundingVault.algo.ts:176
     // const alphaBefore = Asset(this.alphaAsset.value).balance(appAddr);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:43
+    // RareFiAlphaCompoundingVault.algo.ts:44
     // alphaAsset = GlobalState<uint64>();       // Alpha ASA ID (deposit & yield asset)
     bytec_3 // "alphaAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:175
+    // RareFiAlphaCompoundingVault.algo.ts:176
     // const alphaBefore = Asset(this.alphaAsset.value).balance(appAddr);
     app_global_get_ex
     assert // check GlobalState exists
     dup2
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // RareFiAlphaCompoundingVault.algo.ts:178-192
+    // RareFiAlphaCompoundingVault.algo.ts:179-193
     // itxn.submitGroup(
     //   itxn.assetTransfer({
     //     assetReceiver: this.tinymanPoolAddress.value,
@@ -2178,23 +2190,23 @@ executeCompound:
     //   }),
     // );
     itxn_begin
-    // RareFiAlphaCompoundingVault.algo.ts:180
+    // RareFiAlphaCompoundingVault.algo.ts:181
     // assetReceiver: this.tinymanPoolAddress.value,
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:61
+    // RareFiAlphaCompoundingVault.algo.ts:62
     // tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
     bytec 16 // "tinymanPoolAddress"
-    // RareFiAlphaCompoundingVault.algo.ts:180
+    // RareFiAlphaCompoundingVault.algo.ts:181
     // assetReceiver: this.tinymanPoolAddress.value,
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:181
+    // RareFiAlphaCompoundingVault.algo.ts:182
     // xferAsset: Asset(this.usdcAsset.value),
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:44
+    // RareFiAlphaCompoundingVault.algo.ts:45
     // usdcAsset = GlobalState<uint64>();        // USDC ASA ID (airdrops come in as this)
     bytec 4 // "usdcAsset"
-    // RareFiAlphaCompoundingVault.algo.ts:181
+    // RareFiAlphaCompoundingVault.algo.ts:182
     // xferAsset: Asset(this.usdcAsset.value),
     app_global_get_ex
     assert // check GlobalState exists
@@ -2203,7 +2215,7 @@ executeCompound:
     itxn_field XferAsset
     dup
     itxn_field AssetReceiver
-    // RareFiAlphaCompoundingVault.algo.ts:179-184
+    // RareFiAlphaCompoundingVault.algo.ts:180-185
     // itxn.assetTransfer({
     //   assetReceiver: this.tinymanPoolAddress.value,
     //   xferAsset: Asset(this.usdcAsset.value),
@@ -2212,11 +2224,11 @@ executeCompound:
     // }),
     intc_3 // 4
     itxn_field TypeEnum
-    // RareFiAlphaCompoundingVault.algo.ts:183
+    // RareFiAlphaCompoundingVault.algo.ts:184
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // RareFiAlphaCompoundingVault.algo.ts:185-191
+    // RareFiAlphaCompoundingVault.algo.ts:186-192
     // itxn.applicationCall({
     //   appId: Application(this.tinymanPoolAppId.value),
     //   appArgs: [Bytes('swap'), Bytes('fixed-input'), itob(minAmountOut)],
@@ -2225,17 +2237,17 @@ executeCompound:
     //   fee: Uint64(0),
     // }),
     itxn_next
-    // RareFiAlphaCompoundingVault.algo.ts:186
+    // RareFiAlphaCompoundingVault.algo.ts:187
     // appId: Application(this.tinymanPoolAppId.value),
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:60
+    // RareFiAlphaCompoundingVault.algo.ts:61
     // tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID
     bytec 15 // "tinymanPoolAppId"
-    // RareFiAlphaCompoundingVault.algo.ts:186
+    // RareFiAlphaCompoundingVault.algo.ts:187
     // appId: Application(this.tinymanPoolAppId.value),
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:187
+    // RareFiAlphaCompoundingVault.algo.ts:188
     // appArgs: [Bytes('swap'), Bytes('fixed-input'), itob(minAmountOut)],
     dig 5
     itob
@@ -2249,7 +2261,7 @@ executeCompound:
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_field ApplicationID
-    // RareFiAlphaCompoundingVault.algo.ts:185-191
+    // RareFiAlphaCompoundingVault.algo.ts:186-192
     // itxn.applicationCall({
     //   appId: Application(this.tinymanPoolAppId.value),
     //   appArgs: [Bytes('swap'), Bytes('fixed-input'), itob(minAmountOut)],
@@ -2259,11 +2271,11 @@ executeCompound:
     // }),
     pushint 6 // 6
     itxn_field TypeEnum
-    // RareFiAlphaCompoundingVault.algo.ts:190
+    // RareFiAlphaCompoundingVault.algo.ts:191
     // fee: Uint64(0),
     intc_0 // 0
     itxn_field Fee
-    // RareFiAlphaCompoundingVault.algo.ts:178-192
+    // RareFiAlphaCompoundingVault.algo.ts:179-193
     // itxn.submitGroup(
     //   itxn.assetTransfer({
     //     assetReceiver: this.tinymanPoolAddress.value,
@@ -2280,82 +2292,82 @@ executeCompound:
     //   }),
     // );
     itxn_submit
-    // RareFiAlphaCompoundingVault.algo.ts:195
+    // RareFiAlphaCompoundingVault.algo.ts:196
     // const alphaAfter: uint64 = Asset(this.alphaAsset.value).balance(appAddr);
     cover 2
     asset_holding_get AssetBalance
     assert // account opted into asset
-    // RareFiAlphaCompoundingVault.algo.ts:196
+    // RareFiAlphaCompoundingVault.algo.ts:197
     // const swapOutput: uint64 = alphaAfter - alphaBefore;
     swap
     -
     dup
     uncover 2
-    // RareFiAlphaCompoundingVault.algo.ts:197
+    // RareFiAlphaCompoundingVault.algo.ts:198
     // assert(swapOutput >= minAmountOut, 'Swap output below minimum');
     >=
     assert // Swap output below minimum
-    // RareFiAlphaCompoundingVault.algo.ts:200
+    // RareFiAlphaCompoundingVault.algo.ts:201
     // let farmBonus: uint64 = Uint64(0);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:201
+    // RareFiAlphaCompoundingVault.algo.ts:202
     // if (this.farmEmissionRate.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
     dup
-    // RareFiAlphaCompoundingVault.algo.ts:65
+    // RareFiAlphaCompoundingVault.algo.ts:66
     // farmEmissionRate = GlobalState<uint64>();    // Basis points of compound output to add from farm (e.g., 1000 = 10%)
     bytec 9 // "farmEmissionRate"
-    // RareFiAlphaCompoundingVault.algo.ts:201
+    // RareFiAlphaCompoundingVault.algo.ts:202
     // if (this.farmEmissionRate.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     bz executeCompound_after_if_else@8
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:201
+    // RareFiAlphaCompoundingVault.algo.ts:202
     // if (this.farmEmissionRate.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
     app_global_get_ex
     assert // check GlobalState exists
     bz executeCompound_after_if_else@8
-    // RareFiAlphaCompoundingVault.algo.ts:202
+    // RareFiAlphaCompoundingVault.algo.ts:203
     // const requestedBonus = this.mulDivFloor(swapOutput, this.farmEmissionRate.value, FEE_BPS_BASE);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:65
+    // RareFiAlphaCompoundingVault.algo.ts:66
     // farmEmissionRate = GlobalState<uint64>();    // Basis points of compound output to add from farm (e.g., 1000 = 10%)
     bytec 9 // "farmEmissionRate"
-    // RareFiAlphaCompoundingVault.algo.ts:202
+    // RareFiAlphaCompoundingVault.algo.ts:203
     // const requestedBonus = this.mulDivFloor(swapOutput, this.farmEmissionRate.value, FEE_BPS_BASE);
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     frame_dig 1
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:202
+    // RareFiAlphaCompoundingVault.algo.ts:203
     // const requestedBonus = this.mulDivFloor(swapOutput, this.farmEmissionRate.value, FEE_BPS_BASE);
     intc 4 // 10000
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     divmodw
     popn 2
     dup
     cover 2
     frame_bury 0
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // RareFiAlphaCompoundingVault.algo.ts:203
+    // RareFiAlphaCompoundingVault.algo.ts:204
     // farmBonus = requestedBonus < this.farmBalance.value ? requestedBonus : this.farmBalance.value;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:203
+    // RareFiAlphaCompoundingVault.algo.ts:204
     // farmBonus = requestedBonus < this.farmBalance.value ? requestedBonus : this.farmBalance.value;
     app_global_get_ex
     assert // check GlobalState exists
@@ -2365,130 +2377,130 @@ executeCompound:
     frame_bury 2
 
 executeCompound_ternary_merge@7:
-    // RareFiAlphaCompoundingVault.algo.ts:204
+    // RareFiAlphaCompoundingVault.algo.ts:205
     // this.farmBalance.value = this.farmBalance.value - farmBonus;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:204
+    // RareFiAlphaCompoundingVault.algo.ts:205
     // this.farmBalance.value = this.farmBalance.value - farmBonus;
     app_global_get_ex
     assert // check GlobalState exists
     frame_dig 2
     -
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:204
+    // RareFiAlphaCompoundingVault.algo.ts:205
     // this.farmBalance.value = this.farmBalance.value - farmBonus;
     swap
     app_global_put
 
 executeCompound_after_if_else@8:
-    // RareFiAlphaCompoundingVault.algo.ts:208
+    // RareFiAlphaCompoundingVault.algo.ts:209
     // const totalOutput: uint64 = swapOutput + farmBonus;
     frame_dig 1
     frame_dig 2
     +
-    // RareFiAlphaCompoundingVault.algo.ts:211
+    // RareFiAlphaCompoundingVault.algo.ts:212
     // const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, FEE_PERCENT_BASE);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:49
+    // RareFiAlphaCompoundingVault.algo.ts:50
     // creatorFeeRate = GlobalState<uint64>();    // 0-100, percentage of yield to creator
     bytec 14 // "creatorFeeRate"
-    // RareFiAlphaCompoundingVault.algo.ts:211
+    // RareFiAlphaCompoundingVault.algo.ts:212
     // const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, FEE_PERCENT_BASE);
     app_global_get_ex
     assert // check GlobalState exists
-    // RareFiAlphaCompoundingVault.algo.ts:85
+    // RareFiAlphaCompoundingVault.algo.ts:86
     // const [hi, lo] = mulw(n1, n2);
     dig 1
     mulw
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:211
+    // RareFiAlphaCompoundingVault.algo.ts:212
     // const creatorCut: uint64 = this.mulDivFloor(totalOutput, this.creatorFeeRate.value, FEE_PERCENT_BASE);
     pushint 100 // 100
-    // RareFiAlphaCompoundingVault.algo.ts:86
+    // RareFiAlphaCompoundingVault.algo.ts:87
     // const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     divmodw
     popn 2
     swap
-    // RareFiAlphaCompoundingVault.algo.ts:87
+    // RareFiAlphaCompoundingVault.algo.ts:88
     // assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     !
     assert // Multiplication overflow in mulDivFloor
-    // RareFiAlphaCompoundingVault.algo.ts:212
+    // RareFiAlphaCompoundingVault.algo.ts:213
     // const vaultCut: uint64 = totalOutput - creatorCut;
     dup2
     -
-    // RareFiAlphaCompoundingVault.algo.ts:215
+    // RareFiAlphaCompoundingVault.algo.ts:216
     // this.creatorUnclaimedAlpha.value = this.creatorUnclaimedAlpha.value + creatorCut;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:50
+    // RareFiAlphaCompoundingVault.algo.ts:51
     // creatorUnclaimedAlpha = GlobalState<uint64>(); // Accumulated Alpha for creator to claim
     bytec 8 // "creatorUnclaimedAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:215
+    // RareFiAlphaCompoundingVault.algo.ts:216
     // this.creatorUnclaimedAlpha.value = this.creatorUnclaimedAlpha.value + creatorCut;
     app_global_get_ex
     assert // check GlobalState exists
     uncover 2
     +
-    // RareFiAlphaCompoundingVault.algo.ts:50
+    // RareFiAlphaCompoundingVault.algo.ts:51
     // creatorUnclaimedAlpha = GlobalState<uint64>(); // Accumulated Alpha for creator to claim
     bytec 8 // "creatorUnclaimedAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:215
+    // RareFiAlphaCompoundingVault.algo.ts:216
     // this.creatorUnclaimedAlpha.value = this.creatorUnclaimedAlpha.value + creatorCut;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:218
+    // RareFiAlphaCompoundingVault.algo.ts:219
     // this.totalAlpha.value = this.totalAlpha.value + vaultCut;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:218
+    // RareFiAlphaCompoundingVault.algo.ts:219
     // this.totalAlpha.value = this.totalAlpha.value + vaultCut;
     app_global_get_ex
     assert // check GlobalState exists
     +
-    // RareFiAlphaCompoundingVault.algo.ts:54
+    // RareFiAlphaCompoundingVault.algo.ts:55
     // totalAlpha = GlobalState<uint64>();        // Total Alpha held (deposits + compounded yield)
     bytec_1 // "totalAlpha"
-    // RareFiAlphaCompoundingVault.algo.ts:218
+    // RareFiAlphaCompoundingVault.algo.ts:219
     // this.totalAlpha.value = this.totalAlpha.value + vaultCut;
     swap
     app_global_put
-    // RareFiAlphaCompoundingVault.algo.ts:221
+    // RareFiAlphaCompoundingVault.algo.ts:222
     // this.totalYieldCompounded.value = this.totalYieldCompounded.value + totalOutput;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:57
+    // RareFiAlphaCompoundingVault.algo.ts:58
     // totalYieldCompounded = GlobalState<uint64>(); // Total yield compounded (for stats)
     bytec 12 // "totalYieldCompounded"
-    // RareFiAlphaCompoundingVault.algo.ts:221
+    // RareFiAlphaCompoundingVault.algo.ts:222
     // this.totalYieldCompounded.value = this.totalYieldCompounded.value + totalOutput;
     app_global_get_ex
     assert // check GlobalState exists
     +
-    // RareFiAlphaCompoundingVault.algo.ts:57
+    // RareFiAlphaCompoundingVault.algo.ts:58
     // totalYieldCompounded = GlobalState<uint64>(); // Total yield compounded (for stats)
     bytec 12 // "totalYieldCompounded"
-    // RareFiAlphaCompoundingVault.algo.ts:221
+    // RareFiAlphaCompoundingVault.algo.ts:222
     // this.totalYieldCompounded.value = this.totalYieldCompounded.value + totalOutput;
     swap
     app_global_put
     retsub
 
 executeCompound_ternary_false@6:
-    // RareFiAlphaCompoundingVault.algo.ts:203
+    // RareFiAlphaCompoundingVault.algo.ts:204
     // farmBonus = requestedBonus < this.farmBalance.value ? requestedBonus : this.farmBalance.value;
     intc_0 // 0
-    // RareFiAlphaCompoundingVault.algo.ts:64
+    // RareFiAlphaCompoundingVault.algo.ts:65
     // farmBalance = GlobalState<uint64>();         // Total Alpha available for farm bonus
     bytec_2 // "farmBalance"
-    // RareFiAlphaCompoundingVault.algo.ts:203
+    // RareFiAlphaCompoundingVault.algo.ts:204
     // farmBonus = requestedBonus < this.farmBalance.value ? requestedBonus : this.farmBalance.value;
     app_global_get_ex
     assert // check GlobalState exists

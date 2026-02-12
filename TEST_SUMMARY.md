@@ -3,7 +3,7 @@
 **Date:** February 2025
 **Contracts:** RareFiVault, RareFiAlphaCompoundingVault
 **Framework:** Jest + Algorand Localnet
-**Total Tests:** 173 passing
+**Total Tests:** 186 passing
 **Security:** Audited with Trail of Bits Tealer v0.1.2
 
 ---
@@ -22,7 +22,7 @@
 
 ---
 
-## RareFiVault Tests (91 tests)
+## RareFiVault Tests (103 tests)
 
 ### Deployment (2 tests)
 - Deploy vault and pool successfully
@@ -92,9 +92,18 @@ Multi-user scenario (Alice, Bob, Charlie, Dave):
 - Reject above 500%
 - Reject 0% when farm has balance
 
+### Min Swap Threshold Update (7 tests)
+- Update threshold within valid range (to 10 USDC)
+- Set threshold to minimum (0.20 USDC)
+- Set threshold to maximum (50 USDC)
+- Reject threshold above 50 USDC
+- Reject threshold below 0.20 USDC
+- Reject createVault with threshold above 50 USDC
+- Reject non-creator/non-rarefi updating threshold
+
 ---
 
-## RareFiAlphaCompoundingVault Tests (82 tests)
+## RareFiAlphaCompoundingVault Tests (83 tests)
 
 ### Deployment (2 tests)
 - Deploy vault and pool successfully
@@ -140,6 +149,9 @@ Multi-user scenario (Alice, Bob, Charlie, Dave):
 
 ### Farm Emission Rate (8 tests)
 - Same pattern as RareFiVault (includes 500% max boundary tests)
+
+### Min Swap Threshold Update (7 tests)
+- Same pattern as RareFiVault (0.20-50 USDC range, creator/rarefi only)
 
 ### Comprehensive Integration (6 tests)
 1. Initial deposits (3 users: 1000 + 500 + 500 = 2000 shares)
@@ -261,4 +273,4 @@ python -m tealer detect --contracts contracts/artifacts/RareFiAlphaCompoundingVa
 
 ## Conclusion
 
-All 173 tests pass. Both contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (phishing prevention, auto-swap/compound protection, slippage caps, access controls, immutability) function as designed and verified in compiled TEAL bytecode.
+All 186 tests pass. Both contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (phishing prevention, auto-swap/compound protection, slippage caps, swap threshold caps, access controls, immutability) function as designed and verified in compiled TEAL bytecode.

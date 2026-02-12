@@ -28,6 +28,7 @@ const FEE_PERCENT_BASE: uint64 = Uint64(100);          // Fee percentage base (f
 const MIN_FARM_EMISSION_BPS: uint64 = Uint64(1_000);    // 10% minimum when farm has balance
 const MIN_DEPOSIT_AMOUNT: uint64 = Uint64(1_000_000);  // Minimum deposit (1 token with 6 decimals)
 const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0.20 USDC)
+const MAX_SWAP_THRESHOLD: uint64 = Uint64(50_000_000);  // Maximum swap threshold (50 USDC)
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
 const MAX_SLIPPAGE_BPS: uint64 = Uint64(10_000);        // Absolute ceiling for maxSlippageBps setting
 const MIN_MAX_SLIPPAGE_BPS: uint64 = Uint64(500);       // 5% minimum for maxSlippageBps (prevents creator from setting too low)
@@ -250,6 +251,7 @@ export class RareFiVault extends arc4.Contract {
     // Validate parameters
     assert(creatorFeeRate <= MAX_FEE_RATE, 'Creator fee rate exceeds maximum (6%)');
     assert(minSwapThreshold >= MIN_SWAP_AMOUNT, 'Swap threshold too low');
+    assert(minSwapThreshold <= MAX_SWAP_THRESHOLD, 'Swap threshold too high (max 50 USDC)');
     assert(maxSlippageBps >= MIN_MAX_SLIPPAGE_BPS, 'Max slippage too low (min 5%)');
     assert(maxSlippageBps <= MAX_SLIPPAGE_BPS, 'Max slippage too high');
     assert(depositAssetId !== Uint64(0), 'Invalid deposit asset');
@@ -637,6 +639,7 @@ export class RareFiVault extends arc4.Contract {
     const isRarefi = Txn.sender === this.rarefiAddress.value;
     assert(isCreator || isRarefi, 'Only creator or RareFi can update');
     assert(newThreshold >= MIN_SWAP_AMOUNT, 'Threshold too low');
+    assert(newThreshold <= MAX_SWAP_THRESHOLD, 'Threshold too high (max 50 USDC)');
     this.minSwapThreshold.value = newThreshold;
   }
 
