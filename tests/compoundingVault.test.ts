@@ -11,10 +11,12 @@ import {
   getUserShares,
   getUserAlphaBalance,
   performContributeFarm,
-  performSetFarmEmissionRate,
+  performSetEmissionRatio,
   performUpdateCreatorFeeRate,
+  performUpdateMaxSlippage,
   performUpdateMinSwapThreshold,
   getFarmStats,
+  getFarmStatsABI,
   CompoundingVaultDeploymentResult,
 } from './utils/compoundingVault';
 import { getAssetBalance, optInToAsset, fundAsset } from './utils/assets';
@@ -703,13 +705,13 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       console.log('Farm balance:', farmStats.farmBalance / 1_000_000);
     });
 
-    it('should allow setting farm emission rate', async () => {
-      await performSetFarmEmissionRate(algod, deployment, creator, 1000); // 10%
+    it('should allow setting emission ratio', async () => {
+      await performSetEmissionRatio(algod, deployment, creator, 1000);
 
       const farmStats = await getFarmStats(algod, deployment);
-      expect(farmStats.farmEmissionRate).toBe(1000);
+      expect(farmStats.emissionRatio).toBe(1000);
 
-      console.log('Farm emission rate:', farmStats.farmEmissionRate, 'bps');
+      console.log('Emission ratio:', farmStats.emissionRatio);
     });
 
     it('should add farm bonus during compound', async () => {
@@ -1163,7 +1165,7 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
         const farmStats = await getFarmStats(algod, deployment);
 
         expect(farmStats.farmBalance).toBe(0);
-        expect(farmStats.farmEmissionRate).toBe(0);
+        expect(farmStats.emissionRatio).toBe(0);
 
         // Compound 100 USDC
         await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
@@ -1216,13 +1218,13 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
         console.log('Farm balance:', farmStats.farmBalance / 1_000_000, 'ALPHA');
       });
 
-      it('should set farm emission rate', async () => {
-        await performSetFarmEmissionRate(algod, deployment, creator, 5000); // 50%
+      it('should set emission ratio', async () => {
+        await performSetEmissionRatio(algod, deployment, creator, 5000); // 50%
 
         const farmStats = await getFarmStats(algod, deployment);
-        expect(farmStats.farmEmissionRate).toBe(5000);
+        expect(farmStats.emissionRatio).toBe(5000);
 
-        console.log('Farm emission rate:', farmStats.farmEmissionRate, 'bps (50%)');
+        console.log('Emission ratio:', farmStats.emissionRatio);
       });
 
       it('should add farm bonus to compound', async () => {
@@ -1266,6 +1268,65 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
       });
     });
 
+    describe('Farm + Creator Fee Interaction', () => {
+      it('should apply creator fee on total output including farm bonus', async () => {
+        const CREATOR_FEE = 5; // 5%
+        const deployment = await deployCompoundingVaultForTest(algod, creator, {
+          creatorFeeRate: CREATOR_FEE,
+          minSwapThreshold: 2_000_000,
+        });
+
+        await optInToAsset(algod, alice, deployment.alphaAssetId);
+        await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+        await performUserOptIn(algod, deployment, alice);
+        await performDeposit(algod, deployment, alice, 1_000_000_000);
+
+        // Setup farm: 500 Alpha, high emission ratio to get a big bonus
+        await performContributeFarm(algod, deployment, creator, 500_000_000); // 500 Alpha
+        await performSetEmissionRatio(algod, deployment, creator, 5000); // 50%
+
+        const farmBefore = await getFarmStats(algod, deployment);
+        const statsBefore = await getVaultStats(algod, deployment);
+
+        // Trigger compound
+        await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+
+        const farmAfter = await getFarmStats(algod, deployment);
+        const statsAfter = await getVaultStats(algod, deployment);
+
+        const farmBonus = farmBefore.farmBalance - farmAfter.farmBalance;
+        expect(farmBonus).toBeGreaterThan(0);
+
+        // Total yield compounded = swap output + farm bonus
+        const totalYieldCompounded = statsAfter.totalYieldCompounded - statsBefore.totalYieldCompounded;
+
+        // Creator should get exactly CREATOR_FEE% of total (swap + farm bonus)
+        const creatorCut = statsAfter.creatorUnclaimedAlpha - statsBefore.creatorUnclaimedAlpha;
+        const expectedCreatorCut = Math.floor(totalYieldCompounded * CREATOR_FEE / 100);
+
+        // Vault (depositors) get the rest
+        const vaultCut = statsAfter.totalAlpha - statsBefore.totalAlpha;
+        const expectedVaultCut = totalYieldCompounded - expectedCreatorCut;
+
+        // Verify creator fee is taken on TOTAL (swap + farm), not just swap
+        expect(creatorCut).toBe(expectedCreatorCut);
+        expect(vaultCut).toBe(expectedVaultCut);
+
+        // Verify farm bonus is included (creator cut > what it would be without farm)
+        const swapOnlyOutput = totalYieldCompounded - farmBonus;
+        const creatorCutWithoutFarm = Math.floor(swapOnlyOutput * CREATOR_FEE / 100);
+        expect(creatorCut).toBeGreaterThan(creatorCutWithoutFarm);
+
+        console.log('Farm + Creator Fee interaction:');
+        console.log('  Total yield (swap + farm):', totalYieldCompounded / 1_000_000, 'ALPHA');
+        console.log('  Farm bonus:', farmBonus / 1_000_000, 'ALPHA');
+        console.log('  Creator cut (5% of total):', creatorCut / 1_000_000, 'ALPHA');
+        console.log('  Creator cut if no farm:', creatorCutWithoutFarm / 1_000_000, 'ALPHA');
+        console.log('  Vault cut (depositors):', vaultCut / 1_000_000, 'ALPHA');
+      });
+    });
+
     describe('Farm Edge Cases', () => {
       it('should handle compound when farm is empty', async () => {
         const deployment = await deployCompoundingVaultForTest(algod, creator, {
@@ -1279,8 +1340,8 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
         await performUserOptIn(algod, deployment, alice);
         await performDeposit(algod, deployment, alice, 1_000_000_000);
 
-        // Set emission rate but no farm balance
-        await performSetFarmEmissionRate(algod, deployment, creator, 5000);
+        // Set emission ratio but no farm balance
+        await performSetEmissionRatio(algod, deployment, creator, 5000);
 
         const statsBefore = await getVaultStats(algod, deployment);
         await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
@@ -1304,9 +1365,9 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
         await performUserOptIn(algod, deployment, alice);
         await performDeposit(algod, deployment, alice, 1_000_000_000);
 
-        // Small farm, high emission rate
+        // Small farm, high emission ratio
         await performContributeFarm(algod, deployment, creator, 1_000_000); // 1 ALPHA
-        await performSetFarmEmissionRate(algod, deployment, creator, 10000); // 100%
+        await performSetEmissionRatio(algod, deployment, creator, 10000); // 100%
 
         const farmBefore = await getFarmStats(algod, deployment);
 
@@ -1556,13 +1617,13 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
 
     it('Phase 3: Enable farm with 1000 Alpha', async () => {
       await performContributeFarm(algod, deployment, creator, 1_000_000_000);
-      await performSetFarmEmissionRate(algod, deployment, creator, 2000); // 20%
+      await performSetEmissionRatio(algod, deployment, creator, 2000); // 20%
 
       const farmStats = await getFarmStats(algod, deployment);
       expect(farmStats.farmBalance).toBe(1_000_000_000);
-      expect(farmStats.farmEmissionRate).toBe(2000);
+      expect(farmStats.emissionRatio).toBe(2000);
 
-      console.log('Phase 3: Farm enabled with 1000 Alpha, 20% emission');
+      console.log('Phase 3: Farm enabled with 1000 Alpha, ratio:', farmStats.emissionRatio);
     });
 
     it('Phase 4: Charlie joins, compound with farm bonus', async () => {
@@ -1772,166 +1833,289 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
   });
 
   /**
-   * FARM EMISSION RATE MINIMUM CONSTRAINT TESTS
-   * Tests that emission rate cannot go below 10% when farm has balance
+   * MAX SLIPPAGE UPDATE TESTS
+   * Tests updateMaxSlippage constraints: creator-only, range 5-100% (500-10000 bps)
    */
-  describe('Farm Emission Rate Minimum Constraint', () => {
-    it('should allow setting emission rate to 0% when farm balance is 0', async () => {
+  describe('Max Slippage', () => {
+    it('should allow creator to update maxSlippageBps', async () => {
       const deployment = await deployCompoundingVaultForTest(algod, creator, {
         creatorFeeRate: 0,
         minSwapThreshold: 2_000_000,
       });
 
-      // Farm balance is 0, should allow setting to 0%
-      await performSetFarmEmissionRate(algod, deployment, creator, 0);
+      // Default is 5000 (50%), update to 2000 (20%)
+      await performUpdateMaxSlippage(algod, deployment, creator, 2000);
 
-      const farmStats = await getFarmStats(algod, deployment);
-      expect(farmStats.farmEmissionRate).toBe(0);
-      expect(farmStats.farmBalance).toBe(0);
-
-      console.log('Set emission rate to 0% with empty farm - OK');
+      const appInfo = await algod.getApplicationByID(deployment.vaultAppId).do();
+      const globalState: Record<string, number> = {};
+      for (const kv of appInfo.params?.globalState || []) {
+        let key: string;
+        if (kv.key instanceof Uint8Array) {
+          key = new TextDecoder().decode(kv.key);
+        } else {
+          key = Buffer.from(kv.key as string, 'base64').toString('utf8');
+        }
+        if (kv.value.type === 2) {
+          globalState[key] = Number(kv.value.uint);
+        }
+      }
+      expect(globalState['maxSlippageBps']).toBe(2000);
+      console.log('Creator updated maxSlippageBps to 2000 (20%)');
     });
 
-    it('should allow setting emission rate to 5% when farm balance is 0', async () => {
+    it('should reject maxSlippageBps below 5% (500 bps)', async () => {
       const deployment = await deployCompoundingVaultForTest(algod, creator, {
         creatorFeeRate: 0,
         minSwapThreshold: 2_000_000,
       });
 
-      // Farm balance is 0, should allow any rate
-      await performSetFarmEmissionRate(algod, deployment, creator, 500); // 5%
+      await expect(
+        performUpdateMaxSlippage(algod, deployment, creator, 499)
+      ).rejects.toThrow();
 
-      const farmStats = await getFarmStats(algod, deployment);
-      expect(farmStats.farmEmissionRate).toBe(500);
-
-      console.log('Set emission rate to 5% with empty farm - OK');
+      console.log('Correctly rejected maxSlippageBps below minimum (499)');
     });
 
-    it('should reject setting emission rate below 10% when farm has balance', async () => {
+    it('should reject maxSlippageBps above 100% (10000 bps)', async () => {
       const deployment = await deployCompoundingVaultForTest(algod, creator, {
         creatorFeeRate: 0,
         minSwapThreshold: 2_000_000,
       });
 
-      // First, contribute to farm
+      await expect(
+        performUpdateMaxSlippage(algod, deployment, creator, 10001)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected maxSlippageBps above maximum (10001)');
+    });
+
+    it('should reject non-creator updating maxSlippageBps', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateMaxSlippage(algod, deployment, alice, 2000)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected non-creator maxSlippage update');
+    });
+  });
+
+  /**
+   * CREATOR CLAIM ACCESS CONTROL TEST
+   */
+  describe('Creator Claim Access Control', () => {
+    it('should reject non-creator calling claimCreator', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 5,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await optInToAsset(algod, alice, deployment.usdcAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 100_000_000);
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000);
+
+      // Generate some yield so there's something to claim
+      await performCompoundYield(algod, deployment, creator, 10_000_000, 100);
+
+      // Alice (non-creator) tries to claim creator fees
+      await expect(
+        performClaimCreator(algod, deployment, alice)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected non-creator calling claimCreator');
+    });
+  });
+
+  /**
+   * EMISSION RATIO CONSTRAINT TESTS
+   * Tests that emission ratio must be positive and dynamic rate floors at 10%
+   */
+  describe('Emission Ratio Constraints', () => {
+    it('should reject setting emission ratio to 0', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Ratio must be > 0
+      await expect(
+        performSetEmissionRatio(algod, deployment, creator, 0)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected emission ratio of 0');
+    });
+
+    it('should allow setting any positive emission ratio', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Small ratio
+      await performSetEmissionRatio(algod, deployment, creator, 500);
+      let farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.emissionRatio).toBe(500);
+
+      // Large ratio (no max cap)
+      await performSetEmissionRatio(algod, deployment, creator, 4_000_000);
+      farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.emissionRatio).toBe(4_000_000);
+
+      console.log('Set emission ratio to various values - OK');
+    });
+
+    it('should allow setting large emission ratios (no max cap)', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Contribute to farm
       await performContributeFarm(algod, deployment, creator, 50_000_000);
 
+      // Set very large ratio - should succeed (no max cap)
+      await performSetEmissionRatio(algod, deployment, creator, 10_000_000);
+
+      const farmStats = await getFarmStats(algod, deployment);
+      expect(farmStats.emissionRatio).toBe(10_000_000);
+
+      console.log('Set large emission ratio with funded farm - OK');
+    });
+
+    it('should allow contributions when emission ratio is not yet set', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Emission ratio starts at 0 (not yet set)
       const farmStatsBefore = await getFarmStats(algod, deployment);
-      expect(farmStatsBefore.farmBalance).toBe(50_000_000);
+      expect(farmStatsBefore.emissionRatio).toBe(0);
 
-      // Try to set emission rate to 5% (500 bps) - should fail
-      await expect(
-        performSetFarmEmissionRate(algod, deployment, creator, 500)
-      ).rejects.toThrow();
-
-      // Try to set to 0% - should also fail
-      await expect(
-        performSetFarmEmissionRate(algod, deployment, creator, 0)
-      ).rejects.toThrow();
-
-      console.log('Correctly rejected emission rate below 10% when farm has balance');
-    });
-
-    it('should allow setting emission rate to exactly 10% when farm has balance', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Contribute to farm
-      await performContributeFarm(algod, deployment, creator, 50_000_000);
-
-      // Set to exactly 10% (1000 bps) - should succeed
-      await performSetFarmEmissionRate(algod, deployment, creator, 1000);
-
-      const farmStats = await getFarmStats(algod, deployment);
-      expect(farmStats.farmEmissionRate).toBe(1000);
-
-      console.log('Set emission rate to 10% with funded farm - OK');
-    });
-
-    it('should allow setting emission rate above 10% when farm has balance', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Contribute to farm
-      await performContributeFarm(algod, deployment, creator, 50_000_000);
-
-      // Set to 50% (5000 bps) - should succeed
-      await performSetFarmEmissionRate(algod, deployment, creator, 5000);
-
-      const farmStats = await getFarmStats(algod, deployment);
-      expect(farmStats.farmEmissionRate).toBe(5000);
-
-      console.log('Set emission rate to 50% with funded farm - OK');
-    });
-
-    it('should allow setting emission rate up to 500% (max)', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Contribute to farm
-      await performContributeFarm(algod, deployment, creator, 50_000_000);
-
-      // Set to 500% (50000 bps) - should succeed (max allowed)
-      await performSetFarmEmissionRate(algod, deployment, creator, 50000);
-
-      const farmStats = await getFarmStats(algod, deployment);
-      expect(farmStats.farmEmissionRate).toBe(50000);
-
-      console.log('Set emission rate to 500% (max) - OK');
-    });
-
-    it('should reject setting emission rate above 500%', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Contribute to farm
-      await performContributeFarm(algod, deployment, creator, 50_000_000);
-
-      // Set to 501% (50100 bps) - should fail
-      await expect(
-        performSetFarmEmissionRate(algod, deployment, creator, 50100)
-      ).rejects.toThrow();
-
-      console.log('Correctly rejected emission rate above 500%');
-    });
-
-    it('should allow contributions when emission rate is 0, but then require min 10% to change', async () => {
-      const deployment = await deployCompoundingVaultForTest(algod, creator, {
-        creatorFeeRate: 0,
-        minSwapThreshold: 2_000_000,
-      });
-
-      // Emission rate starts at 0
-      const farmStatsBefore = await getFarmStats(algod, deployment);
-      expect(farmStatsBefore.farmEmissionRate).toBe(0);
-
-      // Contribution should work even with 0 emission rate
+      // Contribution should work even without ratio set
       await performContributeFarm(algod, deployment, creator, 50_000_000);
 
       const farmStatsAfter = await getFarmStats(algod, deployment);
       expect(farmStatsAfter.farmBalance).toBe(50_000_000);
-      expect(farmStatsAfter.farmEmissionRate).toBe(0); // Still 0
+      expect(farmStatsAfter.emissionRatio).toBe(0); // Still 0
 
-      // Now try to set to 5% - should fail
-      await expect(
-        performSetFarmEmissionRate(algod, deployment, creator, 500)
-      ).rejects.toThrow();
-
-      // Must set to at least 10%
-      await performSetFarmEmissionRate(algod, deployment, creator, 1000);
+      // Set ratio to activate dynamic emissions
+      await performSetEmissionRatio(algod, deployment, creator, 4_000_000);
 
       const farmStatsFinal = await getFarmStats(algod, deployment);
-      expect(farmStatsFinal.farmEmissionRate).toBe(1000);
+      expect(farmStatsFinal.emissionRatio).toBe(4_000_000);
 
-      console.log('Contribution works at 0% emission, then requires min 10% to update - OK');
+      console.log('Contribution works without ratio set, then ratio activates emissions - OK');
+    });
+
+    it('should reject non-creator/non-rarefi setting emission ratio', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performSetEmissionRatio(algod, deployment, alice, 5000)
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected non-creator/non-rarefi setting emission ratio');
+    });
+
+    it('should enforce 10% floor when dynamic rate would be lower', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 1_000_000_000); // 1000 Alpha
+
+      // Tiny farm (1 Alpha) with small ratio on large deposits → rate would be far below 10%
+      await performContributeFarm(algod, deployment, creator, 1_000_000); // 1 Alpha
+      await performSetEmissionRatio(algod, deployment, creator, 100); // very small ratio
+
+      // Dynamic rate = 1_000_000 * 100 / 1_000_000_000 = 0.1 bps → floored to 1000 bps (10%)
+      const farmStats = await getFarmStatsABI(algod, deployment);
+      expect(farmStats.currentDynamicRate).toBe(1000); // 10% floor
+
+      console.log('10% floor enforced: dynamic rate =', farmStats.currentDynamicRate, 'bps (10%)');
+    });
+
+    it('should return correct currentDynamicRate from getFarmStats', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 1_000_000_000); // 1000 Alpha
+
+      // No farm → rate should be 0
+      let farmStats = await getFarmStatsABI(algod, deployment);
+      expect(farmStats.currentDynamicRate).toBe(0);
+
+      // Fund farm and set ratio
+      await performContributeFarm(algod, deployment, creator, 500_000_000); // 500 Alpha
+      await performSetEmissionRatio(algod, deployment, creator, 5000); // 50%
+
+      // Dynamic rate = 500_000_000 * 5000 / 1_000_000_000 = 2500 bps (25%)
+      farmStats = await getFarmStatsABI(algod, deployment);
+      expect(farmStats.currentDynamicRate).toBe(2500);
+      expect(farmStats.farmBalance).toBe(500_000_000);
+      expect(farmStats.emissionRatio).toBe(5000);
+
+      // After a compound, farm depletes → rate should decrease
+      await performCompoundYield(algod, deployment, creator, 100_000_000, 100);
+
+      const farmStatsAfter = await getFarmStatsABI(algod, deployment);
+      expect(farmStatsAfter.currentDynamicRate).toBeLessThan(2500);
+      expect(farmStatsAfter.farmBalance).toBeLessThan(500_000_000);
+
+      console.log('getFarmStats ABI returns:');
+      console.log('  Before compound: rate =', farmStats.currentDynamicRate, 'bps (' + (farmStats.currentDynamicRate / 100).toFixed(1) + '%)');
+      console.log('  After compound: rate =', farmStatsAfter.currentDynamicRate, 'bps (' + (farmStatsAfter.currentDynamicRate / 100).toFixed(1) + '%), farm:', farmStatsAfter.farmBalance / 1_000_000, 'Alpha');
+    });
+
+    it('should return rate 0 when all users withdraw (totalAlpha = 0)', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator, {
+        creatorFeeRate: 0,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 10_000_000_000);
+
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 1_000_000_000);
+
+      // Setup farm
+      await performContributeFarm(algod, deployment, creator, 50_000_000);
+      await performSetEmissionRatio(algod, deployment, creator, 5000);
+
+      // Rate should be positive
+      let farmStats = await getFarmStatsABI(algod, deployment);
+      expect(farmStats.currentDynamicRate).toBeGreaterThan(0);
+
+      // Withdraw all deposits
+      await performWithdraw(algod, deployment, alice, 0);
+
+      // Rate should be 0 (no depositors)
+      farmStats = await getFarmStatsABI(algod, deployment);
+      expect(farmStats.currentDynamicRate).toBe(0);
+      expect(farmStats.farmBalance).toBe(50_000_000); // Farm still funded
+
+      console.log('Rate = 0 when totalAlpha = 0, farm still has', farmStats.farmBalance / 1_000_000, 'Alpha');
     });
   });
 

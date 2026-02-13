@@ -3,7 +3,7 @@
 **Date:** February 2025
 **Contracts:** RareFiVault, RareFiAlphaCompoundingVault
 **Framework:** Jest + Algorand Localnet
-**Total Tests:** 186 passing
+**Total Tests:** 198 passing
 **Security:** Audited with Trail of Bits Tealer v0.1.2
 
 ---
@@ -22,7 +22,7 @@
 
 ---
 
-## RareFiVault Tests (103 tests)
+## RareFiVault Tests (109 tests)
 
 ### Deployment (2 tests)
 - Deploy vault and pool successfully
@@ -78,19 +78,27 @@ Multi-user scenario (Alice, Bob, Charlie, Dave):
 - Swap rejects slippage above max setting
 - Non-creator cannot update
 
+### Creator Claim Access Control (1 test)
+- Reject non-creator calling claimCreator
+
 ### Asset Opt-In Guard (2 tests)
 - optInAssets succeeds on first call
 - Rejects second call (already opted in)
 
-### Farm Emission Rate (8 tests)
-- Set to 0% when balance is 0
-- Set any rate when balance is 0
-- Reject < 10% when farm has balance
-- Allow exactly 10% when farm has balance
-- Allow > 10% when farm has balance
-- Allow 500% (max) when farm has balance
-- Reject above 500%
-- Reject 0% when farm has balance
+### Farm + Creator Fee Interaction (1 test)
+- Creator fee applied on total output (swap + farm bonus), not just swap output
+  - Verifies creator gets 5% of (swapOutput + farmBonus)
+  - Confirms creator earns more with farm active vs without
+
+### Emission Ratio Constraints (8 tests)
+- Reject setting emission ratio to 0
+- Allow setting any positive emission ratio
+- Allow setting large emission ratios (no max cap)
+- Allow contributions when emission ratio is not yet set
+- Reject non-creator/non-rarefi setting emission ratio
+- Enforce 10% floor when dynamic rate would be lower
+- Return correct currentDynamicRate from getFarmStats ABI
+- Return rate 0 when all users withdraw (totalDeposits/totalAlpha = 0)
 
 ### Min Swap Threshold Update (7 tests)
 - Update threshold within valid range (to 10 USDC)
@@ -103,7 +111,7 @@ Multi-user scenario (Alice, Bob, Charlie, Dave):
 
 ---
 
-## RareFiAlphaCompoundingVault Tests (83 tests)
+## RareFiAlphaCompoundingVault Tests (89 tests)
 
 ### Deployment (2 tests)
 - Deploy vault and pool successfully
@@ -135,6 +143,11 @@ Multi-user scenario (Alice, Bob, Charlie, Dave):
 - Set emission rate (10%)
 - Farm bonus applied on compound
 
+### Farm + Creator Fee Interaction (1 test)
+- Creator fee applied on total output (compound + farm bonus), not just compound output
+  - Verifies creator gets 5% of (compoundOutput + farmBonus)
+  - Confirms creator earns more with farm active vs without
+
 ### Permissionless Compound (1 test)
 - Non-creator can trigger compoundYield
 
@@ -144,11 +157,14 @@ Multi-user scenario (Alice, Bob, Charlie, Dave):
 ### Max Slippage (5 tests)
 - Same pattern as RareFiVault (5-100% range, creator only)
 
+### Creator Claim Access Control (1 test)
+- Reject non-creator calling claimCreator
+
 ### Asset Opt-In Guard (2 tests)
 - Same pattern as RareFiVault
 
-### Farm Emission Rate (8 tests)
-- Same pattern as RareFiVault (includes 500% max boundary tests)
+### Emission Ratio Constraints (8 tests)
+- Same pattern as RareFiVault (reject 0, allow any positive, no max cap, allow contributions before ratio set, reject unauthorized, 10% floor, getFarmStats ABI, rate 0 on empty vault)
 
 ### Min Swap Threshold Update (7 tests)
 - Same pattern as RareFiVault (0.20-50 USDC range, creator/rarefi only)
@@ -202,8 +218,10 @@ Auto-swap/compound executes BEFORE deposit is credited. New depositor cannot cap
 - Enforced on all swap paths (permissionless + auto-swap on deposit)
 
 ### Farm Emission Constraints
-- Min 10% when farm has balance (protects contributors)
-- Max 500%, only creator or RareFi can set
+- Dynamic rate: `max(10%, farmBalance × emissionRatio / totalDeposits)`
+- 10% floor when farm has balance (protects contributors)
+- No max cap — rate self-adjusts via geometric decay
+- Only creator or RareFi can set emission ratio
 
 ### Immutability
 - Contract updates and deletions always fail
@@ -273,4 +291,4 @@ python -m tealer detect --contracts contracts/artifacts/RareFiAlphaCompoundingVa
 
 ## Conclusion
 
-All 186 tests pass. Both contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (phishing prevention, auto-swap/compound protection, slippage caps, swap threshold caps, access controls, immutability) function as designed and verified in compiled TEAL bytecode.
+All 198 tests pass. Both contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (phishing prevention, auto-swap/compound protection, slippage caps, swap threshold caps, access controls, immutability) function as designed and verified in compiled TEAL bytecode.

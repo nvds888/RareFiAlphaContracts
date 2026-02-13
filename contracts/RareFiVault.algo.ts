@@ -32,7 +32,6 @@ const MAX_SWAP_THRESHOLD: uint64 = Uint64(50_000_000);  // Maximum swap threshol
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
 const MAX_SLIPPAGE_BPS: uint64 = Uint64(10_000);        // Absolute ceiling for maxSlippageBps setting
 const MIN_MAX_SLIPPAGE_BPS: uint64 = Uint64(500);       // 5% minimum for maxSlippageBps (prevents creator from setting too low)
-const MAX_FARM_EMISSION_BPS: uint64 = Uint64(50_000);  // Max 500% farm emission rate
 
 export class RareFiVault extends arc4.Contract {
   // ============================================
@@ -61,9 +60,9 @@ export class RareFiVault extends arc4.Contract {
   tinymanPoolAppId = GlobalState<uint64>();  // Tinyman V2 pool app ID (USDC/swapAsset)
   tinymanPoolAddress = GlobalState<Account>(); // Tinyman pool address
 
-  // Farm feature - bonus yield distribution
+  // Farm feature - dynamic yield distribution
   farmBalance = GlobalState<uint64>();         // Total swapAsset available for farm bonus
-  farmEmissionRate = GlobalState<uint64>();    // Basis points of swap output to add from farm (e.g., 1000 = 10%)
+  emissionRatio = GlobalState<uint64>();       // Multiplier for dynamic rate: rate = farmBalance * emissionRatio / totalDeposits
 
   // Setup guard
   assetsOptedIn = GlobalState<uint64>();      // 1 if assets are opted in, 0 otherwise
@@ -89,6 +88,22 @@ export class RareFiVault extends arc4.Contract {
     const [q_hi, q_lo, _r_hi, _r_lo] = divmodw(hi, lo, Uint64(0), d);
     assert(q_hi === Uint64(0), 'Multiplication overflow in mulDivFloor');
     return q_lo;
+  }
+
+  /**
+   * Calculate dynamic farm emission rate based on farmBalance / totalDeposits ratio
+   * Rate = farmBalance * emissionRatio / totalDeposits, floored at 10% when farm has balance
+   */
+  private calculateDynamicEmissionRate(): uint64 {
+    const totalDeposited = this.totalDeposits.value;
+
+    if (totalDeposited === Uint64(0) || this.farmBalance.value === Uint64(0)) {
+      return Uint64(0);
+    }
+
+    const dynamicRate = this.mulDivFloor(this.farmBalance.value, this.emissionRatio.value, totalDeposited);
+
+    return dynamicRate < MIN_FARM_EMISSION_BPS ? MIN_FARM_EMISSION_BPS : dynamicRate;
   }
 
   /**
@@ -200,10 +215,11 @@ export class RareFiVault extends arc4.Contract {
     const swapOutput: uint64 = swapAssetAfter - swapAssetBefore;
     assert(swapOutput >= minAmountOut, 'Swap output below minimum');
 
-    // Calculate farm bonus
+    // Calculate farm bonus using dynamic emission rate
     let farmBonus: uint64 = Uint64(0);
-    if (this.farmEmissionRate.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
-      const requestedBonus = this.mulDivFloor(swapOutput, this.farmEmissionRate.value, FEE_BPS_BASE);
+    if (this.emissionRatio.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
+      const currentRate = this.calculateDynamicEmissionRate();
+      const requestedBonus = this.mulDivFloor(swapOutput, currentRate, FEE_BPS_BASE);
       farmBonus = requestedBonus < this.farmBalance.value ? requestedBonus : this.farmBalance.value;
       this.farmBalance.value = this.farmBalance.value - farmBonus;
     }
@@ -288,7 +304,7 @@ export class RareFiVault extends arc4.Contract {
 
     // Initialize farm state
     this.farmBalance.value = Uint64(0);
-    this.farmEmissionRate.value = Uint64(0); // Disabled by default
+    this.emissionRatio.value = Uint64(0); // Disabled by default, creator sets via setEmissionRatio
 
     // Setup guard
     this.assetsOptedIn.value = Uint64(0);
@@ -701,35 +717,33 @@ export class RareFiVault extends arc4.Contract {
   }
 
   /**
-   * Set the farm emission rate (percentage of swap output to add from farm)
+   * Set the emission ratio (multiplier for dynamic farm rate calculation)
    * Only callable by creator or RareFi
+   * Dynamic rate = farmBalance * emissionRatio / totalDeposits
    *
-   * @param emissionRateBps - Emission rate in basis points (e.g., 1000 = 10%, 5000 = 50%)
-   *                          Maximum 50000 (500%) - up to 5x swap output from farm
-   *                          Minimum 1000 (10%) when farm has balance (to protect contributors)
+   * @param newRatio - The emission ratio multiplier (e.g., 4000000 for aggressive distribution)
    */
   @arc4.abimethod()
-  setFarmEmissionRate(emissionRateBps: uint64): void {
+  setEmissionRatio(newRatio: uint64): void {
     const isCreator = Txn.sender === this.creatorAddress.value;
     const isRarefi = Txn.sender === this.rarefiAddress.value;
-    assert(isCreator || isRarefi, 'Only creator or RareFi can set farm rate');
-    assert(emissionRateBps <= MAX_FARM_EMISSION_BPS, 'Emission rate too high (max 500%)');
+    assert(isCreator || isRarefi, 'Only creator or RareFi can set emission ratio');
+    assert(newRatio > Uint64(0), 'Emission ratio must be positive');
 
-    // If farm has balance, enforce minimum emission rate to protect contributors
-    if (this.farmBalance.value > Uint64(0)) {
-      assert(emissionRateBps >= MIN_FARM_EMISSION_BPS, 'Emission rate too low (min 10% when farm has balance)');
-    }
-
-    this.farmEmissionRate.value = emissionRateBps;
+    this.emissionRatio.value = newRatio;
   }
 
   /**
-   * Get farm statistics
-   * @returns [farmBalance, farmEmissionRate]
+   * Get farm statistics including dynamic emission rate
+   * @returns [farmBalance, emissionRatio, currentDynamicRate]
    */
   @arc4.abimethod({ readonly: true })
-  getFarmStats(): [uint64, uint64] {
-    return [this.farmBalance.value, this.farmEmissionRate.value];
+  getFarmStats(): [uint64, uint64, uint64] {
+    let currentRate: uint64 = Uint64(0);
+    if (this.emissionRatio.value > Uint64(0) && this.farmBalance.value > Uint64(0)) {
+      currentRate = this.calculateDynamicEmissionRate();
+    }
+    return [this.farmBalance.value, this.emissionRatio.value, currentRate];
   }
 
   // ============================================

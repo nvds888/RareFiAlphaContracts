@@ -256,7 +256,7 @@ export async function deployCompoundingVaultForTest(
     approvalProgram: vaultCompiled.approvalProgram,
     clearProgram: vaultCompiled.clearProgram,
     numGlobalByteSlices: 3, // creatorAddress, rarefiAddress, tinymanPoolAddress
-    numGlobalInts: 13, // alphaAsset, usdcAsset, creatorFeeRate, creatorUnclaimedAlpha, totalShares, totalAlpha, minSwapThreshold, maxSlippageBps, totalYieldCompounded, tinymanPoolAppId, farmBalance, farmEmissionRate, assetsOptedIn
+    numGlobalInts: 13, // alphaAsset, usdcAsset, creatorFeeRate, creatorUnclaimedAlpha, totalShares, totalAlpha, minSwapThreshold, maxSlippageBps, totalYieldCompounded, tinymanPoolAppId, farmBalance, emissionRatio, assetsOptedIn
     numLocalByteSlices: 0,
     numLocalInts: 1, // userShares
     extraPages: 1,
@@ -687,11 +687,11 @@ export async function performContributeFarm(
   await atc.execute(algod, 5);
 }
 
-export async function performSetFarmEmissionRate(
+export async function performSetEmissionRatio(
   algod: algosdk.Algodv2,
   deployment: CompoundingVaultDeploymentResult,
   sender: { addr: string | algosdk.Address; sk: Uint8Array },
-  emissionRateBps: number,
+  newRatio: number,
 ) {
   const contract = new algosdk.ABIContract(deployment.arc56Spec);
   const suggestedParams = await algod.getTransactionParams().do();
@@ -704,8 +704,8 @@ export async function performSetFarmEmissionRate(
   const atc = new algosdk.AtomicTransactionComposer();
   atc.addMethodCall({
     appID: deployment.vaultAppId,
-    method: contract.getMethodByName('setFarmEmissionRate'),
-    methodArgs: [emissionRateBps],
+    method: contract.getMethodByName('setEmissionRatio'),
+    methodArgs: [newRatio],
     sender: senderAddr,
     signer,
     suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
@@ -733,6 +733,33 @@ export async function performUpdateMinSwapThreshold(
     appID: deployment.vaultAppId,
     method: contract.getMethodByName('updateMinSwapThreshold'),
     methodArgs: [newThreshold],
+    sender: senderAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+
+  await atc.execute(algod, 5);
+}
+
+export async function performUpdateMaxSlippage(
+  algod: algosdk.Algodv2,
+  deployment: CompoundingVaultDeploymentResult,
+  sender: { addr: string | algosdk.Address; sk: Uint8Array },
+  newMaxSlippageBps: number,
+) {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const senderAddr = typeof sender.addr === 'string' ? sender.addr : sender.addr.toString();
+  const signer = algosdk.makeBasicAccountTransactionSigner({
+    sk: sender.sk,
+    addr: algosdk.decodeAddress(senderAddr),
+  });
+
+  const atc = new algosdk.AtomicTransactionComposer();
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('updateMaxSlippage'),
+    methodArgs: [newMaxSlippageBps],
     sender: senderAddr,
     signer,
     suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
@@ -773,7 +800,8 @@ export async function getFarmStats(
   deployment: CompoundingVaultDeploymentResult,
 ): Promise<{
   farmBalance: number;
-  farmEmissionRate: number;
+  emissionRatio: number;
+  currentDynamicRate: number;
 }> {
   const appInfo = await algod.getApplicationByID(deployment.vaultAppId).do();
   const globalState: Record<string, number> = {};
@@ -792,7 +820,45 @@ export async function getFarmStats(
 
   return {
     farmBalance: globalState['farmBalance'] || 0,
-    farmEmissionRate: globalState['farmEmissionRate'] || 0,
+    emissionRatio: globalState['emissionRatio'] || 0,
+    currentDynamicRate: 0, // Computed on-chain only, use getFarmStatsABI for live rate
+  };
+}
+
+/**
+ * Get farm stats via ABI method call (includes on-chain computed currentDynamicRate)
+ * Use this when you need the live dynamic rate (e.g. for frontend display)
+ */
+export async function getFarmStatsABI(
+  algod: algosdk.Algodv2,
+  deployment: CompoundingVaultDeploymentResult,
+): Promise<{
+  farmBalance: number;
+  emissionRatio: number;
+  currentDynamicRate: number;
+}> {
+  const contract = new algosdk.ABIContract(deployment.arc56Spec);
+  const suggestedParams = await algod.getTransactionParams().do();
+  const appAddr = algosdk.getApplicationAddress(deployment.vaultAppId).toString();
+  const signer = algosdk.makeEmptyTransactionSigner();
+
+  const atc = new algosdk.AtomicTransactionComposer();
+  atc.addMethodCall({
+    appID: deployment.vaultAppId,
+    method: contract.getMethodByName('getFarmStats'),
+    methodArgs: [],
+    sender: appAddr,
+    signer,
+    suggestedParams: { ...suggestedParams, fee: 1000, flatFee: true },
+  });
+
+  const result = await atc.simulate(algod, new algosdk.modelsv2.SimulateRequest({ txnGroups: [], allowEmptySignatures: true, allowUnnamedResources: true }));
+  const returnValue = result.methodResults[0].returnValue as bigint[];
+
+  return {
+    farmBalance: Number(returnValue[0]),
+    emissionRatio: Number(returnValue[1]),
+    currentDynamicRate: Number(returnValue[2]),
   };
 }
 

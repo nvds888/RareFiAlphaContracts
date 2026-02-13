@@ -43,7 +43,7 @@ Users deposit Alpha tokens and earn yield in USDC, which is automatically swappe
 | `tinymanPoolAppId` | uint64 | Tinyman V2 pool app ID |
 | `tinymanPoolAddress` | Account | Tinyman pool state holder |
 | `farmBalance` | uint64 | Farm bonus pool |
-| `farmEmissionRate` | uint64 | Farm emission rate (bps) |
+| `emissionRatio` | uint64 | Multiplier for dynamic rate: rate = farmBalance × emissionRatio / totalAlpha |
 | `assetsOptedIn` | uint64 | 1 if assets opted in |
 
 ### Local State (1 key per user)
@@ -66,8 +66,7 @@ Users deposit Alpha tokens and earn yield in USDC, which is automatically swappe
 | `FEE_BPS_BASE` | 10,000 | Basis points denominator |
 | `MIN_MAX_SLIPPAGE_BPS` | 500 | 5% min for maxSlippageBps |
 | `MAX_SLIPPAGE_BPS` | 10,000 | 100% absolute ceiling |
-| `MIN_FARM_EMISSION_BPS` | 1,000 | 10% min when farm funded |
-| `MAX_FARM_EMISSION_BPS` | 50,000 | 500% max farm rate |
+| `MIN_FARM_EMISSION_BPS` | 1,000 | 10% floor when farm funded |
 
 ---
 
@@ -144,8 +143,8 @@ Creator only. Must be 5-100% (500-10000 bps).
 #### `contributeFarm()`
 Anyone sends Alpha to fund the farm. Requires asset transfer in preceding txn.
 
-#### `setFarmEmissionRate(emissionRateBps)`
-Creator or RareFi. Max 500%. Min 10% when farm has balance (protects contributors).
+#### `setEmissionRatio(newRatio)`
+Creator or RareFi. Must be > 0. Controls the dynamic emission rate: `rate = farmBalance × emissionRatio / totalAlpha`, floored at 10% when farm has balance. No max cap — the rate self-adjusts as the farm depletes (geometric decay).
 
 ### Read-Only Methods
 
@@ -157,7 +156,7 @@ Creator or RareFi. Max 500%. Min 10% when farm has balance (protects contributor
 | `previewDeposit(alphaAmount)` | Shares that would be minted |
 | `previewWithdraw(shareAmount)` | Alpha that would be received |
 | `getCompoundQuote()` | `[usdcBal, expectedAlpha, minAt50bps]` |
-| `getFarmStats()` | `[farmBalance, farmEmissionRate]` |
+| `getFarmStats()` | `[farmBalance, emissionRatio, currentDynamicRate]` |
 
 Note: `sharePrice` in `getVaultStats` is scaled by SCALE (1e12).
 
@@ -192,6 +191,23 @@ netInput = input × (10000 - feeBps) / 10000
 output = (outputReserves × netInput) / (inputReserves + netInput)
 ```
 
+**Dynamic farm emission rate:**
+```
+dynamicRate = max(MIN_FARM_EMISSION_BPS, farmBalance × emissionRatio / totalAlpha)
+farmBonus = min(compoundOutput × dynamicRate / FEE_BPS_BASE, farmBalance)
+```
+Rate self-adjusts: high farm balance = high rate, as farm depletes the rate drops (geometric decay). 10% floor when farm > 0.
+
+**Managing emissions (creator/RareFi):**
+1. Fund farm: `contributeFarm()` — anyone sends Alpha to the farm
+2. Activate: `setEmissionRatio(ratio)` — creator or RareFi sets multiplier (must be > 0)
+3. Adjust: call `setEmissionRatio(newRatio)` at any time to change drain speed
+4. Monitor: `getFarmStats()` returns `[farmBalance, emissionRatio, currentDynamicRate]`
+
+Farm is disabled by default (`emissionRatio = 0`, `farmBalance = 0`). Both steps required to activate. Once set, `emissionRatio` cannot be set to 0 (protects contributors). Bonus per compound is capped at `farmBalance`.
+
+**What `emissionRatio` means:** It controls how much of the farm is paid out as bonus each compound. Higher value = bigger bonus = farm drains faster. Example: vault with 200k Alpha deposited, ~40 Alpha yield per compound, 10k Alpha in farm — ratio 500,000 gives ~100 Alpha bonus per compound (+250%), farm half-life ~16 months. The bonus stays roughly constant as deposits grow (it dilutes per user but total farm spend is the same). As the farm depletes, bonus tapers smoothly (geometric decay).
+
 **Safe math:** All multiplications use `mulw` (128-bit) + `divmodw` (128-bit division), asserts no overflow.
 
 ---
@@ -205,7 +221,7 @@ output = (outputReserves × netInput) / (inputReserves + netInput)
 | claimCreator, updateCreatorFeeRate | | ✓ | |
 | updateMaxSlippage | | ✓ | |
 | updateMinSwapThreshold | | ✓ | ✓ |
-| setFarmEmissionRate | | ✓ | ✓ |
+| setEmissionRatio | | ✓ | ✓ |
 
 ---
 
@@ -261,7 +277,7 @@ Audited with Trail of Bits Tealer v0.1.2 static analyzer.
 
 1. Deploy with `createVault()` parameters
 2. Creator calls `optInAssets()` with 5.4 ALGO payment
-3. (Optional) Fund farm with `contributeFarm()` + set rate with `setFarmEmissionRate()`
+3. (Optional) Fund farm with `contributeFarm()` + set ratio with `setEmissionRatio()`
 4. Team performs first deposit
 5. Users can begin depositing
 
