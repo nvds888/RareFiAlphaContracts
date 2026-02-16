@@ -27,8 +27,8 @@ rarefivault/
 │   ├── MockTinymanPool.algo.ts          # Tinyman V2 test mock
 │   └── artifacts/                       # Compiled TEAL and ABI specs
 ├── tests/
-│   ├── vault.test.ts                    # RareFiVault tests (81 tests)
-│   ├── compoundingVault.test.ts         # Compounding vault tests (61 tests)
+│   ├── vault.test.ts                    # RareFiVault tests (109 tests)
+│   ├── compoundingVault.test.ts         # Compounding vault tests (89 tests)
 │   └── utils/                           # Test utilities
 ├── RAREFI_CONCEPT.md
 ├── TECHNICAL_SPEC_RareFiVault.md
@@ -72,7 +72,7 @@ npm test -- vault.test.ts
 npm test -- compoundingVault.test.ts
 ```
 
-**Current status:** 177 tests passing
+**Current status:** 198 tests passing
 
 ## Key Features
 
@@ -91,20 +91,11 @@ npm test -- compoundingVault.test.ts
 - **Slippage protection** - All swaps bounded by creator-controlled max
 - **Threshold guards** - Minimum amounts prevent dust attacks
 
-### Security Audit
+### Security Review
 
-Static analysis with **Trail of Bits Tealer v0.1.2**:
+Internal security review using Trail of Bits Tealer v0.1.2 static analyzer and manual TEAL bytecode verification. Not a professional third-party audit.
 
-```bash
-# Install Tealer
-pip3 install tealer
-
-# Scan contracts
-python -m tealer detect --contracts contracts/artifacts/RareFiVault.approval.teal
-python -m tealer detect --contracts contracts/artifacts/RareFiAlphaCompoundingVault.approval.teal
-```
-
-See [SECURITY_AUDIT_REPORT.md](./SECURITY_AUDIT_REPORT.md) for full audit report and [TEST_SUMMARY.md](./TEST_SUMMARY.md) for test coverage.
+See [SECURITY_REVIEW.md](./SECURITY_REVIEW.md) for the full review and [TEST_SUMMARY.md](./TEST_SUMMARY.md) for test coverage.
 
 ## License
 

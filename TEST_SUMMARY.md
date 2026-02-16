@@ -1,230 +1,63 @@
 # RareFi Vault Contracts - Test Summary
 
-**Date:** February 2025
+**Date:** February 2026
 **Contracts:** RareFiVault, RareFiAlphaCompoundingVault
 **Framework:** Jest + Algorand Localnet
-**Total Tests:** 198 passing
-**Security:** Audited with Trail of Bits Tealer v0.1.2
-
----
-
-## Contract Overview
-
-### RareFiVault (Staking Rewards Accumulator)
-- Deposit Alpha → earn project tokens via USDC → swapAsset swaps
-- Yield-per-token accumulator pattern (SCALE = 1e12)
-- Auto-swap on deposit when threshold met
-
-### RareFiAlphaCompoundingVault (Share-Based Auto-Compounding)
-- Deposit Alpha → earn more Alpha via USDC → Alpha swaps
-- Share price increases over time as yield compounds
-- Auto-compound on deposit when threshold met
+**Total Tests:** 198 passing (109 + 89)
 
 ---
 
 ## RareFiVault Tests (109 tests)
 
-### Deployment (2 tests)
-- Deploy vault and pool successfully
-- Correct initial state (all global state vars)
-
-### User Operations (6 tests)
-- Opt in, deposit, yield tracking, claim, withdraw, deposit-withdraw-deposit cycle
-
-### Close Out (1 test)
-- Returns deposit and yield on close out
-
-### Comprehensive Integration (9 tests)
-Multi-user scenario (Alice, Bob, Charlie, Dave):
-1. Initial deposits (1000 + 500 + 300 + 200 = 2000 total)
-2. First yield swap — proportional distribution verified
-3. Partial operations (claims, partial withdrawals)
-4. Second yield swap to remaining users
-5. Close out returns deposit + yield
-6. Additional deposits with preserved history
-7. Creator fee claims
-8. Final user operations
-9. Full withdrawal (vault ends at 0)
-
-### Edge Cases & Rounding (5 tests)
-- Prime number deposits: 0.00001% error
-- Small yield (2 USDC on 1000 tokens)
-- Large deposits (10,000 tokens)
-- Multiple deposit-claim cycles
-- Creator fee accumulation over 5 swaps: exactly 20.00%
-
-### Auto-Swap on Deposit (4 tests)
-- No swap when USDC below threshold
-- Auto-swap triggers at threshold (yieldPerToken increases)
-- Withdrawals always allowed
-- New depositor gets 0 from pre-existing yield
-
-### Flash Deposit Prevention (1 test)
-- Alice: 100% yield (49.60 IBUS), attacker Bob: 0
-
-### Permissionless Swap (1 test)
-- Non-creator can trigger swapYield
-
-### Creator Fee Rate Update (5 tests)
-- Update to valid value (2% → 5%)
-- Set to 0%, set to max (6%)
-- Reject 7% (exceeds maximum)
-- Reject non-creator update
-
-### Max Slippage (5 tests)
-- Creator can update maxSlippageBps
-- Enforced min 5% (rejects lower)
-- Enforced max 100% (rejects higher)
-- Swap rejects slippage above max setting
-- Non-creator cannot update
-
-### Creator Claim Access Control (1 test)
-- Reject non-creator calling claimCreator
-
-### Asset Opt-In Guard (2 tests)
-- optInAssets succeeds on first call
-- Rejects second call (already opted in)
-
-### Farm + Creator Fee Interaction (1 test)
-- Creator fee applied on total output (swap + farm bonus), not just swap output
-  - Verifies creator gets 5% of (swapOutput + farmBonus)
-  - Confirms creator earns more with farm active vs without
-
-### Emission Ratio Constraints (8 tests)
-- Reject setting emission ratio to 0
-- Allow setting any positive emission ratio
-- Allow setting large emission ratios (no max cap)
-- Allow contributions when emission ratio is not yet set
-- Reject non-creator/non-rarefi setting emission ratio
-- Enforce 10% floor when dynamic rate would be lower
-- Return correct currentDynamicRate from getFarmStats ABI
-- Return rate 0 when all users withdraw (totalDeposits/totalAlpha = 0)
-
-### Min Swap Threshold Update (7 tests)
-- Update threshold within valid range (to 10 USDC)
-- Set threshold to minimum (0.20 USDC)
-- Set threshold to maximum (50 USDC)
-- Reject threshold above 50 USDC
-- Reject threshold below 0.20 USDC
-- Reject createVault with threshold above 50 USDC
-- Reject non-creator/non-rarefi updating threshold
-
----
+| Category | Tests | Description |
+|----------|-------|-------------|
+| Deployment | 2 | Deploy vault and pool, verify initial state |
+| User Operations | 6 | Opt in, deposit, yield tracking, claim, withdraw, cycles |
+| Close Out | 1 | Returns deposit and yield on close out |
+| Comprehensive Integration | 9 | Multi-user scenario (Alice, Bob, Charlie, Dave) through full lifecycle |
+| Edge Cases & Rounding | 5 | Prime numbers, small yield, large deposits, multi-cycle precision |
+| Auto-Swap on Deposit | 4 | Threshold behavior, yield distribution to existing depositors |
+| Flash Deposit Prevention | 1 | Attacker gets 0 from pre-existing yield |
+| Permissionless Swap | 1 | Non-creator can trigger swapYield |
+| Creator Fee Rate Update | 5 | Valid updates, boundary values, rejection of invalid values |
+| Max Slippage | 5 | Range enforcement (5-100%), swap rejection, access control |
+| Creator Claim Access Control | 1 | Reject non-creator |
+| Asset Opt-In Guard | 2 | Single-use enforcement |
+| Farm + Creator Fee Interaction | 1 | Fee applied on total output (swap + farm bonus) |
+| Emission Ratio Constraints | 8 | Reject 0, allow positive, no max cap, 10% floor, access control |
+| Min Swap Threshold Update | 7 | Range enforcement (0.20-50 USDC), access control |
 
 ## RareFiAlphaCompoundingVault Tests (89 tests)
 
-### Deployment (2 tests)
-- Deploy vault and pool successfully
-- Correct initial state
-
-### User Operations - Share Accounting (6 tests)
-- Opt in, deposit (1:1 first), compound (price 1.0 → 1.154)
-- Withdraw with yield (1000 → 1154.88 Alpha)
-- Correct shares at higher price (500 Alpha → 463.4 shares at 1.079)
-- Late depositor pays current share price
-
-### Auto-Compounding Logic (2 tests)
-- Proportional distribution (2x shares = 2x yield)
-- Close out returns all Alpha for shares
-
-### Edge Cases (4 tests)
-- Prime number deposits
-- 5 compound cycles: share price 1.496
-- Dust handling on withdrawals
-- Reject zero deposit
-
-### Auto-Compound on Deposit (3 tests)
-- No compound when USDC below threshold
-- Auto-compound at threshold (price 1.0 → 1.090546)
-- New depositor gets correct shares (not capturing yield)
-
-### Farm Feature (3 tests)
-- Fund farm (50 Alpha)
-- Set emission rate (10%)
-- Farm bonus applied on compound
-
-### Farm + Creator Fee Interaction (1 test)
-- Creator fee applied on total output (compound + farm bonus), not just compound output
-  - Verifies creator gets 5% of (compoundOutput + farmBonus)
-  - Confirms creator earns more with farm active vs without
-
-### Permissionless Compound (1 test)
-- Non-creator can trigger compoundYield
-
-### Creator Fee Rate Update (5 tests)
-- Same pattern as RareFiVault (0-6% range, creator only)
-
-### Max Slippage (5 tests)
-- Same pattern as RareFiVault (5-100% range, creator only)
-
-### Creator Claim Access Control (1 test)
-- Reject non-creator calling claimCreator
-
-### Asset Opt-In Guard (2 tests)
-- Same pattern as RareFiVault
-
-### Emission Ratio Constraints (8 tests)
-- Same pattern as RareFiVault (reject 0, allow any positive, no max cap, allow contributions before ratio set, reject unauthorized, 10% floor, getFarmStats ABI, rate 0 on empty vault)
-
-### Min Swap Threshold Update (7 tests)
-- Same pattern as RareFiVault (0.20-50 USDC range, creator/rarefi only)
-
-### Comprehensive Integration (6 tests)
-1. Initial deposits (3 users: 1000 + 500 + 500 = 2000 shares)
-2. First compound — share price 1.0398
-3. Partial withdrawals, Bob closes out
-4. Second compound — further appreciation
-5. Creator claims 29.86 Alpha fees
-6. Final withdrawals (totalShares: 0, totalAlpha: 0)
+| Category | Tests | Description |
+|----------|-------|-------------|
+| Deployment | 2 | Deploy vault and pool, verify initial state |
+| Share Accounting | 6 | 1:1 first deposit, compound price increase, late depositor pricing |
+| Auto-Compounding Logic | 2 | Proportional distribution, close out |
+| Edge Cases | 4 | Prime numbers, 5 compound cycles, dust handling, zero deposit rejection |
+| Auto-Compound on Deposit | 3 | Threshold behavior, share price update, new depositor protection |
+| Farm Feature | 3 | Fund farm, set emission rate, bonus applied on compound |
+| Farm + Creator Fee Interaction | 1 | Fee applied on total output (compound + farm bonus) |
+| Permissionless Compound | 1 | Non-creator can trigger compoundYield |
+| Creator Fee Rate Update | 5 | Same pattern as RareFiVault |
+| Max Slippage | 5 | Same pattern as RareFiVault |
+| Creator Claim Access Control | 1 | Reject non-creator |
+| Asset Opt-In Guard | 2 | Same pattern as RareFiVault |
+| Emission Ratio Constraints | 8 | Same pattern as RareFiVault |
+| Min Swap Threshold Update | 7 | Same pattern as RareFiVault |
+| Comprehensive Integration | 6 | Multi-user lifecycle through deposits, compounds, withdrawals |
 
 ---
 
 ## Security Features Tested
 
-### Phishing Attack Prevention (CRITICAL)
-**Protection against account takeover and fund drain:**
-- All incoming payment transactions reject `rekeyTo` and `closeRemainderTo`
-- All incoming asset transfers reject `rekeyTo` and `assetCloseTo`
-- Verified in TEAL bytecode at:
-  - RareFiVault: lines 403-414, 882-894, 2036-2048
-  - AlphaCompoundingVault: lines 373-384, 738-750, 1860-1872
-
-**Attack scenario prevented:**
-1. Attacker creates malicious UI showing "deposit" transaction
-2. Transaction secretly includes `rekeyTo` to attacker's address
-3. Contract rejects with error: "rekeyTo must be zero"
-4. User's account remains secure
-
-### Flash Deposit Prevention
-Auto-swap/compound executes BEFORE deposit is credited. New depositor cannot capture pre-existing yield. Verified with explicit attacker scenario.
-
-### Yield Distribution Fairness
-- Proportional distribution based on deposit/share size
-- Late depositors pay current share price
-- Historical yield preserved through cycles
-- Creator fee deducted before user distribution
-
-### Permissionless Swaps
-- Anyone can trigger `swapYield()` / `compoundYield()`
-- Slippage capped by creator-controlled `maxSlippageBps` (min 5%)
-- On-chain price calculation prevents fake quotes
-
-### Creator Fee Constraints
-- Capped at 0-6% via `MAX_FEE_RATE`
-- Only creator can update (not RareFi or anyone else)
-
-### Max Slippage Constraints
-- Creator-controlled, range 5-100% (500-10000 bps)
-- Enforced on all swap paths (permissionless + auto-swap on deposit)
-
-### Farm Emission Constraints
-- Dynamic rate: `max(10%, farmBalance × emissionRatio / totalDeposits)`
-- 10% floor when farm has balance (protects contributors)
-- No max cap — rate self-adjusts via geometric decay
-- Only creator or RareFi can set emission ratio
-
-### Immutability
-- Contract updates and deletions always fail
+- **Phishing prevention:** All incoming txns reject `rekeyTo`, `closeRemainderTo`, `assetCloseTo`
+- **Flash deposit prevention:** Auto-swap/compound executes before deposit is credited
+- **Yield distribution fairness:** Proportional to deposit/share size, late depositors pay current price
+- **Permissionless swaps:** Anyone can trigger, slippage capped by `maxSlippageBps`
+- **Creator fee constraints:** 0-6% range, creator-only updates
+- **Farm emission constraints:** Dynamic rate with 10% floor, geometric decay, no max cap
+- **Immutability:** Contract updates and deletions always fail
 
 ---
 
@@ -232,63 +65,22 @@ Auto-swap/compound executes BEFORE deposit is credited. New depositor cannot cap
 
 | Scenario | Expected | Actual | Error |
 |----------|----------|--------|-------|
-| Prime deposits (7:13) | 1.8571428571 | 1.8571429491 | 0.00001% |
+| Prime deposits (7:13 ratio) | 1.8571428571 | 1.8571429491 | 0.00001% |
 | Share price | Exact | Exact | 0% |
 | Creator fee (5%) | 5.00% | 5.00% | 0% |
 
-- `yieldPerToken` / share price scaled by 1e12
-- Safe math: `mulw`/`divmodw` (128-bit intermediates)
-- Floor division throughout
+All arithmetic uses `mulw`/`divmodw` (128-bit intermediates) with floor division.
 
 ---
 
-## Test Infrastructure
+## Running Tests
 
 ```bash
-# Run all tests
-npm test
-
-# Verbose output
-npx jest --verbose
-
-# Single file
-npm test -- tests/vault.test.ts
-
-# Compile contracts
-npm run compile:vault
+# Prerequisites: Docker + algokit localnet start
+npm test                              # All tests
+npm test -- tests/vault.test.ts       # RareFiVault only
+npm test -- tests/compoundingVault.test.ts  # Compounding vault only
+npx jest --verbose                    # Detailed output
 ```
 
-**Prerequisites:** Docker (Algorand localnet via `algokit localnet start`), Node.js ≥ 18
-
----
-
-## Mock Tinyman Pool
-
-Tests use `MockTinymanPool` simulating Tinyman V2:
-- LocalState storage (matches real Tinyman V2 pattern)
-- Constant product AMM formula
-- 30 bps (0.3%) default fee
-- State holder pattern for pool data
-
----
-
-## Static Analysis
-
-**Tool:** Trail of Bits Tealer v0.1.2
-
-```bash
-# Install Tealer
-pip3 install tealer
-
-# Scan contracts
-python -m tealer detect --contracts contracts/artifacts/RareFiVault.approval.teal
-python -m tealer detect --contracts contracts/artifacts/RareFiAlphaCompoundingVault.approval.teal
-```
-
-**Results:** All critical findings addressed. Tealer flags "unprotected-deletable" and "unprotected-updatable" as false positives (contracts explicitly reject updates/deletions with `assert(false)`).
-
----
-
-## Conclusion
-
-All 198 tests pass. Both contracts demonstrate mathematically correct accounting with minimal precision loss (~0.00001%). Security features (phishing prevention, auto-swap/compound protection, slippage caps, swap threshold caps, access controls, immutability) function as designed and verified in compiled TEAL bytecode.
+Tests use `MockTinymanPool` simulating Tinyman V2 with LocalState storage, constant product AMM, and 30 bps default fee.

@@ -2,7 +2,7 @@
 
 **Contract:** Auto-Compounding Yield Vault (ERC4626-style)
 **Framework:** Algorand TypeScript (puya-ts)
-**Last Updated:** February 2025
+**Last Updated:** February 2026
 
 ---
 
@@ -198,15 +198,9 @@ farmBonus = min(compoundOutput × dynamicRate / FEE_BPS_BASE, farmBalance)
 ```
 Rate self-adjusts: high farm balance = high rate, as farm depletes the rate drops (geometric decay). 10% floor when farm > 0.
 
-**Managing emissions (creator/RareFi):**
-1. Fund farm: `contributeFarm()` — anyone sends Alpha to the farm
-2. Activate: `setEmissionRatio(ratio)` — creator or RareFi sets multiplier (must be > 0)
-3. Adjust: call `setEmissionRatio(newRatio)` at any time to change drain speed
-4. Monitor: `getFarmStats()` returns `[farmBalance, emissionRatio, currentDynamicRate]`
+Farm is disabled by default (`emissionRatio = 0`, `farmBalance = 0`). Both funding and a ratio are required to activate. Once set, `emissionRatio` cannot be set to 0 (protects farm contributors from locked funds). Bonus per compound is capped at `farmBalance`. Rate self-adjusts via geometric decay as the farm depletes.
 
-Farm is disabled by default (`emissionRatio = 0`, `farmBalance = 0`). Both steps required to activate. Once set, `emissionRatio` cannot be set to 0 (protects contributors). Bonus per compound is capped at `farmBalance`.
-
-**What `emissionRatio` means:** It controls how much of the farm is paid out as bonus each compound. Higher value = bigger bonus = farm drains faster. Example: vault with 200k Alpha deposited, ~40 Alpha yield per compound, 10k Alpha in farm — ratio 500,000 gives ~100 Alpha bonus per compound (+250%), farm half-life ~16 months. The bonus stays roughly constant as deposits grow (it dilutes per user but total farm spend is the same). As the farm depletes, bonus tapers smoothly (geometric decay).
+See [RAREFI_CONCEPT.md](./RAREFI_CONCEPT.md#farm-feature) for detailed emission ratio guidance, example scenarios, and half-life calculations.
 
 **Safe math:** All multiplications use `mulw` (128-bit) + `divmodw` (128-bit division), asserts no overflow.
 
@@ -269,7 +263,7 @@ TEAL bytecode verified for dangerous field checks:
 - **Lines 738-750** (deposit): rekeyTo, assetCloseTo
 - **Lines 1860-1872** (contributeFarm): rekeyTo, assetCloseTo
 
-Audited with Trail of Bits Tealer v0.1.2 static analyzer.
+Reviewed with Trail of Bits Tealer v0.1.2 static analyzer. See [SECURITY_REVIEW.md](./SECURITY_REVIEW.md) for full details.
 
 ---
 
