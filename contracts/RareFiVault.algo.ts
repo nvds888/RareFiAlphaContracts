@@ -264,6 +264,9 @@ export class RareFiVault extends arc4.Contract {
     tinymanPoolAddress: Account,
     rarefiAddress: Account
   ): void {
+    // SECURITY: Prevent rekey attacks on app call
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
+
     // Validate parameters
     assert(creatorFeeRate <= MAX_FEE_RATE, 'Creator fee rate exceeds maximum (6%)');
     assert(minSwapThreshold >= MIN_SWAP_AMOUNT, 'Swap threshold too low');
@@ -317,6 +320,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   optInAssets(): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     assert(Txn.sender === this.creatorAddress.value, 'Only creator can opt-in assets');
     assert(this.assetsOptedIn.value === Uint64(0), 'Assets already opted in');
 
@@ -372,6 +376,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod({ allowActions: 'OptIn' })
   optIn(): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     // Initialize local state for user
     this.depositedAmount(Txn.sender).value = Uint64(0);
     this.userYieldPerToken(Txn.sender).value = Uint64(0);
@@ -383,6 +388,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod({ allowActions: 'CloseOut' })
   closeOut(): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     // Update pending yield
     this.updateEarnedYield(Txn.sender);
 
@@ -428,6 +434,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   deposit(slippageBps: uint64): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     assert(slippageBps <= this.maxSlippageBps.value, 'Slippage exceeds maximum allowed');
 
     const appAddr: Account = Global.currentApplicationAddress;
@@ -469,6 +476,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   withdraw(amount: uint64): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     const userBalance = this.depositedAmount(Txn.sender).value;
     let withdrawAmount = amount;
 
@@ -505,6 +513,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   claim(): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     // Update pending yield
     this.updateEarnedYield(Txn.sender);
 
@@ -528,6 +537,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   claimCreator(): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     assert(Txn.sender === this.creatorAddress.value, 'Only creator can claim');
 
     const claimable = this.creatorUnclaimedYield.value;
@@ -558,6 +568,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   swapYield(slippageBps: uint64): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     assert(slippageBps <= this.maxSlippageBps.value, 'Slippage exceeds maximum allowed');
 
     const appAddr: Account = Global.currentApplicationAddress;
@@ -651,6 +662,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   updateMinSwapThreshold(newThreshold: uint64): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     const isCreator = Txn.sender === this.creatorAddress.value;
     const isRarefi = Txn.sender === this.rarefiAddress.value;
     assert(isCreator || isRarefi, 'Only creator or RareFi can update');
@@ -665,6 +677,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   updateMaxSlippage(newMaxSlippageBps: uint64): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     assert(Txn.sender === this.creatorAddress.value, 'Only creator can update max slippage');
     assert(newMaxSlippageBps >= MIN_MAX_SLIPPAGE_BPS, 'Max slippage too low (min 5%)');
     assert(newMaxSlippageBps <= MAX_SLIPPAGE_BPS, 'Max slippage too high');
@@ -677,6 +690,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   updateCreatorFeeRate(newFeeRate: uint64): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     assert(Txn.sender === this.creatorAddress.value, 'Only creator can update fee rate');
     assert(newFeeRate <= MAX_FEE_RATE, 'Fee rate exceeds maximum (6%)');
     this.creatorFeeRate.value = newFeeRate;
@@ -695,6 +709,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   contributeFarm(): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     const appAddr: Account = Global.currentApplicationAddress;
     const currentIndex = Txn.groupIndex;
     assert(currentIndex >= Uint64(1), 'App call must follow asset transfer');
@@ -725,6 +740,7 @@ export class RareFiVault extends arc4.Contract {
    */
   @arc4.abimethod()
   setEmissionRatio(newRatio: uint64): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     const isCreator = Txn.sender === this.creatorAddress.value;
     const isRarefi = Txn.sender === this.rarefiAddress.value;
     assert(isCreator || isRarefi, 'Only creator or RareFi can set emission ratio');

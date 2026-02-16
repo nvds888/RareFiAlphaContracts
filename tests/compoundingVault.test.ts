@@ -387,6 +387,41 @@ describe('RareFiAlphaCompoundingVault Contract Tests', () => {
     });
   });
 
+  describe('Security - Rekey Protection', () => {
+    it('should reject app call with non-zero rekeyTo', async () => {
+      const deployment = await deployCompoundingVaultForTest(algod, creator);
+      await optInToAsset(algod, alice, deployment.alphaAssetId);
+      await fundAsset(algod, creator, alice.addr, deployment.alphaAssetId, 5_000_000_000);
+      await performUserOptIn(algod, deployment, alice);
+      await performDeposit(algod, deployment, alice, 100_000_000);
+
+      // Try to withdraw with rekeyTo set to bob (simulating malicious frontend)
+      const contract = new algosdk.ABIContract(deployment.arc56Spec);
+      const suggestedParams = await algod.getTransactionParams().do();
+      const aliceAddr = alice.addr.toString();
+      const bobAddr = bob.addr.toString();
+
+      const signer = algosdk.makeBasicAccountTransactionSigner({
+        sk: alice.sk,
+        addr: algosdk.decodeAddress(aliceAddr),
+      });
+
+      const atc = new algosdk.AtomicTransactionComposer();
+      atc.addMethodCall({
+        appID: deployment.vaultAppId,
+        method: contract.getMethodByName('withdraw'),
+        methodArgs: [0], // withdraw all
+        sender: aliceAddr,
+        signer,
+        suggestedParams: { ...suggestedParams, fee: 2000, flatFee: true },
+        appForeignAssets: [deployment.alphaAssetId],
+        rekeyTo: bobAddr,
+      });
+
+      await expect(atc.execute(algod, 5)).rejects.toThrow();
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should reject deposit below minimum', async () => {
       const deployment = await deployCompoundingVaultForTest(algod, creator);

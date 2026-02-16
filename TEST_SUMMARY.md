@@ -3,11 +3,11 @@
 **Date:** February 2026
 **Contracts:** RareFiVault, RareFiAlphaCompoundingVault
 **Framework:** Jest + Algorand Localnet
-**Total Tests:** 198 passing (109 + 89)
+**Total Tests:** 200 passing (110 + 90)
 
 ---
 
-## RareFiVault Tests (109 tests)
+## RareFiVault Tests (110 tests)
 
 | Category | Tests | Description |
 |----------|-------|-------------|
@@ -26,8 +26,9 @@
 | Farm + Creator Fee Interaction | 1 | Fee applied on total output (swap + farm bonus) |
 | Emission Ratio Constraints | 8 | Reject 0, allow positive, no max cap, 10% floor, access control |
 | Min Swap Threshold Update | 7 | Range enforcement (0.20-50 USDC), access control |
+| Rekey Protection | 1 | Reject app call with non-zero rekeyTo |
 
-## RareFiAlphaCompoundingVault Tests (89 tests)
+## RareFiAlphaCompoundingVault Tests (90 tests)
 
 | Category | Tests | Description |
 |----------|-------|-------------|
@@ -45,13 +46,14 @@
 | Asset Opt-In Guard | 2 | Same pattern as RareFiVault |
 | Emission Ratio Constraints | 8 | Same pattern as RareFiVault |
 | Min Swap Threshold Update | 7 | Same pattern as RareFiVault |
+| Rekey Protection | 1 | Reject app call with non-zero rekeyTo |
 | Comprehensive Integration | 6 | Multi-user lifecycle through deposits, compounds, withdrawals |
 
 ---
 
 ## Security Features Tested
 
-- **Phishing prevention:** All incoming txns reject `rekeyTo`, `closeRemainderTo`, `assetCloseTo`
+- **Rekey protection:** All app calls and grouped txns reject non-zero `rekeyTo`, `closeRemainderTo`, `assetCloseTo`
 - **Flash deposit prevention:** Auto-swap/compound executes before deposit is credited
 - **Yield distribution fairness:** Proportional to deposit/share size, late depositors pay current price
 - **Permissionless swaps:** Anyone can trigger, slippage capped by `maxSlippageBps`
