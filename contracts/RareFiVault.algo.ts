@@ -685,6 +685,30 @@ export class RareFiVault extends arc4.Contract {
   }
 
   /**
+   * Update the creator address (key rotation)
+   * Only callable by current creator
+   */
+  @arc4.abimethod()
+  updateCreatorAddress(newCreatorAddress: Account): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
+    assert(Txn.sender === this.creatorAddress.value, 'Only creator can update');
+    this.creatorAddress.value = newCreatorAddress;
+  }
+
+  /**
+   * Update the RareFi platform address
+   * Only callable by creator or current RareFi address
+   */
+  @arc4.abimethod()
+  updateRarefiAddress(newRarefiAddress: Account): void {
+    assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
+    const isCreator = Txn.sender === this.creatorAddress.value;
+    const isRarefi = Txn.sender === this.rarefiAddress.value;
+    assert(isCreator || isRarefi, 'Only creator or RareFi can update');
+    this.rarefiAddress.value = newRarefiAddress;
+  }
+
+  /**
    * Update the creator fee rate
    * Only callable by creator, constrained to 0-6% range
    */
