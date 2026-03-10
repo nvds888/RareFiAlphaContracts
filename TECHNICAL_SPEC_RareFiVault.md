@@ -2,7 +2,7 @@
 
 **Contract:** Staking Rewards Accumulator Vault
 **Framework:** Algorand TypeScript (puya-ts)
-**Last Updated:** February 2026
+**Last Updated:** March 2026
 
 ---
 
@@ -129,6 +129,9 @@ Creator claims accumulated fees in swapAsset.
 #### `updateCreatorFeeRate(newFeeRate)`
 Creator only. Must be 0-6%.
 
+#### `updateCreatorAddress(newCreatorAddress)`
+Creator only. Transfers creator role to a new address (key rotation, multisig migration).
+
 ### Admin Operations (Creator or RareFi)
 
 #### `updateMinSwapThreshold(newThreshold)`
@@ -136,6 +139,9 @@ Must be 0.20-50 USDC (200,000-50,000,000). Prevents disabling swaps via excessiv
 
 #### `updateMaxSlippage(newMaxSlippageBps)`
 Creator only. Must be 5-100% (500-10000 bps).
+
+#### `updateRarefiAddress(newRarefiAddress)`
+Creator or RareFi. Updates the RareFi platform address (key rotation).
 
 ### Farm Operations
 
@@ -202,8 +208,10 @@ See [RAREFI_CONCEPT.md](./RAREFI_CONCEPT.md#farm-feature) for detailed emission 
 | deposit, withdraw, claim, closeOut | ✓ | ✓ | ✓ |
 | swapYield, contributeFarm | ✓ | ✓ | ✓ |
 | claimCreator, updateCreatorFeeRate | | ✓ | |
+| updateCreatorAddress | | ✓ | |
 | updateMaxSlippage | | ✓ | |
 | updateMinSwapThreshold | | ✓ | ✓ |
+| updateRarefiAddress | | ✓ | ✓ |
 | setEmissionRatio | | ✓ | ✓ |
 
 ---
