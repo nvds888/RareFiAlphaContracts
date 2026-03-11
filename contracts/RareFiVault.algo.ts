@@ -692,19 +692,19 @@ export class RareFiVault extends arc4.Contract {
   updateCreatorAddress(newCreatorAddress: Account): void {
     assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     assert(Txn.sender === this.creatorAddress.value, 'Only creator can update');
+    assert(newCreatorAddress !== Global.zeroAddress, 'Cannot set zero address');
     this.creatorAddress.value = newCreatorAddress;
   }
 
   /**
    * Update the RareFi platform address
-   * Only callable by creator or current RareFi address
+   * Only callable by current RareFi address
    */
   @arc4.abimethod()
   updateRarefiAddress(newRarefiAddress: Account): void {
     assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
-    const isCreator = Txn.sender === this.creatorAddress.value;
-    const isRarefi = Txn.sender === this.rarefiAddress.value;
-    assert(isCreator || isRarefi, 'Only creator or RareFi can update');
+    assert(Txn.sender === this.rarefiAddress.value, 'Only RareFi can update');
+    assert(newRarefiAddress !== Global.zeroAddress, 'Cannot set zero address');
     this.rarefiAddress.value = newRarefiAddress;
   }
 

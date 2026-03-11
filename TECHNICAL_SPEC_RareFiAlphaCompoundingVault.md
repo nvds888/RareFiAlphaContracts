@@ -141,8 +141,10 @@ Must be 0.20-50 USDC (200,000-50,000,000). Prevents disabling swaps via excessiv
 #### `updateMaxSlippage(newMaxSlippageBps)`
 Creator only. Must be 5-100% (500-10000 bps).
 
+### RareFi Operations
+
 #### `updateRarefiAddress(newRarefiAddress)`
-Creator or RareFi. Updates the RareFi platform address (key rotation).
+RareFi only. Updates the RareFi platform address (key rotation).
 
 ### Farm Operations
 
@@ -222,7 +224,7 @@ See [RAREFI_CONCEPT.md](./RAREFI_CONCEPT.md#farm-feature) for detailed emission 
 | updateCreatorAddress | | ✓ | |
 | updateMaxSlippage | | ✓ | |
 | updateMinSwapThreshold | | ✓ | ✓ |
-| updateRarefiAddress | | ✓ | ✓ |
+| updateRarefiAddress | | | ✓ |
 | setEmissionRatio | | ✓ | ✓ |
 
 ---

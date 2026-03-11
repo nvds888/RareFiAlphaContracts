@@ -16,6 +16,8 @@ import {
   performUpdateCreatorFeeRate,
   performUpdateMaxSlippage,
   performUpdateMinSwapThreshold,
+  performUpdateCreatorAddress,
+  performUpdateRarefiAddress,
   getFarmStats,
   getFarmStatsABI,
   VaultDeploymentResult,
@@ -3006,6 +3008,230 @@ describe('RareFiVault Contract Tests', () => {
       await expect(atc.execute(algod, 5)).rejects.toThrow();
 
       console.log('contributeFarm sender mismatch rejected - OK');
+    });
+  });
+
+  /**
+   * UPDATE CREATOR ADDRESS TESTS
+   * Tests updateCreatorAddress: creator-only, key rotation
+   */
+  describe('Update Creator Address', () => {
+    it('should allow creator to update creator address', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Update creator address to alice
+      await performUpdateCreatorAddress(algod, deployment, creator, alice.addr as string);
+
+      // Verify by reading global state
+      const appInfo = await algod.getApplicationByID(deployment.vaultAppId).do();
+      let storedCreator = '';
+      for (const kv of appInfo.params?.globalState || []) {
+        let key: string;
+        if (kv.key instanceof Uint8Array) {
+          key = new TextDecoder().decode(kv.key);
+        } else {
+          key = Buffer.from(kv.key as string, 'base64').toString('utf8');
+        }
+        if (key === 'creatorAddress' && kv.value.type === 1) {
+          const bytes = kv.value.bytes instanceof Uint8Array
+            ? kv.value.bytes
+            : new Uint8Array(Buffer.from(kv.value.bytes as string, 'base64'));
+          storedCreator = algosdk.encodeAddress(bytes);
+        }
+      }
+      expect(storedCreator).toBe(alice.addr);
+      console.log('Creator address updated to alice');
+    });
+
+    it('should allow new creator to use creator-only methods after rotation', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Rotate creator to alice
+      await performUpdateCreatorAddress(algod, deployment, creator, alice.addr as string);
+
+      // Alice (new creator) should be able to update fee rate
+      await performUpdateCreatorFeeRate(algod, deployment, alice, 5);
+
+      console.log('New creator (alice) successfully updated fee rate');
+    });
+
+    it('should reject old creator after rotation', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Rotate creator to alice
+      await performUpdateCreatorAddress(algod, deployment, creator, alice.addr as string);
+
+      // Old creator should no longer be able to update fee rate
+      await expect(
+        performUpdateCreatorFeeRate(algod, deployment, creator, 5)
+      ).rejects.toThrow();
+
+      console.log('Old creator correctly rejected after rotation');
+    });
+
+    it('should reject updating creator address to zero address', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateCreatorAddress(algod, deployment, creator, 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ')
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected zero address for creator');
+    });
+
+    it('should reject non-creator updating creator address', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateCreatorAddress(algod, deployment, alice, alice.addr as string)
+      ).rejects.toThrow();
+
+      console.log('Non-creator correctly rejected from updating creator address');
+    });
+  });
+
+  /**
+   * UPDATE RAREFI ADDRESS TESTS
+   * Tests updateRarefiAddress: rarefi-only (creator cannot update)
+   */
+  describe('Update RareFi Address', () => {
+    it('should allow current rarefi to update rarefi address', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // rarefiAddress is set to creator during deployment, so creator is also rarefi initially
+      // Update rarefi address to alice (sender is current rarefi = creator)
+      await performUpdateRarefiAddress(algod, deployment, creator, alice.addr as string);
+
+      // Verify by reading global state
+      const appInfo = await algod.getApplicationByID(deployment.vaultAppId).do();
+      let storedRarefi = '';
+      for (const kv of appInfo.params?.globalState || []) {
+        let key: string;
+        if (kv.key instanceof Uint8Array) {
+          key = new TextDecoder().decode(kv.key);
+        } else {
+          key = Buffer.from(kv.key as string, 'base64').toString('utf8');
+        }
+        if (key === 'rarefiAddress' && kv.value.type === 1) {
+          const bytes = kv.value.bytes instanceof Uint8Array
+            ? kv.value.bytes
+            : new Uint8Array(Buffer.from(kv.value.bytes as string, 'base64'));
+          storedRarefi = algosdk.encodeAddress(bytes);
+        }
+      }
+      expect(storedRarefi).toBe(alice.addr);
+      console.log('RareFi address updated to alice by current rarefi');
+    });
+
+    it('should allow chained rarefi rotation', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Rotate rarefi: creator (initial rarefi) -> alice -> bob
+      await performUpdateRarefiAddress(algod, deployment, creator, alice.addr as string);
+      await performUpdateRarefiAddress(algod, deployment, alice, bob.addr as string);
+
+      // Verify
+      const appInfo = await algod.getApplicationByID(deployment.vaultAppId).do();
+      let storedRarefi = '';
+      for (const kv of appInfo.params?.globalState || []) {
+        let key: string;
+        if (kv.key instanceof Uint8Array) {
+          key = new TextDecoder().decode(kv.key);
+        } else {
+          key = Buffer.from(kv.key as string, 'base64').toString('utf8');
+        }
+        if (key === 'rarefiAddress' && kv.value.type === 1) {
+          const bytes = kv.value.bytes instanceof Uint8Array
+            ? kv.value.bytes
+            : new Uint8Array(Buffer.from(kv.value.bytes as string, 'base64'));
+          storedRarefi = algosdk.encodeAddress(bytes);
+        }
+      }
+      expect(storedRarefi).toBe(bob.addr);
+      console.log('RareFi address rotated: creator -> alice -> bob');
+    });
+
+    it('should reject creator updating rarefi address after rotation', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Rotate rarefi away from creator to alice
+      await performUpdateRarefiAddress(algod, deployment, creator, alice.addr as string);
+
+      // Creator (no longer rarefi) should be rejected
+      await expect(
+        performUpdateRarefiAddress(algod, deployment, creator, bob.addr as string)
+      ).rejects.toThrow();
+
+      console.log('Creator correctly rejected from updating rarefi address after rotation');
+    });
+
+    it('should reject updating rarefi address to zero address', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      await expect(
+        performUpdateRarefiAddress(algod, deployment, creator, 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ')
+      ).rejects.toThrow();
+
+      console.log('Correctly rejected zero address for rarefi');
+    });
+
+    it('should reject non-rarefi updating rarefi address', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Alice is not rarefi
+      await expect(
+        performUpdateRarefiAddress(algod, deployment, alice, bob.addr as string)
+      ).rejects.toThrow();
+
+      console.log('Non-rarefi correctly rejected from updating rarefi address');
+    });
+
+    it('should reject old rarefi after rotation', async () => {
+      const deployment = await deployVaultForTest(algod, creator, {
+        creatorFeeRate: 3,
+        minSwapThreshold: 2_000_000,
+      });
+
+      // Rotate: creator -> alice -> bob
+      await performUpdateRarefiAddress(algod, deployment, creator, alice.addr as string);
+      await performUpdateRarefiAddress(algod, deployment, alice, bob.addr as string);
+
+      // Alice (old rarefi) should no longer be able to update
+      await expect(
+        performUpdateRarefiAddress(algod, deployment, alice, alice.addr as string)
+      ).rejects.toThrow();
+
+      console.log('Old rarefi address correctly rejected after rotation');
     });
   });
 });

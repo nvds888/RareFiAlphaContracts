@@ -3,11 +3,11 @@
 **Date:** February 2026
 **Contracts:** RareFiVault, RareFiAlphaCompoundingVault
 **Framework:** Jest + Algorand Localnet
-**Total Tests:** 200 passing (110 + 90)
+**Total Tests:** 222 passing (121 + 101)
 
 ---
 
-## RareFiVault Tests (110 tests)
+## RareFiVault Tests (121 tests)
 
 | Category | Tests | Description |
 |----------|-------|-------------|
@@ -26,9 +26,11 @@
 | Farm + Creator Fee Interaction | 1 | Fee applied on total output (swap + farm bonus) |
 | Emission Ratio Constraints | 8 | Reject 0, allow positive, no max cap, 10% floor, access control |
 | Min Swap Threshold Update | 7 | Range enforcement (0.20-50 USDC), access control |
+| Update Creator Address | 5 | Key rotation, new creator access, old creator rejection, zero address rejection, access control |
+| Update RareFi Address | 6 | Rarefi self-update, chained rotation, creator rejected after rotation, zero address rejection, access control |
 | Rekey Protection | 1 | Reject app call with non-zero rekeyTo |
 
-## RareFiAlphaCompoundingVault Tests (90 tests)
+## RareFiAlphaCompoundingVault Tests (101 tests)
 
 | Category | Tests | Description |
 |----------|-------|-------------|
@@ -46,6 +48,8 @@
 | Asset Opt-In Guard | 2 | Same pattern as RareFiVault |
 | Emission Ratio Constraints | 8 | Same pattern as RareFiVault |
 | Min Swap Threshold Update | 7 | Same pattern as RareFiVault |
+| Update Creator Address | 5 | Key rotation, new creator access, old creator rejection, zero address rejection, access control |
+| Update RareFi Address | 6 | Rarefi self-update, chained rotation, creator rejected after rotation, zero address rejection, access control |
 | Rekey Protection | 1 | Reject app call with non-zero rekeyTo |
 | Comprehensive Integration | 6 | Multi-user lifecycle through deposits, compounds, withdrawals |
 
@@ -59,6 +63,7 @@
 - **Permissionless swaps:** Anyone can trigger, slippage capped by `maxSlippageBps`
 - **Creator fee constraints:** 0-6% range, creator-only updates
 - **Farm emission constraints:** Dynamic rate with 10% floor, geometric decay, no max cap
+- **Address rotation:** Each role can only rotate its own key (creator→creator, rarefi→rarefi); old addresses lose access immediately; zero address rejected
 - **Immutability:** Contract updates and deletions always fail
 
 ---

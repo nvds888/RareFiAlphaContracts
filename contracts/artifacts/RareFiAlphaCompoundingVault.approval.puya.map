@@ -3,7 +3,7 @@
   "sources": [
     "../RareFiAlphaCompoundingVault.algo.ts"
   ],
-  "mappings": "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",
+  "mappings": "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",
   "op_pc_offset": 0,
   "pc_events": {
     "1": {
@@ -9873,24 +9873,58 @@
       ]
     },
     "1649": {
+      "op": "dup"
+    },
+    "1650": {
+      "op": "global ZeroAddress",
+      "defined_out": [
+        "newCreatorAddress#0",
+        "newCreatorAddress#0 (copy)",
+        "tmp%5#0"
+      ],
+      "stack_out": [
+        "newCreatorAddress#0",
+        "newCreatorAddress#0 (copy)",
+        "tmp%5#0"
+      ]
+    },
+    "1652": {
+      "op": "!=",
+      "defined_out": [
+        "newCreatorAddress#0",
+        "tmp%6#0"
+      ],
+      "stack_out": [
+        "newCreatorAddress#0",
+        "tmp%6#0"
+      ]
+    },
+    "1653": {
+      "error": "Cannot set zero address",
+      "op": "assert // Cannot set zero address",
+      "stack_out": [
+        "newCreatorAddress#0"
+      ]
+    },
+    "1654": {
       "op": "bytec_3 // \"creatorAddress\"",
       "stack_out": [
         "newCreatorAddress#0",
         "\"creatorAddress\""
       ]
     },
-    "1650": {
+    "1655": {
       "op": "swap",
       "stack_out": [
         "\"creatorAddress\"",
         "newCreatorAddress#0"
       ]
     },
-    "1651": {
+    "1656": {
       "op": "app_global_put",
       "stack_out": []
     },
-    "1652": {
+    "1657": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1"
@@ -9899,11 +9933,11 @@
         "1"
       ]
     },
-    "1653": {
+    "1658": {
       "op": "return",
       "stack_out": []
     },
-    "1654": {
+    "1659": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.updateRarefiAddress[routing]",
       "params": {},
       "block": "updateRarefiAddress",
@@ -9916,7 +9950,7 @@
         "newRarefiAddress#0"
       ]
     },
-    "1657": {
+    "1662": {
       "op": "dup",
       "defined_out": [
         "newRarefiAddress#0",
@@ -9927,7 +9961,7 @@
         "newRarefiAddress#0 (copy)"
       ]
     },
-    "1658": {
+    "1663": {
       "op": "len",
       "defined_out": [
         "len%0#0",
@@ -9938,7 +9972,7 @@
         "len%0#0"
       ]
     },
-    "1659": {
+    "1664": {
       "op": "pushint 32 // 32",
       "defined_out": [
         "32",
@@ -9951,7 +9985,7 @@
         "32"
       ]
     },
-    "1661": {
+    "1666": {
       "op": "==",
       "defined_out": [
         "eq%0#0",
@@ -9962,14 +9996,14 @@
         "eq%0#0"
       ]
     },
-    "1662": {
+    "1667": {
       "error": "invalid number of bytes for arc4.static_array<arc4.uint8, 32>",
       "op": "assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>",
       "stack_out": [
         "newRarefiAddress#0"
       ]
     },
-    "1663": {
+    "1668": {
       "op": "txn RekeyTo",
       "defined_out": [
         "newRarefiAddress#0",
@@ -9980,7 +10014,7 @@
         "tmp%0#1"
       ]
     },
-    "1665": {
+    "1670": {
       "op": "global ZeroAddress",
       "defined_out": [
         "newRarefiAddress#0",
@@ -9993,7 +10027,7 @@
         "tmp%1#1"
       ]
     },
-    "1667": {
+    "1672": {
       "op": "==",
       "defined_out": [
         "newRarefiAddress#0",
@@ -10004,14 +10038,14 @@
         "tmp%2#0"
       ]
     },
-    "1668": {
+    "1673": {
       "error": "rekeyTo must be zero",
       "op": "assert // rekeyTo must be zero",
       "stack_out": [
         "newRarefiAddress#0"
       ]
     },
-    "1669": {
+    "1674": {
       "op": "txn Sender",
       "defined_out": [
         "newRarefiAddress#0",
@@ -10022,7 +10056,7 @@
         "tmp%3#0"
       ]
     },
-    "1671": {
+    "1676": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0",
@@ -10035,10 +10069,10 @@
         "0"
       ]
     },
-    "1672": {
-      "op": "bytec_3 // \"creatorAddress\"",
+    "1677": {
+      "op": "bytec 10 // \"rarefiAddress\"",
       "defined_out": [
-        "\"creatorAddress\"",
+        "\"rarefiAddress\"",
         "0",
         "newRarefiAddress#0",
         "tmp%3#0"
@@ -10047,10 +10081,10 @@
         "newRarefiAddress#0",
         "tmp%3#0",
         "0",
-        "\"creatorAddress\""
+        "\"rarefiAddress\""
       ]
     },
-    "1673": {
+    "1679": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%0#0",
@@ -10065,7 +10099,7 @@
         "maybe_exists%0#0"
       ]
     },
-    "1674": {
+    "1680": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -10074,133 +10108,77 @@
         "maybe_value%0#0"
       ]
     },
-    "1675": {
+    "1681": {
       "op": "==",
       "defined_out": [
-        "isCreator#0",
-        "newRarefiAddress#0"
+        "newRarefiAddress#0",
+        "tmp%4#0"
       ],
       "stack_out": [
         "newRarefiAddress#0",
-        "isCreator#0"
-      ]
-    },
-    "1676": {
-      "op": "txn Sender",
-      "defined_out": [
-        "isCreator#0",
-        "newRarefiAddress#0",
-        "tmp%5#0"
-      ],
-      "stack_out": [
-        "newRarefiAddress#0",
-        "isCreator#0",
-        "tmp%5#0"
-      ]
-    },
-    "1678": {
-      "op": "intc_0 // 0",
-      "stack_out": [
-        "newRarefiAddress#0",
-        "isCreator#0",
-        "tmp%5#0",
-        "0"
-      ]
-    },
-    "1679": {
-      "op": "bytec 10 // \"rarefiAddress\"",
-      "defined_out": [
-        "\"rarefiAddress\"",
-        "0",
-        "isCreator#0",
-        "newRarefiAddress#0",
-        "tmp%5#0"
-      ],
-      "stack_out": [
-        "newRarefiAddress#0",
-        "isCreator#0",
-        "tmp%5#0",
-        "0",
-        "\"rarefiAddress\""
-      ]
-    },
-    "1681": {
-      "op": "app_global_get_ex",
-      "defined_out": [
-        "isCreator#0",
-        "maybe_exists%1#0",
-        "maybe_value%1#0",
-        "newRarefiAddress#0",
-        "tmp%5#0"
-      ],
-      "stack_out": [
-        "newRarefiAddress#0",
-        "isCreator#0",
-        "tmp%5#0",
-        "maybe_value%1#0",
-        "maybe_exists%1#0"
+        "tmp%4#0"
       ]
     },
     "1682": {
-      "error": "check GlobalState exists",
-      "op": "assert // check GlobalState exists",
+      "error": "Only RareFi can update",
+      "op": "assert // Only RareFi can update",
       "stack_out": [
-        "newRarefiAddress#0",
-        "isCreator#0",
-        "tmp%5#0",
-        "maybe_value%1#0"
+        "newRarefiAddress#0"
       ]
     },
     "1683": {
-      "op": "==",
-      "defined_out": [
-        "isCreator#0",
-        "isRarefi#0",
-        "newRarefiAddress#0"
-      ],
-      "stack_out": [
-        "newRarefiAddress#0",
-        "isCreator#0",
-        "isRarefi#0"
-      ]
+      "op": "dup"
     },
     "1684": {
-      "op": "||",
+      "op": "global ZeroAddress",
       "defined_out": [
         "newRarefiAddress#0",
-        "tmp%7#0"
+        "newRarefiAddress#0 (copy)",
+        "tmp%5#0"
       ],
       "stack_out": [
         "newRarefiAddress#0",
-        "tmp%7#0"
-      ]
-    },
-    "1685": {
-      "error": "Only creator or RareFi can update",
-      "op": "assert // Only creator or RareFi can update",
-      "stack_out": [
-        "newRarefiAddress#0"
+        "newRarefiAddress#0 (copy)",
+        "tmp%5#0"
       ]
     },
     "1686": {
+      "op": "!=",
+      "defined_out": [
+        "newRarefiAddress#0",
+        "tmp%6#0"
+      ],
+      "stack_out": [
+        "newRarefiAddress#0",
+        "tmp%6#0"
+      ]
+    },
+    "1687": {
+      "error": "Cannot set zero address",
+      "op": "assert // Cannot set zero address",
+      "stack_out": [
+        "newRarefiAddress#0"
+      ]
+    },
+    "1688": {
       "op": "bytec 10 // \"rarefiAddress\"",
       "stack_out": [
         "newRarefiAddress#0",
         "\"rarefiAddress\""
       ]
     },
-    "1688": {
+    "1690": {
       "op": "swap",
       "stack_out": [
         "\"rarefiAddress\"",
         "newRarefiAddress#0"
       ]
     },
-    "1689": {
+    "1691": {
       "op": "app_global_put",
       "stack_out": []
     },
-    "1690": {
+    "1692": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1"
@@ -10209,11 +10187,11 @@
         "1"
       ]
     },
-    "1691": {
+    "1693": {
       "op": "return",
       "stack_out": []
     },
-    "1692": {
+    "1694": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.updateCreatorFeeRate[routing]",
       "params": {},
       "block": "updateCreatorFeeRate",
@@ -10226,7 +10204,7 @@
         "tmp%0#0"
       ]
     },
-    "1695": {
+    "1697": {
       "op": "dup",
       "defined_out": [
         "tmp%0#0",
@@ -10237,7 +10215,7 @@
         "tmp%0#0 (copy)"
       ]
     },
-    "1696": {
+    "1698": {
       "op": "len",
       "defined_out": [
         "len%0#0",
@@ -10248,7 +10226,7 @@
         "len%0#0"
       ]
     },
-    "1697": {
+    "1699": {
       "op": "intc_2 // 8",
       "defined_out": [
         "8",
@@ -10261,7 +10239,7 @@
         "8"
       ]
     },
-    "1698": {
+    "1700": {
       "op": "==",
       "defined_out": [
         "eq%0#0",
@@ -10272,14 +10250,14 @@
         "eq%0#0"
       ]
     },
-    "1699": {
+    "1701": {
       "error": "invalid number of bytes for arc4.uint64",
       "op": "assert // invalid number of bytes for arc4.uint64",
       "stack_out": [
         "tmp%0#0"
       ]
     },
-    "1700": {
+    "1702": {
       "op": "btoi",
       "defined_out": [
         "newFeeRate#0"
@@ -10288,7 +10266,7 @@
         "newFeeRate#0"
       ]
     },
-    "1701": {
+    "1703": {
       "op": "txn RekeyTo",
       "defined_out": [
         "newFeeRate#0",
@@ -10299,7 +10277,7 @@
         "tmp%0#1"
       ]
     },
-    "1703": {
+    "1705": {
       "op": "global ZeroAddress",
       "defined_out": [
         "newFeeRate#0",
@@ -10312,7 +10290,7 @@
         "tmp%1#1"
       ]
     },
-    "1705": {
+    "1707": {
       "op": "==",
       "defined_out": [
         "newFeeRate#0",
@@ -10323,14 +10301,14 @@
         "tmp%2#0"
       ]
     },
-    "1706": {
+    "1708": {
       "error": "rekeyTo must be zero",
       "op": "assert // rekeyTo must be zero",
       "stack_out": [
         "newFeeRate#0"
       ]
     },
-    "1707": {
+    "1709": {
       "op": "txn Sender",
       "defined_out": [
         "newFeeRate#0",
@@ -10341,7 +10319,7 @@
         "tmp%3#0"
       ]
     },
-    "1709": {
+    "1711": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0",
@@ -10354,7 +10332,7 @@
         "0"
       ]
     },
-    "1710": {
+    "1712": {
       "op": "bytec_3 // \"creatorAddress\"",
       "defined_out": [
         "\"creatorAddress\"",
@@ -10369,7 +10347,7 @@
         "\"creatorAddress\""
       ]
     },
-    "1711": {
+    "1713": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%0#0",
@@ -10384,7 +10362,7 @@
         "maybe_exists%0#0"
       ]
     },
-    "1712": {
+    "1714": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -10393,7 +10371,7 @@
         "maybe_value%0#0"
       ]
     },
-    "1713": {
+    "1715": {
       "op": "==",
       "defined_out": [
         "newFeeRate#0",
@@ -10404,14 +10382,14 @@
         "tmp%4#0"
       ]
     },
-    "1714": {
+    "1716": {
       "error": "Only creator can update fee rate",
       "op": "assert // Only creator can update fee rate",
       "stack_out": [
         "newFeeRate#0"
       ]
     },
-    "1715": {
+    "1717": {
       "op": "dup",
       "defined_out": [
         "newFeeRate#0",
@@ -10422,7 +10400,7 @@
         "newFeeRate#0 (copy)"
       ]
     },
-    "1716": {
+    "1718": {
       "op": "pushint 6 // 6",
       "defined_out": [
         "6",
@@ -10435,7 +10413,7 @@
         "6"
       ]
     },
-    "1718": {
+    "1720": {
       "op": "<=",
       "defined_out": [
         "newFeeRate#0",
@@ -10446,14 +10424,14 @@
         "tmp%5#0"
       ]
     },
-    "1719": {
+    "1721": {
       "error": "Fee rate exceeds maximum (6%)",
       "op": "assert // Fee rate exceeds maximum (6%)",
       "stack_out": [
         "newFeeRate#0"
       ]
     },
-    "1720": {
+    "1722": {
       "op": "bytec 14 // \"creatorFeeRate\"",
       "defined_out": [
         "\"creatorFeeRate\"",
@@ -10464,18 +10442,18 @@
         "\"creatorFeeRate\""
       ]
     },
-    "1722": {
+    "1724": {
       "op": "swap",
       "stack_out": [
         "\"creatorFeeRate\"",
         "newFeeRate#0"
       ]
     },
-    "1723": {
+    "1725": {
       "op": "app_global_put",
       "stack_out": []
     },
-    "1724": {
+    "1726": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1"
@@ -10484,11 +10462,11 @@
         "1"
       ]
     },
-    "1725": {
+    "1727": {
       "op": "return",
       "stack_out": []
     },
-    "1726": {
+    "1728": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.contributeFarm[routing]",
       "params": {},
       "block": "contributeFarm",
@@ -10501,7 +10479,7 @@
         "tmp%0#0"
       ]
     },
-    "1728": {
+    "1730": {
       "op": "global ZeroAddress",
       "defined_out": [
         "tmp%0#0",
@@ -10512,7 +10490,7 @@
         "tmp%1#0"
       ]
     },
-    "1730": {
+    "1732": {
       "op": "==",
       "defined_out": [
         "tmp%2#0"
@@ -10521,12 +10499,12 @@
         "tmp%2#0"
       ]
     },
-    "1731": {
+    "1733": {
       "error": "rekeyTo must be zero",
       "op": "assert // rekeyTo must be zero",
       "stack_out": []
     },
-    "1732": {
+    "1734": {
       "op": "global CurrentApplicationAddress",
       "defined_out": [
         "appAddr#0"
@@ -10535,7 +10513,7 @@
         "appAddr#0"
       ]
     },
-    "1734": {
+    "1736": {
       "op": "txn GroupIndex",
       "defined_out": [
         "appAddr#0",
@@ -10546,7 +10524,7 @@
         "currentIndex#0"
       ]
     },
-    "1736": {
+    "1738": {
       "op": "dup",
       "defined_out": [
         "appAddr#0",
@@ -10559,7 +10537,7 @@
         "currentIndex#0 (copy)"
       ]
     },
-    "1737": {
+    "1739": {
       "error": "App call must follow asset transfer",
       "op": "assert // App call must follow asset transfer",
       "stack_out": [
@@ -10567,7 +10545,7 @@
         "currentIndex#0"
       ]
     },
-    "1738": {
+    "1740": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1",
@@ -10580,7 +10558,7 @@
         "1"
       ]
     },
-    "1739": {
+    "1741": {
       "op": "-",
       "defined_out": [
         "appAddr#0",
@@ -10591,7 +10569,7 @@
         "farmTransfer#0"
       ]
     },
-    "1740": {
+    "1742": {
       "op": "dup",
       "defined_out": [
         "appAddr#0",
@@ -10604,7 +10582,7 @@
         "farmTransfer#0 (copy)"
       ]
     },
-    "1741": {
+    "1743": {
       "op": "gtxns TypeEnum",
       "defined_out": [
         "appAddr#0",
@@ -10617,7 +10595,7 @@
         "gtxn_type%0#0"
       ]
     },
-    "1743": {
+    "1745": {
       "op": "intc_3 // axfer",
       "defined_out": [
         "appAddr#0",
@@ -10632,7 +10610,7 @@
         "axfer"
       ]
     },
-    "1744": {
+    "1746": {
       "op": "==",
       "defined_out": [
         "appAddr#0",
@@ -10645,7 +10623,7 @@
         "gtxn_type_matches%0#0"
       ]
     },
-    "1745": {
+    "1747": {
       "error": "transaction type is axfer",
       "op": "assert // transaction type is axfer",
       "stack_out": [
@@ -10653,7 +10631,7 @@
         "farmTransfer#0"
       ]
     },
-    "1746": {
+    "1748": {
       "op": "dup",
       "stack_out": [
         "appAddr#0",
@@ -10661,7 +10639,7 @@
         "farmTransfer#0 (copy)"
       ]
     },
-    "1747": {
+    "1749": {
       "op": "gtxns XferAsset",
       "defined_out": [
         "appAddr#0",
@@ -10674,7 +10652,7 @@
         "tmp%6#0"
       ]
     },
-    "1749": {
+    "1751": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0",
@@ -10689,7 +10667,7 @@
         "0"
       ]
     },
-    "1750": {
+    "1752": {
       "op": "bytec 4 // \"alphaAsset\"",
       "defined_out": [
         "\"alphaAsset\"",
@@ -10706,7 +10684,7 @@
         "\"alphaAsset\""
       ]
     },
-    "1752": {
+    "1754": {
       "op": "app_global_get_ex",
       "defined_out": [
         "appAddr#0",
@@ -10723,7 +10701,7 @@
         "maybe_exists%0#0"
       ]
     },
-    "1753": {
+    "1755": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -10733,7 +10711,7 @@
         "maybe_value%0#0"
       ]
     },
-    "1754": {
+    "1756": {
       "op": "==",
       "defined_out": [
         "appAddr#0",
@@ -10746,7 +10724,7 @@
         "tmp%7#0"
       ]
     },
-    "1755": {
+    "1757": {
       "error": "Must transfer Alpha asset",
       "op": "assert // Must transfer Alpha asset",
       "stack_out": [
@@ -10754,7 +10732,7 @@
         "farmTransfer#0"
       ]
     },
-    "1756": {
+    "1758": {
       "op": "dup",
       "stack_out": [
         "appAddr#0",
@@ -10762,7 +10740,7 @@
         "farmTransfer#0 (copy)"
       ]
     },
-    "1757": {
+    "1759": {
       "op": "gtxns AssetReceiver",
       "defined_out": [
         "appAddr#0",
@@ -10775,7 +10753,7 @@
         "tmp%8#0"
       ]
     },
-    "1759": {
+    "1761": {
       "op": "uncover 2",
       "stack_out": [
         "farmTransfer#0",
@@ -10783,7 +10761,7 @@
         "appAddr#0"
       ]
     },
-    "1761": {
+    "1763": {
       "op": "==",
       "defined_out": [
         "farmTransfer#0",
@@ -10794,21 +10772,21 @@
         "tmp%9#0"
       ]
     },
-    "1762": {
+    "1764": {
       "error": "Must send to contract",
       "op": "assert // Must send to contract",
       "stack_out": [
         "farmTransfer#0"
       ]
     },
-    "1763": {
+    "1765": {
       "op": "dup",
       "stack_out": [
         "farmTransfer#0",
         "farmTransfer#0 (copy)"
       ]
     },
-    "1764": {
+    "1766": {
       "op": "gtxns Sender",
       "defined_out": [
         "farmTransfer#0",
@@ -10819,7 +10797,7 @@
         "tmp%10#0"
       ]
     },
-    "1766": {
+    "1768": {
       "op": "txn Sender",
       "defined_out": [
         "farmTransfer#0",
@@ -10832,7 +10810,7 @@
         "tmp%11#0"
       ]
     },
-    "1768": {
+    "1770": {
       "op": "==",
       "defined_out": [
         "farmTransfer#0",
@@ -10843,21 +10821,21 @@
         "tmp%12#0"
       ]
     },
-    "1769": {
+    "1771": {
       "error": "Transfer must be from caller",
       "op": "assert // Transfer must be from caller",
       "stack_out": [
         "farmTransfer#0"
       ]
     },
-    "1770": {
+    "1772": {
       "op": "dup",
       "stack_out": [
         "farmTransfer#0",
         "farmTransfer#0 (copy)"
       ]
     },
-    "1771": {
+    "1773": {
       "op": "gtxns RekeyTo",
       "defined_out": [
         "farmTransfer#0",
@@ -10868,7 +10846,7 @@
         "tmp%13#0"
       ]
     },
-    "1773": {
+    "1775": {
       "op": "global ZeroAddress",
       "defined_out": [
         "farmTransfer#0",
@@ -10881,7 +10859,7 @@
         "tmp%14#0"
       ]
     },
-    "1775": {
+    "1777": {
       "op": "==",
       "defined_out": [
         "farmTransfer#0",
@@ -10892,21 +10870,21 @@
         "tmp%15#0"
       ]
     },
-    "1776": {
+    "1778": {
       "error": "rekeyTo must be zero",
       "op": "assert // rekeyTo must be zero",
       "stack_out": [
         "farmTransfer#0"
       ]
     },
-    "1777": {
+    "1779": {
       "op": "dup",
       "stack_out": [
         "farmTransfer#0",
         "farmTransfer#0 (copy)"
       ]
     },
-    "1778": {
+    "1780": {
       "op": "gtxns AssetCloseTo",
       "defined_out": [
         "farmTransfer#0",
@@ -10917,7 +10895,7 @@
         "tmp%16#0"
       ]
     },
-    "1780": {
+    "1782": {
       "op": "global ZeroAddress",
       "defined_out": [
         "farmTransfer#0",
@@ -10930,7 +10908,7 @@
         "tmp%17#0"
       ]
     },
-    "1782": {
+    "1784": {
       "op": "==",
       "defined_out": [
         "farmTransfer#0",
@@ -10941,14 +10919,14 @@
         "tmp%18#0"
       ]
     },
-    "1783": {
+    "1785": {
       "error": "assetCloseTo must be zero",
       "op": "assert // assetCloseTo must be zero",
       "stack_out": [
         "farmTransfer#0"
       ]
     },
-    "1784": {
+    "1786": {
       "op": "gtxns AssetAmount",
       "defined_out": [
         "amount#0"
@@ -10957,7 +10935,7 @@
         "amount#0"
       ]
     },
-    "1786": {
+    "1788": {
       "op": "dup",
       "defined_out": [
         "amount#0",
@@ -10968,21 +10946,21 @@
         "amount#0 (copy)"
       ]
     },
-    "1787": {
+    "1789": {
       "error": "Contribution must be positive",
       "op": "assert // Contribution must be positive",
       "stack_out": [
         "amount#0"
       ]
     },
-    "1788": {
+    "1790": {
       "op": "intc_0 // 0",
       "stack_out": [
         "amount#0",
         "0"
       ]
     },
-    "1789": {
+    "1791": {
       "op": "bytec_2 // \"farmBalance\"",
       "defined_out": [
         "\"farmBalance\"",
@@ -10995,7 +10973,7 @@
         "\"farmBalance\""
       ]
     },
-    "1790": {
+    "1792": {
       "op": "app_global_get_ex",
       "defined_out": [
         "amount#0",
@@ -11008,7 +10986,7 @@
         "maybe_exists%1#0"
       ]
     },
-    "1791": {
+    "1793": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11016,7 +10994,7 @@
         "maybe_value%1#0"
       ]
     },
-    "1792": {
+    "1794": {
       "op": "+",
       "defined_out": [
         "tmp%21#0"
@@ -11025,35 +11003,35 @@
         "tmp%21#0"
       ]
     },
-    "1793": {
+    "1795": {
       "op": "bytec_2 // \"farmBalance\"",
       "stack_out": [
         "tmp%21#0",
         "\"farmBalance\""
       ]
     },
-    "1794": {
+    "1796": {
       "op": "swap",
       "stack_out": [
         "\"farmBalance\"",
         "tmp%21#0"
       ]
     },
-    "1795": {
+    "1797": {
       "op": "app_global_put",
       "stack_out": []
     },
-    "1796": {
+    "1798": {
       "op": "intc_1 // 1",
       "stack_out": [
         "1"
       ]
     },
-    "1797": {
+    "1799": {
       "op": "return",
       "stack_out": []
     },
-    "1798": {
+    "1800": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.setEmissionRatio[routing]",
       "params": {},
       "block": "setEmissionRatio",
@@ -11066,7 +11044,7 @@
         "tmp%0#0"
       ]
     },
-    "1801": {
+    "1803": {
       "op": "dup",
       "defined_out": [
         "tmp%0#0",
@@ -11077,7 +11055,7 @@
         "tmp%0#0 (copy)"
       ]
     },
-    "1802": {
+    "1804": {
       "op": "len",
       "defined_out": [
         "len%0#0",
@@ -11088,7 +11066,7 @@
         "len%0#0"
       ]
     },
-    "1803": {
+    "1805": {
       "op": "intc_2 // 8",
       "defined_out": [
         "8",
@@ -11101,7 +11079,7 @@
         "8"
       ]
     },
-    "1804": {
+    "1806": {
       "op": "==",
       "defined_out": [
         "eq%0#0",
@@ -11112,14 +11090,14 @@
         "eq%0#0"
       ]
     },
-    "1805": {
+    "1807": {
       "error": "invalid number of bytes for arc4.uint64",
       "op": "assert // invalid number of bytes for arc4.uint64",
       "stack_out": [
         "tmp%0#0"
       ]
     },
-    "1806": {
+    "1808": {
       "op": "btoi",
       "defined_out": [
         "newRatio#0"
@@ -11128,7 +11106,7 @@
         "newRatio#0"
       ]
     },
-    "1807": {
+    "1809": {
       "op": "txn RekeyTo",
       "defined_out": [
         "newRatio#0",
@@ -11139,7 +11117,7 @@
         "tmp%0#1"
       ]
     },
-    "1809": {
+    "1811": {
       "op": "global ZeroAddress",
       "defined_out": [
         "newRatio#0",
@@ -11152,7 +11130,7 @@
         "tmp%1#1"
       ]
     },
-    "1811": {
+    "1813": {
       "op": "==",
       "defined_out": [
         "newRatio#0",
@@ -11163,14 +11141,14 @@
         "tmp%2#0"
       ]
     },
-    "1812": {
+    "1814": {
       "error": "rekeyTo must be zero",
       "op": "assert // rekeyTo must be zero",
       "stack_out": [
         "newRatio#0"
       ]
     },
-    "1813": {
+    "1815": {
       "op": "txn Sender",
       "defined_out": [
         "newRatio#0",
@@ -11181,7 +11159,7 @@
         "tmp%3#0"
       ]
     },
-    "1815": {
+    "1817": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0",
@@ -11194,7 +11172,7 @@
         "0"
       ]
     },
-    "1816": {
+    "1818": {
       "op": "bytec_3 // \"creatorAddress\"",
       "defined_out": [
         "\"creatorAddress\"",
@@ -11209,7 +11187,7 @@
         "\"creatorAddress\""
       ]
     },
-    "1817": {
+    "1819": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%0#0",
@@ -11224,7 +11202,7 @@
         "maybe_exists%0#0"
       ]
     },
-    "1818": {
+    "1820": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11233,7 +11211,7 @@
         "maybe_value%0#0"
       ]
     },
-    "1819": {
+    "1821": {
       "op": "==",
       "defined_out": [
         "isCreator#0",
@@ -11244,7 +11222,7 @@
         "isCreator#0"
       ]
     },
-    "1820": {
+    "1822": {
       "op": "txn Sender",
       "defined_out": [
         "isCreator#0",
@@ -11257,7 +11235,7 @@
         "tmp%5#0"
       ]
     },
-    "1822": {
+    "1824": {
       "op": "intc_0 // 0",
       "stack_out": [
         "newRatio#0",
@@ -11266,7 +11244,7 @@
         "0"
       ]
     },
-    "1823": {
+    "1825": {
       "op": "bytec 10 // \"rarefiAddress\"",
       "defined_out": [
         "\"rarefiAddress\"",
@@ -11283,7 +11261,7 @@
         "\"rarefiAddress\""
       ]
     },
-    "1825": {
+    "1827": {
       "op": "app_global_get_ex",
       "defined_out": [
         "isCreator#0",
@@ -11300,7 +11278,7 @@
         "maybe_exists%1#0"
       ]
     },
-    "1826": {
+    "1828": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11310,7 +11288,7 @@
         "maybe_value%1#0"
       ]
     },
-    "1827": {
+    "1829": {
       "op": "==",
       "defined_out": [
         "isCreator#0",
@@ -11323,7 +11301,7 @@
         "isRarefi#0"
       ]
     },
-    "1828": {
+    "1830": {
       "op": "||",
       "defined_out": [
         "newRatio#0",
@@ -11334,14 +11312,14 @@
         "tmp%7#0"
       ]
     },
-    "1829": {
+    "1831": {
       "error": "Only creator or RareFi can set emission ratio",
       "op": "assert // Only creator or RareFi can set emission ratio",
       "stack_out": [
         "newRatio#0"
       ]
     },
-    "1830": {
+    "1832": {
       "op": "dup",
       "defined_out": [
         "newRatio#0",
@@ -11352,14 +11330,14 @@
         "newRatio#0 (copy)"
       ]
     },
-    "1831": {
+    "1833": {
       "error": "Emission ratio must be positive",
       "op": "assert // Emission ratio must be positive",
       "stack_out": [
         "newRatio#0"
       ]
     },
-    "1832": {
+    "1834": {
       "op": "bytec 9 // \"emissionRatio\"",
       "defined_out": [
         "\"emissionRatio\"",
@@ -11370,18 +11348,18 @@
         "\"emissionRatio\""
       ]
     },
-    "1834": {
+    "1836": {
       "op": "swap",
       "stack_out": [
         "\"emissionRatio\"",
         "newRatio#0"
       ]
     },
-    "1835": {
+    "1837": {
       "op": "app_global_put",
       "stack_out": []
     },
-    "1836": {
+    "1838": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1"
@@ -11390,21 +11368,21 @@
         "1"
       ]
     },
-    "1837": {
+    "1839": {
       "op": "return",
       "stack_out": []
     },
-    "1838": {
+    "1840": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getFarmStats[routing]",
       "params": {},
       "block": "getFarmStats",
       "stack_in": [],
       "op": "intc_0 // 0"
     },
-    "1839": {
+    "1841": {
       "op": "dup"
     },
-    "1840": {
+    "1842": {
       "op": "bytec 9 // \"emissionRatio\"",
       "defined_out": [
         "\"emissionRatio\"",
@@ -11417,7 +11395,7 @@
         "\"emissionRatio\""
       ]
     },
-    "1842": {
+    "1844": {
       "op": "app_global_get_ex",
       "defined_out": [
         "currentRate#0",
@@ -11430,7 +11408,7 @@
         "maybe_exists%0#0"
       ]
     },
-    "1843": {
+    "1845": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11438,20 +11416,20 @@
         "maybe_value%0#0"
       ]
     },
-    "1844": {
+    "1846": {
       "op": "bz getFarmStats_after_if_else@4",
       "stack_out": [
         "currentRate#0"
       ]
     },
-    "1847": {
+    "1849": {
       "op": "intc_0 // 0",
       "stack_out": [
         "currentRate#0",
         "0"
       ]
     },
-    "1848": {
+    "1850": {
       "op": "bytec_2 // \"farmBalance\"",
       "defined_out": [
         "\"farmBalance\"",
@@ -11464,7 +11442,7 @@
         "\"farmBalance\""
       ]
     },
-    "1849": {
+    "1851": {
       "op": "app_global_get_ex",
       "defined_out": [
         "currentRate#0",
@@ -11477,7 +11455,7 @@
         "maybe_exists%1#0"
       ]
     },
-    "1850": {
+    "1852": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11485,13 +11463,13 @@
         "maybe_value%1#0"
       ]
     },
-    "1851": {
+    "1853": {
       "op": "bz getFarmStats_after_if_else@4",
       "stack_out": [
         "currentRate#0"
       ]
     },
-    "1854": {
+    "1856": {
       "callsub": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.calculateDynamicEmissionRate",
       "op": "callsub calculateDynamicEmissionRate",
       "stack_out": [
@@ -11499,13 +11477,13 @@
         "currentRate#0"
       ]
     },
-    "1857": {
+    "1859": {
       "op": "bury 1",
       "stack_out": [
         "currentRate#0"
       ]
     },
-    "1859": {
+    "1861": {
       "block": "getFarmStats_after_if_else@4",
       "stack_in": [
         "currentRate#0"
@@ -11519,7 +11497,7 @@
         "0"
       ]
     },
-    "1860": {
+    "1862": {
       "op": "bytec_2 // \"farmBalance\"",
       "defined_out": [
         "\"farmBalance\"",
@@ -11531,7 +11509,7 @@
         "\"farmBalance\""
       ]
     },
-    "1861": {
+    "1863": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%2#0",
@@ -11543,7 +11521,7 @@
         "maybe_exists%2#0"
       ]
     },
-    "1862": {
+    "1864": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11551,7 +11529,7 @@
         "maybe_value%2#0"
       ]
     },
-    "1863": {
+    "1865": {
       "op": "intc_0 // 0",
       "stack_out": [
         "currentRate#0",
@@ -11559,7 +11537,7 @@
         "0"
       ]
     },
-    "1864": {
+    "1866": {
       "op": "bytec 9 // \"emissionRatio\"",
       "defined_out": [
         "\"emissionRatio\"",
@@ -11573,7 +11551,7 @@
         "\"emissionRatio\""
       ]
     },
-    "1866": {
+    "1868": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%3#0",
@@ -11587,7 +11565,7 @@
         "maybe_exists%3#0"
       ]
     },
-    "1867": {
+    "1869": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11596,7 +11574,7 @@
         "maybe_value%3#0"
       ]
     },
-    "1868": {
+    "1870": {
       "op": "swap",
       "stack_out": [
         "currentRate#0",
@@ -11604,7 +11582,7 @@
         "maybe_value%2#0"
       ]
     },
-    "1869": {
+    "1871": {
       "op": "itob",
       "defined_out": [
         "aggregate%val_as_bytes%0#0",
@@ -11616,7 +11594,7 @@
         "aggregate%val_as_bytes%0#0"
       ]
     },
-    "1870": {
+    "1872": {
       "op": "swap",
       "stack_out": [
         "currentRate#0",
@@ -11624,7 +11602,7 @@
         "maybe_value%3#0"
       ]
     },
-    "1871": {
+    "1873": {
       "op": "itob",
       "defined_out": [
         "aggregate%val_as_bytes%0#0",
@@ -11636,7 +11614,7 @@
         "aggregate%val_as_bytes%1#0"
       ]
     },
-    "1872": {
+    "1874": {
       "op": "concat",
       "defined_out": [
         "aggregate%head%1#0"
@@ -11646,7 +11624,7 @@
         "aggregate%head%1#0"
       ]
     },
-    "1873": {
+    "1875": {
       "op": "dig 1",
       "defined_out": [
         "aggregate%head%1#0",
@@ -11658,7 +11636,7 @@
         "currentRate#0"
       ]
     },
-    "1875": {
+    "1877": {
       "op": "itob",
       "defined_out": [
         "aggregate%head%1#0",
@@ -11671,7 +11649,7 @@
         "aggregate%val_as_bytes%2#0"
       ]
     },
-    "1876": {
+    "1878": {
       "op": "concat",
       "defined_out": [
         "aggregate%head%2#0",
@@ -11682,7 +11660,7 @@
         "aggregate%head%2#0"
       ]
     },
-    "1877": {
+    "1879": {
       "op": "bytec 7 // 0x151f7c75",
       "defined_out": [
         "0x151f7c75",
@@ -11695,7 +11673,7 @@
         "0x151f7c75"
       ]
     },
-    "1879": {
+    "1881": {
       "op": "swap",
       "stack_out": [
         "currentRate#0",
@@ -11703,7 +11681,7 @@
         "aggregate%head%2#0"
       ]
     },
-    "1880": {
+    "1882": {
       "op": "concat",
       "defined_out": [
         "currentRate#0",
@@ -11714,13 +11692,13 @@
         "tmp%1#0"
       ]
     },
-    "1881": {
+    "1883": {
       "op": "log",
       "stack_out": [
         "currentRate#0"
       ]
     },
-    "1882": {
+    "1884": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1",
@@ -11731,20 +11709,20 @@
         "1"
       ]
     },
-    "1883": {
+    "1885": {
       "op": "return",
       "stack_out": [
         "currentRate#0"
       ]
     },
-    "1884": {
+    "1886": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.calculateDynamicEmissionRate",
       "params": {},
       "block": "calculateDynamicEmissionRate",
       "stack_in": [],
       "op": "proto 0 1"
     },
-    "1887": {
+    "1889": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0"
@@ -11753,7 +11731,7 @@
         "0"
       ]
     },
-    "1888": {
+    "1890": {
       "op": "bytec_1 // \"totalAlpha\"",
       "defined_out": [
         "\"totalAlpha\"",
@@ -11764,7 +11742,7 @@
         "\"totalAlpha\""
       ]
     },
-    "1889": {
+    "1891": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%0#0",
@@ -11775,14 +11753,14 @@
         "maybe_exists%0#0"
       ]
     },
-    "1890": {
+    "1892": {
       "op": "swap",
       "stack_out": [
         "maybe_exists%0#0",
         "totalDeposited#0"
       ]
     },
-    "1891": {
+    "1893": {
       "op": "dup",
       "stack_out": [
         "maybe_exists%0#0",
@@ -11790,7 +11768,7 @@
         "totalDeposited#0 (copy)"
       ]
     },
-    "1892": {
+    "1894": {
       "op": "uncover 2",
       "defined_out": [
         "maybe_exists%0#0",
@@ -11802,7 +11780,7 @@
         "maybe_exists%0#0"
       ]
     },
-    "1894": {
+    "1896": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11810,20 +11788,20 @@
         "totalDeposited#0"
       ]
     },
-    "1895": {
+    "1897": {
       "op": "bz calculateDynamicEmissionRate_if_body@2",
       "stack_out": [
         "totalDeposited#0"
       ]
     },
-    "1898": {
+    "1900": {
       "op": "intc_0 // 0",
       "stack_out": [
         "totalDeposited#0",
         "0"
       ]
     },
-    "1899": {
+    "1901": {
       "op": "bytec_2 // \"farmBalance\"",
       "defined_out": [
         "\"farmBalance\"",
@@ -11836,7 +11814,7 @@
         "\"farmBalance\""
       ]
     },
-    "1900": {
+    "1902": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%1#0",
@@ -11849,7 +11827,7 @@
         "maybe_exists%1#0"
       ]
     },
-    "1901": {
+    "1903": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11857,13 +11835,13 @@
         "maybe_value%1#0"
       ]
     },
-    "1902": {
+    "1904": {
       "op": "bnz calculateDynamicEmissionRate_after_if_else@3",
       "stack_out": [
         "totalDeposited#0"
       ]
     },
-    "1905": {
+    "1907": {
       "block": "calculateDynamicEmissionRate_if_body@2",
       "stack_in": [
         "totalDeposited#0"
@@ -11877,14 +11855,14 @@
         "0"
       ]
     },
-    "1906": {
+    "1908": {
       "op": "swap"
     },
-    "1907": {
+    "1909": {
       "retsub": true,
       "op": "retsub"
     },
-    "1908": {
+    "1910": {
       "block": "calculateDynamicEmissionRate_after_if_else@3",
       "stack_in": [
         "totalDeposited#0"
@@ -11898,7 +11876,7 @@
         "0"
       ]
     },
-    "1909": {
+    "1911": {
       "op": "bytec_2 // \"farmBalance\"",
       "defined_out": [
         "\"farmBalance\"",
@@ -11910,7 +11888,7 @@
         "\"farmBalance\""
       ]
     },
-    "1910": {
+    "1912": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%2#0",
@@ -11922,7 +11900,7 @@
         "maybe_exists%2#0"
       ]
     },
-    "1911": {
+    "1913": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11930,7 +11908,7 @@
         "n1#0"
       ]
     },
-    "1912": {
+    "1914": {
       "op": "intc_0 // 0",
       "stack_out": [
         "totalDeposited#0",
@@ -11938,7 +11916,7 @@
         "0"
       ]
     },
-    "1913": {
+    "1915": {
       "op": "bytec 9 // \"emissionRatio\"",
       "defined_out": [
         "\"emissionRatio\"",
@@ -11952,7 +11930,7 @@
         "\"emissionRatio\""
       ]
     },
-    "1915": {
+    "1917": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%3#0",
@@ -11966,7 +11944,7 @@
         "maybe_exists%3#0"
       ]
     },
-    "1916": {
+    "1918": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -11975,7 +11953,7 @@
         "n2#0"
       ]
     },
-    "1917": {
+    "1919": {
       "op": "mulw",
       "defined_out": [
         "hi#0",
@@ -11987,7 +11965,7 @@
         "lo#0"
       ]
     },
-    "1918": {
+    "1920": {
       "op": "intc_0 // 0",
       "stack_out": [
         "totalDeposited#0",
@@ -11996,7 +11974,7 @@
         "0"
       ]
     },
-    "1919": {
+    "1921": {
       "op": "frame_dig 0",
       "defined_out": [
         "0",
@@ -12012,7 +11990,7 @@
         "totalDeposited#0"
       ]
     },
-    "1921": {
+    "1923": {
       "op": "divmodw",
       "defined_out": [
         "_r_hi#0",
@@ -12029,7 +12007,7 @@
         "_r_lo#0"
       ]
     },
-    "1922": {
+    "1924": {
       "op": "popn 2",
       "stack_out": [
         "totalDeposited#0",
@@ -12037,7 +12015,7 @@
         "q_lo#0"
       ]
     },
-    "1924": {
+    "1926": {
       "op": "swap",
       "stack_out": [
         "totalDeposited#0",
@@ -12045,7 +12023,7 @@
         "q_hi#0"
       ]
     },
-    "1925": {
+    "1927": {
       "op": "!",
       "defined_out": [
         "q_lo#0",
@@ -12058,7 +12036,7 @@
         "tmp%0#0"
       ]
     },
-    "1926": {
+    "1928": {
       "error": "Multiplication overflow in mulDivFloor",
       "op": "assert // Multiplication overflow in mulDivFloor",
       "stack_out": [
@@ -12066,7 +12044,7 @@
         "q_lo#0"
       ]
     },
-    "1927": {
+    "1929": {
       "op": "dup",
       "defined_out": [
         "q_lo#0",
@@ -12079,7 +12057,7 @@
         "q_lo#0 (copy)"
       ]
     },
-    "1928": {
+    "1930": {
       "op": "pushint 1000 // 1000",
       "defined_out": [
         "1000",
@@ -12094,7 +12072,7 @@
         "1000"
       ]
     },
-    "1931": {
+    "1933": {
       "op": "<",
       "defined_out": [
         "q_lo#0",
@@ -12107,10 +12085,10 @@
         "tmp%3#0"
       ]
     },
-    "1932": {
+    "1934": {
       "op": "pushint 1000 // 1000"
     },
-    "1935": {
+    "1937": {
       "op": "swap",
       "stack_out": [
         "totalDeposited#0",
@@ -12119,7 +12097,7 @@
         "tmp%3#0"
       ]
     },
-    "1936": {
+    "1938": {
       "op": "select",
       "defined_out": [
         "select%0#0",
@@ -12130,14 +12108,14 @@
         "select%0#0"
       ]
     },
-    "1937": {
+    "1939": {
       "op": "swap"
     },
-    "1938": {
+    "1940": {
       "retsub": true,
       "op": "retsub"
     },
-    "1939": {
+    "1941": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.alphaToShares",
       "params": {
         "alphaAmount#0": "uint64"
@@ -12146,7 +12124,7 @@
       "stack_in": [],
       "op": "proto 1 1"
     },
-    "1942": {
+    "1944": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0"
@@ -12155,7 +12133,7 @@
         "0"
       ]
     },
-    "1943": {
+    "1945": {
       "op": "bytec_0 // \"totalShares\"",
       "defined_out": [
         "\"totalShares\"",
@@ -12166,7 +12144,7 @@
         "\"totalShares\""
       ]
     },
-    "1944": {
+    "1946": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%0#0",
@@ -12177,18 +12155,18 @@
         "maybe_exists%0#0"
       ]
     },
-    "1945": {
+    "1947": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
         "maybe_value%0#0"
       ]
     },
-    "1946": {
+    "1948": {
       "op": "bnz alphaToShares_after_if_else@2",
       "stack_out": []
     },
-    "1949": {
+    "1951": {
       "op": "frame_dig -1",
       "defined_out": [
         "alphaAmount#0 (copy)"
@@ -12197,11 +12175,11 @@
         "alphaAmount#0 (copy)"
       ]
     },
-    "1951": {
+    "1953": {
       "retsub": true,
       "op": "retsub"
     },
-    "1952": {
+    "1954": {
       "block": "alphaToShares_after_if_else@2",
       "stack_in": [],
       "op": "intc_0 // 0",
@@ -12212,7 +12190,7 @@
         "0"
       ]
     },
-    "1953": {
+    "1955": {
       "op": "bytec_0 // \"totalShares\"",
       "defined_out": [
         "\"totalShares\"",
@@ -12223,7 +12201,7 @@
         "\"totalShares\""
       ]
     },
-    "1954": {
+    "1956": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%1#0",
@@ -12234,21 +12212,21 @@
         "maybe_exists%1#0"
       ]
     },
-    "1955": {
+    "1957": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
         "n2#0"
       ]
     },
-    "1956": {
+    "1958": {
       "op": "intc_0 // 0",
       "stack_out": [
         "n2#0",
         "0"
       ]
     },
-    "1957": {
+    "1959": {
       "op": "bytec_1 // \"totalAlpha\"",
       "defined_out": [
         "\"totalAlpha\"",
@@ -12261,7 +12239,7 @@
         "\"totalAlpha\""
       ]
     },
-    "1958": {
+    "1960": {
       "op": "app_global_get_ex",
       "defined_out": [
         "d#0",
@@ -12274,7 +12252,7 @@
         "maybe_exists%2#0"
       ]
     },
-    "1959": {
+    "1961": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -12282,7 +12260,7 @@
         "d#0"
       ]
     },
-    "1960": {
+    "1962": {
       "op": "frame_dig -1",
       "defined_out": [
         "alphaAmount#0 (copy)",
@@ -12295,7 +12273,7 @@
         "alphaAmount#0 (copy)"
       ]
     },
-    "1962": {
+    "1964": {
       "op": "uncover 2",
       "stack_out": [
         "d#0",
@@ -12303,7 +12281,7 @@
         "n2#0"
       ]
     },
-    "1964": {
+    "1966": {
       "op": "mulw",
       "defined_out": [
         "d#0",
@@ -12316,7 +12294,7 @@
         "lo#0"
       ]
     },
-    "1965": {
+    "1967": {
       "op": "intc_0 // 0",
       "stack_out": [
         "d#0",
@@ -12325,7 +12303,7 @@
         "0"
       ]
     },
-    "1966": {
+    "1968": {
       "op": "uncover 3",
       "stack_out": [
         "hi#0",
@@ -12334,7 +12312,7 @@
         "d#0"
       ]
     },
-    "1968": {
+    "1970": {
       "op": "divmodw",
       "defined_out": [
         "_r_hi#0",
@@ -12349,21 +12327,21 @@
         "_r_lo#0"
       ]
     },
-    "1969": {
+    "1971": {
       "op": "popn 2",
       "stack_out": [
         "q_hi#0",
         "q_lo#0"
       ]
     },
-    "1971": {
+    "1973": {
       "op": "swap",
       "stack_out": [
         "q_lo#0",
         "q_hi#0"
       ]
     },
-    "1972": {
+    "1974": {
       "op": "!",
       "defined_out": [
         "q_lo#0",
@@ -12374,18 +12352,18 @@
         "tmp%0#0"
       ]
     },
-    "1973": {
+    "1975": {
       "error": "Multiplication overflow in mulDivFloor",
       "op": "assert // Multiplication overflow in mulDivFloor",
       "stack_out": [
         "q_lo#0"
       ]
     },
-    "1974": {
+    "1976": {
       "retsub": true,
       "op": "retsub"
     },
-    "1975": {
+    "1977": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.sharesToAlpha",
       "params": {
         "shares#0": "uint64"
@@ -12394,7 +12372,7 @@
       "stack_in": [],
       "op": "proto 1 1"
     },
-    "1978": {
+    "1980": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0"
@@ -12403,7 +12381,7 @@
         "0"
       ]
     },
-    "1979": {
+    "1981": {
       "op": "bytec_0 // \"totalShares\"",
       "defined_out": [
         "\"totalShares\"",
@@ -12414,7 +12392,7 @@
         "\"totalShares\""
       ]
     },
-    "1980": {
+    "1982": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%0#0",
@@ -12425,28 +12403,28 @@
         "maybe_exists%0#0"
       ]
     },
-    "1981": {
+    "1983": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
         "maybe_value%0#0"
       ]
     },
-    "1982": {
+    "1984": {
       "op": "bnz sharesToAlpha_after_if_else@2",
       "stack_out": []
     },
-    "1985": {
+    "1987": {
       "op": "intc_0 // 0",
       "stack_out": [
         "0"
       ]
     },
-    "1986": {
+    "1988": {
       "retsub": true,
       "op": "retsub"
     },
-    "1987": {
+    "1989": {
       "block": "sharesToAlpha_after_if_else@2",
       "stack_in": [],
       "op": "intc_0 // 0",
@@ -12457,7 +12435,7 @@
         "0"
       ]
     },
-    "1988": {
+    "1990": {
       "op": "bytec_1 // \"totalAlpha\"",
       "defined_out": [
         "\"totalAlpha\"",
@@ -12468,7 +12446,7 @@
         "\"totalAlpha\""
       ]
     },
-    "1989": {
+    "1991": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%1#0",
@@ -12479,21 +12457,21 @@
         "maybe_exists%1#0"
       ]
     },
-    "1990": {
+    "1992": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
         "n2#0"
       ]
     },
-    "1991": {
+    "1993": {
       "op": "intc_0 // 0",
       "stack_out": [
         "n2#0",
         "0"
       ]
     },
-    "1992": {
+    "1994": {
       "op": "bytec_0 // \"totalShares\"",
       "defined_out": [
         "\"totalShares\"",
@@ -12506,7 +12484,7 @@
         "\"totalShares\""
       ]
     },
-    "1993": {
+    "1995": {
       "op": "app_global_get_ex",
       "defined_out": [
         "d#0",
@@ -12519,7 +12497,7 @@
         "maybe_exists%2#0"
       ]
     },
-    "1994": {
+    "1996": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -12527,7 +12505,7 @@
         "d#0"
       ]
     },
-    "1995": {
+    "1997": {
       "op": "frame_dig -1",
       "defined_out": [
         "d#0",
@@ -12540,7 +12518,7 @@
         "shares#0 (copy)"
       ]
     },
-    "1997": {
+    "1999": {
       "op": "uncover 2",
       "stack_out": [
         "d#0",
@@ -12548,7 +12526,7 @@
         "n2#0"
       ]
     },
-    "1999": {
+    "2001": {
       "op": "mulw",
       "defined_out": [
         "d#0",
@@ -12561,7 +12539,7 @@
         "lo#0"
       ]
     },
-    "2000": {
+    "2002": {
       "op": "intc_0 // 0",
       "stack_out": [
         "d#0",
@@ -12570,7 +12548,7 @@
         "0"
       ]
     },
-    "2001": {
+    "2003": {
       "op": "uncover 3",
       "stack_out": [
         "hi#0",
@@ -12579,7 +12557,7 @@
         "d#0"
       ]
     },
-    "2003": {
+    "2005": {
       "op": "divmodw",
       "defined_out": [
         "_r_hi#0",
@@ -12594,21 +12572,21 @@
         "_r_lo#0"
       ]
     },
-    "2004": {
+    "2006": {
       "op": "popn 2",
       "stack_out": [
         "q_hi#0",
         "q_lo#0"
       ]
     },
-    "2006": {
+    "2008": {
       "op": "swap",
       "stack_out": [
         "q_lo#0",
         "q_hi#0"
       ]
     },
-    "2007": {
+    "2009": {
       "op": "!",
       "defined_out": [
         "q_lo#0",
@@ -12619,18 +12597,18 @@
         "tmp%0#0"
       ]
     },
-    "2008": {
+    "2010": {
       "error": "Multiplication overflow in mulDivFloor",
       "op": "assert // Multiplication overflow in mulDivFloor",
       "stack_out": [
         "q_lo#0"
       ]
     },
-    "2009": {
+    "2011": {
       "retsub": true,
       "op": "retsub"
     },
-    "2010": {
+    "2012": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getExpectedSwapOutput",
       "params": {
         "inputAmount#0": "uint64"
@@ -12639,13 +12617,13 @@
       "stack_in": [],
       "op": "proto 1 1"
     },
-    "2013": {
+    "2015": {
       "op": "pushbytes \"\"",
       "stack_out": [
         "inputReserves#2"
       ]
     },
-    "2015": {
+    "2017": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0"
@@ -12655,7 +12633,7 @@
         "0"
       ]
     },
-    "2016": {
+    "2018": {
       "op": "bytec 15 // \"tinymanPoolAppId\"",
       "defined_out": [
         "\"tinymanPoolAppId\"",
@@ -12667,7 +12645,7 @@
         "\"tinymanPoolAppId\""
       ]
     },
-    "2018": {
+    "2020": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%0#0",
@@ -12679,7 +12657,7 @@
         "maybe_exists%0#0"
       ]
     },
-    "2019": {
+    "2021": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -12687,7 +12665,7 @@
         "poolApp#0"
       ]
     },
-    "2020": {
+    "2022": {
       "op": "intc_0 // 0",
       "stack_out": [
         "inputReserves#2",
@@ -12695,7 +12673,7 @@
         "0"
       ]
     },
-    "2021": {
+    "2023": {
       "op": "bytec 16 // \"tinymanPoolAddress\"",
       "defined_out": [
         "\"tinymanPoolAddress\"",
@@ -12709,7 +12687,7 @@
         "\"tinymanPoolAddress\""
       ]
     },
-    "2023": {
+    "2025": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%1#0",
@@ -12723,7 +12701,7 @@
         "maybe_exists%1#0"
       ]
     },
-    "2024": {
+    "2026": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -12732,7 +12710,7 @@
         "poolAddr#0"
       ]
     },
-    "2025": {
+    "2027": {
       "op": "dup",
       "defined_out": [
         "poolAddr#0",
@@ -12746,7 +12724,7 @@
         "poolAddr#0 (copy)"
       ]
     },
-    "2026": {
+    "2028": {
       "op": "dig 2",
       "defined_out": [
         "poolAddr#0",
@@ -12762,7 +12740,7 @@
         "poolApp#0 (copy)"
       ]
     },
-    "2028": {
+    "2030": {
       "op": "pushbytes \"asset_1_id\"",
       "defined_out": [
         "\"asset_1_id\"",
@@ -12780,7 +12758,7 @@
         "\"asset_1_id\""
       ]
     },
-    "2040": {
+    "2042": {
       "op": "app_local_get_ex",
       "defined_out": [
         "asset1Id#0",
@@ -12796,7 +12774,7 @@
         "hasAsset1Id#0"
       ]
     },
-    "2041": {
+    "2043": {
       "error": "Cannot read pool asset_1_id",
       "op": "assert // Cannot read pool asset_1_id",
       "stack_out": [
@@ -12806,7 +12784,7 @@
         "asset1Id#0"
       ]
     },
-    "2042": {
+    "2044": {
       "op": "dig 1",
       "stack_out": [
         "inputReserves#2",
@@ -12816,7 +12794,7 @@
         "poolAddr#0 (copy)"
       ]
     },
-    "2044": {
+    "2046": {
       "op": "dig 3",
       "stack_out": [
         "inputReserves#2",
@@ -12827,7 +12805,7 @@
         "poolApp#0 (copy)"
       ]
     },
-    "2046": {
+    "2048": {
       "op": "pushbytes \"asset_1_reserves\"",
       "defined_out": [
         "\"asset_1_reserves\"",
@@ -12847,7 +12825,7 @@
         "\"asset_1_reserves\""
       ]
     },
-    "2064": {
+    "2066": {
       "op": "app_local_get_ex",
       "defined_out": [
         "asset1Id#0",
@@ -12865,7 +12843,7 @@
         "hasAsset1Reserves#0"
       ]
     },
-    "2065": {
+    "2067": {
       "op": "swap",
       "stack_out": [
         "inputReserves#2",
@@ -12876,7 +12854,7 @@
         "asset1Reserves#0"
       ]
     },
-    "2066": {
+    "2068": {
       "op": "cover 4",
       "defined_out": [
         "asset1Id#0",
@@ -12894,7 +12872,7 @@
         "hasAsset1Reserves#0"
       ]
     },
-    "2068": {
+    "2070": {
       "error": "Cannot read pool asset_1_reserves",
       "op": "assert // Cannot read pool asset_1_reserves",
       "stack_out": [
@@ -12905,7 +12883,7 @@
         "asset1Id#0"
       ]
     },
-    "2069": {
+    "2071": {
       "op": "dig 1",
       "stack_out": [
         "inputReserves#2",
@@ -12916,7 +12894,7 @@
         "poolAddr#0 (copy)"
       ]
     },
-    "2071": {
+    "2073": {
       "op": "dig 3",
       "stack_out": [
         "inputReserves#2",
@@ -12928,7 +12906,7 @@
         "poolApp#0 (copy)"
       ]
     },
-    "2073": {
+    "2075": {
       "op": "pushbytes \"asset_2_reserves\"",
       "defined_out": [
         "\"asset_2_reserves\"",
@@ -12950,7 +12928,7 @@
         "\"asset_2_reserves\""
       ]
     },
-    "2091": {
+    "2093": {
       "op": "app_local_get_ex",
       "defined_out": [
         "asset1Id#0",
@@ -12970,7 +12948,7 @@
         "hasAsset2Reserves#0"
       ]
     },
-    "2092": {
+    "2094": {
       "op": "swap",
       "stack_out": [
         "inputReserves#2",
@@ -12982,7 +12960,7 @@
         "asset2Reserves#0"
       ]
     },
-    "2093": {
+    "2095": {
       "op": "cover 4",
       "defined_out": [
         "asset1Id#0",
@@ -13002,7 +12980,7 @@
         "hasAsset2Reserves#0"
       ]
     },
-    "2095": {
+    "2097": {
       "error": "Cannot read pool asset_2_reserves",
       "op": "assert // Cannot read pool asset_2_reserves",
       "stack_out": [
@@ -13014,7 +12992,7 @@
         "asset1Id#0"
       ]
     },
-    "2096": {
+    "2098": {
       "op": "swap",
       "stack_out": [
         "inputReserves#2",
@@ -13025,7 +13003,7 @@
         "poolAddr#0"
       ]
     },
-    "2097": {
+    "2099": {
       "op": "uncover 2",
       "stack_out": [
         "inputReserves#2",
@@ -13036,7 +13014,7 @@
         "poolApp#0"
       ]
     },
-    "2099": {
+    "2101": {
       "op": "pushbytes \"total_fee_share\"",
       "defined_out": [
         "\"total_fee_share\"",
@@ -13056,7 +13034,7 @@
         "\"total_fee_share\""
       ]
     },
-    "2116": {
+    "2118": {
       "op": "app_local_get_ex",
       "defined_out": [
         "asset1Id#0",
@@ -13074,7 +13052,7 @@
         "hasTotalFeeShare#0"
       ]
     },
-    "2117": {
+    "2119": {
       "op": "swap",
       "stack_out": [
         "inputReserves#2",
@@ -13085,7 +13063,7 @@
         "totalFeeShare#0"
       ]
     },
-    "2118": {
+    "2120": {
       "op": "cover 3",
       "defined_out": [
         "asset1Id#0",
@@ -13103,7 +13081,7 @@
         "hasTotalFeeShare#0"
       ]
     },
-    "2120": {
+    "2122": {
       "error": "Cannot read pool total_fee_share",
       "op": "assert // Cannot read pool total_fee_share",
       "stack_out": [
@@ -13114,7 +13092,7 @@
         "asset1Id#0"
       ]
     },
-    "2121": {
+    "2123": {
       "op": "intc_0 // 0",
       "stack_out": [
         "inputReserves#2",
@@ -13125,7 +13103,7 @@
         "0"
       ]
     },
-    "2122": {
+    "2124": {
       "op": "bytec 5 // \"usdcAsset\"",
       "defined_out": [
         "\"usdcAsset\"",
@@ -13145,7 +13123,7 @@
         "\"usdcAsset\""
       ]
     },
-    "2124": {
+    "2126": {
       "op": "app_global_get_ex",
       "defined_out": [
         "asset1Id#0",
@@ -13165,7 +13143,7 @@
         "maybe_exists%2#0"
       ]
     },
-    "2125": {
+    "2127": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -13177,7 +13155,7 @@
         "maybe_value%2#0"
       ]
     },
-    "2126": {
+    "2128": {
       "op": "==",
       "defined_out": [
         "asset1Reserves#0",
@@ -13193,7 +13171,7 @@
         "tmp%0#0"
       ]
     },
-    "2127": {
+    "2129": {
       "op": "bz getExpectedSwapOutput_else_body@2",
       "stack_out": [
         "inputReserves#2",
@@ -13202,7 +13180,7 @@
         "asset2Reserves#0"
       ]
     },
-    "2130": {
+    "2132": {
       "op": "frame_dig 1",
       "defined_out": [
         "asset1Reserves#0",
@@ -13218,7 +13196,7 @@
         "inputReserves#2"
       ]
     },
-    "2132": {
+    "2134": {
       "op": "frame_bury 0",
       "defined_out": [
         "asset1Reserves#0",
@@ -13233,7 +13211,7 @@
         "outputReserves#2"
       ]
     },
-    "2134": {
+    "2136": {
       "block": "getExpectedSwapOutput_after_if_else@3",
       "stack_in": [
         "inputReserves#2",
@@ -13253,7 +13231,7 @@
         "10000"
       ]
     },
-    "2136": {
+    "2138": {
       "op": "frame_dig 2",
       "defined_out": [
         "10000",
@@ -13268,7 +13246,7 @@
         "totalFeeShare#0"
       ]
     },
-    "2138": {
+    "2140": {
       "op": "-",
       "defined_out": [
         "n2#0",
@@ -13282,7 +13260,7 @@
         "n2#0"
       ]
     },
-    "2139": {
+    "2141": {
       "op": "frame_dig -1",
       "defined_out": [
         "inputAmount#0 (copy)",
@@ -13298,7 +13276,7 @@
         "inputAmount#0 (copy)"
       ]
     },
-    "2141": {
+    "2143": {
       "op": "mulw",
       "defined_out": [
         "hi#0",
@@ -13314,7 +13292,7 @@
         "lo#0"
       ]
     },
-    "2142": {
+    "2144": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0",
@@ -13332,7 +13310,7 @@
         "0"
       ]
     },
-    "2143": {
+    "2145": {
       "op": "intc 4 // 10000",
       "stack_out": [
         "inputReserves#2",
@@ -13345,7 +13323,7 @@
         "10000"
       ]
     },
-    "2145": {
+    "2147": {
       "op": "divmodw",
       "defined_out": [
         "_r_hi#0",
@@ -13365,7 +13343,7 @@
         "_r_lo#0"
       ]
     },
-    "2146": {
+    "2148": {
       "op": "popn 2",
       "stack_out": [
         "inputReserves#2",
@@ -13376,7 +13354,7 @@
         "q_lo#0"
       ]
     },
-    "2148": {
+    "2150": {
       "op": "swap",
       "stack_out": [
         "inputReserves#2",
@@ -13387,7 +13365,7 @@
         "q_hi#0"
       ]
     },
-    "2149": {
+    "2151": {
       "op": "!",
       "defined_out": [
         "q_lo#0",
@@ -13403,7 +13381,7 @@
         "tmp%0#0"
       ]
     },
-    "2150": {
+    "2152": {
       "error": "Multiplication overflow in mulDivFloor",
       "op": "assert // Multiplication overflow in mulDivFloor",
       "stack_out": [
@@ -13414,7 +13392,7 @@
         "q_lo#0"
       ]
     },
-    "2151": {
+    "2153": {
       "op": "frame_dig 0",
       "defined_out": [
         "inputReserves#2",
@@ -13430,7 +13408,7 @@
         "inputReserves#2"
       ]
     },
-    "2153": {
+    "2155": {
       "op": "dig 1",
       "defined_out": [
         "inputReserves#2",
@@ -13448,7 +13426,7 @@
         "q_lo#0 (copy)"
       ]
     },
-    "2155": {
+    "2157": {
       "op": "+",
       "defined_out": [
         "d#1",
@@ -13465,7 +13443,7 @@
         "d#1"
       ]
     },
-    "2156": {
+    "2158": {
       "op": "cover 2",
       "defined_out": [
         "d#1",
@@ -13483,7 +13461,7 @@
         "q_lo#0"
       ]
     },
-    "2158": {
+    "2160": {
       "op": "mulw",
       "stack_out": [
         "inputReserves#2",
@@ -13494,7 +13472,7 @@
         "lo#0"
       ]
     },
-    "2159": {
+    "2161": {
       "op": "intc_0 // 0",
       "stack_out": [
         "inputReserves#2",
@@ -13506,7 +13484,7 @@
         "0"
       ]
     },
-    "2160": {
+    "2162": {
       "op": "uncover 3",
       "stack_out": [
         "inputReserves#2",
@@ -13518,7 +13496,7 @@
         "d#1"
       ]
     },
-    "2162": {
+    "2164": {
       "op": "divmodw",
       "stack_out": [
         "inputReserves#2",
@@ -13530,7 +13508,7 @@
         "_r_lo#0"
       ]
     },
-    "2163": {
+    "2165": {
       "op": "popn 2",
       "stack_out": [
         "inputReserves#2",
@@ -13540,7 +13518,7 @@
         "q_lo#0"
       ]
     },
-    "2165": {
+    "2167": {
       "op": "swap",
       "stack_out": [
         "inputReserves#2",
@@ -13550,7 +13528,7 @@
         "q_hi#0"
       ]
     },
-    "2166": {
+    "2168": {
       "op": "!",
       "stack_out": [
         "inputReserves#2",
@@ -13560,7 +13538,7 @@
         "tmp%0#0"
       ]
     },
-    "2167": {
+    "2169": {
       "error": "Multiplication overflow in mulDivFloor",
       "op": "assert // Multiplication overflow in mulDivFloor",
       "stack_out": [
@@ -13570,14 +13548,14 @@
         "q_lo#0"
       ]
     },
-    "2168": {
+    "2170": {
       "op": "frame_bury 0"
     },
-    "2170": {
+    "2172": {
       "retsub": true,
       "op": "retsub"
     },
-    "2171": {
+    "2173": {
       "block": "getExpectedSwapOutput_else_body@2",
       "stack_in": [
         "inputReserves#2",
@@ -13595,7 +13573,7 @@
         "totalFeeShare#0"
       ]
     },
-    "2173": {
+    "2175": {
       "op": "frame_dig 1",
       "defined_out": [
         "inputReserves#2",
@@ -13608,10 +13586,10 @@
         "outputReserves#2"
       ]
     },
-    "2175": {
+    "2177": {
       "op": "b getExpectedSwapOutput_after_if_else@3"
     },
-    "2178": {
+    "2180": {
       "subroutine": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.executeCompound",
       "params": {
         "usdcBalance#0": "uint64",
@@ -13621,13 +13599,13 @@
       "stack_in": [],
       "op": "proto 2 0"
     },
-    "2181": {
+    "2183": {
       "op": "pushbytes \"\"",
       "stack_out": [
         "q_lo#0"
       ]
     },
-    "2183": {
+    "2185": {
       "op": "global CurrentApplicationAddress",
       "defined_out": [
         "appAddr#0"
@@ -13637,7 +13615,7 @@
         "appAddr#0"
       ]
     },
-    "2185": {
+    "2187": {
       "op": "frame_dig -2",
       "defined_out": [
         "appAddr#0",
@@ -13649,7 +13627,7 @@
         "usdcBalance#0 (copy)"
       ]
     },
-    "2187": {
+    "2189": {
       "callsub": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.getExpectedSwapOutput",
       "op": "callsub getExpectedSwapOutput",
       "defined_out": [
@@ -13662,7 +13640,7 @@
         "expectedOutput#0"
       ]
     },
-    "2190": {
+    "2192": {
       "op": "dup",
       "defined_out": [
         "appAddr#0",
@@ -13676,7 +13654,7 @@
         "expectedOutput#0 (copy)"
       ]
     },
-    "2191": {
+    "2193": {
       "error": "Expected output is zero",
       "op": "assert // Expected output is zero",
       "stack_out": [
@@ -13685,7 +13663,7 @@
         "expectedOutput#0"
       ]
     },
-    "2192": {
+    "2194": {
       "op": "intc 4 // 10000",
       "defined_out": [
         "10000",
@@ -13699,7 +13677,7 @@
         "10000"
       ]
     },
-    "2194": {
+    "2196": {
       "op": "frame_dig -1",
       "defined_out": [
         "10000",
@@ -13715,7 +13693,7 @@
         "slippageBps#0 (copy)"
       ]
     },
-    "2196": {
+    "2198": {
       "op": "-",
       "defined_out": [
         "appAddr#0",
@@ -13729,7 +13707,7 @@
         "n2#0"
       ]
     },
-    "2197": {
+    "2199": {
       "op": "mulw",
       "defined_out": [
         "appAddr#0",
@@ -13743,7 +13721,7 @@
         "lo#0"
       ]
     },
-    "2198": {
+    "2200": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0",
@@ -13759,7 +13737,7 @@
         "0"
       ]
     },
-    "2199": {
+    "2201": {
       "op": "intc 4 // 10000",
       "stack_out": [
         "q_lo#0",
@@ -13770,7 +13748,7 @@
         "10000"
       ]
     },
-    "2201": {
+    "2203": {
       "op": "divmodw",
       "defined_out": [
         "_r_hi#0",
@@ -13788,7 +13766,7 @@
         "_r_lo#0"
       ]
     },
-    "2202": {
+    "2204": {
       "op": "popn 2",
       "stack_out": [
         "q_lo#0",
@@ -13797,7 +13775,7 @@
         "q_lo#0"
       ]
     },
-    "2204": {
+    "2206": {
       "op": "cover 2",
       "stack_out": [
         "q_lo#0",
@@ -13806,7 +13784,7 @@
         "q_hi#0"
       ]
     },
-    "2206": {
+    "2208": {
       "op": "!",
       "defined_out": [
         "appAddr#0",
@@ -13820,7 +13798,7 @@
         "tmp%0#0"
       ]
     },
-    "2207": {
+    "2209": {
       "error": "Multiplication overflow in mulDivFloor",
       "op": "assert // Multiplication overflow in mulDivFloor",
       "stack_out": [
@@ -13829,7 +13807,7 @@
         "appAddr#0"
       ]
     },
-    "2208": {
+    "2210": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -13838,7 +13816,7 @@
         "0"
       ]
     },
-    "2209": {
+    "2211": {
       "op": "bytec 4 // \"alphaAsset\"",
       "defined_out": [
         "\"alphaAsset\"",
@@ -13854,7 +13832,7 @@
         "\"alphaAsset\""
       ]
     },
-    "2211": {
+    "2213": {
       "op": "app_global_get_ex",
       "defined_out": [
         "appAddr#0",
@@ -13870,7 +13848,7 @@
         "maybe_exists%0#0"
       ]
     },
-    "2212": {
+    "2214": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -13880,7 +13858,7 @@
         "maybe_value%0#0"
       ]
     },
-    "2213": {
+    "2215": {
       "op": "dup2",
       "defined_out": [
         "appAddr#0",
@@ -13898,7 +13876,7 @@
         "maybe_value%0#0 (copy)"
       ]
     },
-    "2214": {
+    "2216": {
       "op": "asset_holding_get AssetBalance",
       "defined_out": [
         "alphaBefore#0",
@@ -13916,7 +13894,7 @@
         "check%0#0"
       ]
     },
-    "2216": {
+    "2218": {
       "error": "account opted into asset",
       "op": "assert // account opted into asset",
       "stack_out": [
@@ -13927,10 +13905,10 @@
         "alphaBefore#0"
       ]
     },
-    "2217": {
+    "2219": {
       "op": "itxn_begin"
     },
-    "2218": {
+    "2220": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -13941,7 +13919,7 @@
         "0"
       ]
     },
-    "2219": {
+    "2221": {
       "op": "bytec 16 // \"tinymanPoolAddress\"",
       "defined_out": [
         "\"tinymanPoolAddress\"",
@@ -13961,7 +13939,7 @@
         "\"tinymanPoolAddress\""
       ]
     },
-    "2221": {
+    "2223": {
       "op": "app_global_get_ex",
       "defined_out": [
         "alphaBefore#0",
@@ -13981,7 +13959,7 @@
         "maybe_exists%1#0"
       ]
     },
-    "2222": {
+    "2224": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -13993,7 +13971,7 @@
         "maybe_value%1#0"
       ]
     },
-    "2223": {
+    "2225": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -14005,7 +13983,7 @@
         "0"
       ]
     },
-    "2224": {
+    "2226": {
       "op": "bytec 5 // \"usdcAsset\"",
       "defined_out": [
         "\"usdcAsset\"",
@@ -14027,7 +14005,7 @@
         "\"usdcAsset\""
       ]
     },
-    "2226": {
+    "2228": {
       "op": "app_global_get_ex",
       "defined_out": [
         "alphaBefore#0",
@@ -14049,7 +14027,7 @@
         "maybe_exists%2#0"
       ]
     },
-    "2227": {
+    "2229": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -14062,7 +14040,7 @@
         "maybe_value%2#0"
       ]
     },
-    "2228": {
+    "2230": {
       "op": "frame_dig -2",
       "stack_out": [
         "q_lo#0",
@@ -14075,7 +14053,7 @@
         "usdcBalance#0 (copy)"
       ]
     },
-    "2230": {
+    "2232": {
       "op": "itxn_field AssetAmount",
       "stack_out": [
         "q_lo#0",
@@ -14087,7 +14065,7 @@
         "maybe_value%2#0"
       ]
     },
-    "2232": {
+    "2234": {
       "op": "itxn_field XferAsset",
       "stack_out": [
         "q_lo#0",
@@ -14098,7 +14076,7 @@
         "maybe_value%1#0"
       ]
     },
-    "2234": {
+    "2236": {
       "op": "dup",
       "defined_out": [
         "alphaBefore#0",
@@ -14118,7 +14096,7 @@
         "maybe_value%1#0 (copy)"
       ]
     },
-    "2235": {
+    "2237": {
       "op": "itxn_field AssetReceiver",
       "stack_out": [
         "q_lo#0",
@@ -14129,7 +14107,7 @@
         "maybe_value%1#0"
       ]
     },
-    "2237": {
+    "2239": {
       "op": "intc_3 // 4",
       "defined_out": [
         "4",
@@ -14149,7 +14127,7 @@
         "4"
       ]
     },
-    "2238": {
+    "2240": {
       "op": "itxn_field TypeEnum",
       "stack_out": [
         "q_lo#0",
@@ -14160,7 +14138,7 @@
         "maybe_value%1#0"
       ]
     },
-    "2240": {
+    "2242": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -14172,7 +14150,7 @@
         "0"
       ]
     },
-    "2241": {
+    "2243": {
       "op": "itxn_field Fee",
       "stack_out": [
         "q_lo#0",
@@ -14183,10 +14161,10 @@
         "maybe_value%1#0"
       ]
     },
-    "2243": {
+    "2245": {
       "op": "itxn_next"
     },
-    "2244": {
+    "2246": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -14198,7 +14176,7 @@
         "0"
       ]
     },
-    "2245": {
+    "2247": {
       "op": "bytec 15 // \"tinymanPoolAppId\"",
       "defined_out": [
         "\"tinymanPoolAppId\"",
@@ -14220,7 +14198,7 @@
         "\"tinymanPoolAppId\""
       ]
     },
-    "2247": {
+    "2249": {
       "op": "app_global_get_ex",
       "defined_out": [
         "alphaBefore#0",
@@ -14242,7 +14220,7 @@
         "maybe_exists%3#0"
       ]
     },
-    "2248": {
+    "2250": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -14255,7 +14233,7 @@
         "maybe_value%3#0"
       ]
     },
-    "2249": {
+    "2251": {
       "op": "dig 5",
       "defined_out": [
         "alphaBefore#0",
@@ -14277,7 +14255,7 @@
         "q_lo#0 (copy)"
       ]
     },
-    "2251": {
+    "2253": {
       "op": "itob",
       "defined_out": [
         "alphaBefore#0",
@@ -14299,7 +14277,7 @@
         "tmp%5#0"
       ]
     },
-    "2252": {
+    "2254": {
       "op": "uncover 2",
       "stack_out": [
         "q_lo#0",
@@ -14312,7 +14290,7 @@
         "maybe_value%1#0"
       ]
     },
-    "2254": {
+    "2256": {
       "op": "itxn_field Accounts",
       "stack_out": [
         "q_lo#0",
@@ -14324,7 +14302,7 @@
         "tmp%5#0"
       ]
     },
-    "2256": {
+    "2258": {
       "op": "dig 3",
       "stack_out": [
         "q_lo#0",
@@ -14337,7 +14315,7 @@
         "maybe_value%0#0 (copy)"
       ]
     },
-    "2258": {
+    "2260": {
       "op": "itxn_field Assets",
       "stack_out": [
         "q_lo#0",
@@ -14349,7 +14327,7 @@
         "tmp%5#0"
       ]
     },
-    "2260": {
+    "2262": {
       "op": "pushbytes \"swap\"",
       "defined_out": [
         "\"swap\"",
@@ -14371,7 +14349,7 @@
         "\"swap\""
       ]
     },
-    "2266": {
+    "2268": {
       "op": "itxn_field ApplicationArgs",
       "stack_out": [
         "q_lo#0",
@@ -14383,7 +14361,7 @@
         "tmp%5#0"
       ]
     },
-    "2268": {
+    "2270": {
       "op": "pushbytes \"fixed-input\"",
       "defined_out": [
         "\"fixed-input\"",
@@ -14405,7 +14383,7 @@
         "\"fixed-input\""
       ]
     },
-    "2281": {
+    "2283": {
       "op": "itxn_field ApplicationArgs",
       "stack_out": [
         "q_lo#0",
@@ -14417,7 +14395,7 @@
         "tmp%5#0"
       ]
     },
-    "2283": {
+    "2285": {
       "op": "itxn_field ApplicationArgs",
       "stack_out": [
         "q_lo#0",
@@ -14428,7 +14406,7 @@
         "maybe_value%3#0"
       ]
     },
-    "2285": {
+    "2287": {
       "op": "itxn_field ApplicationID",
       "stack_out": [
         "q_lo#0",
@@ -14438,7 +14416,7 @@
         "alphaBefore#0"
       ]
     },
-    "2287": {
+    "2289": {
       "op": "pushint 6 // 6",
       "defined_out": [
         "6",
@@ -14456,7 +14434,7 @@
         "6"
       ]
     },
-    "2289": {
+    "2291": {
       "op": "itxn_field TypeEnum",
       "stack_out": [
         "q_lo#0",
@@ -14466,7 +14444,7 @@
         "alphaBefore#0"
       ]
     },
-    "2291": {
+    "2293": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -14477,7 +14455,7 @@
         "0"
       ]
     },
-    "2292": {
+    "2294": {
       "op": "itxn_field Fee",
       "stack_out": [
         "q_lo#0",
@@ -14487,10 +14465,10 @@
         "alphaBefore#0"
       ]
     },
-    "2294": {
+    "2296": {
       "op": "itxn_submit"
     },
-    "2295": {
+    "2297": {
       "op": "cover 2",
       "stack_out": [
         "q_lo#0",
@@ -14500,7 +14478,7 @@
         "maybe_value%0#0"
       ]
     },
-    "2297": {
+    "2299": {
       "op": "asset_holding_get AssetBalance",
       "defined_out": [
         "alphaAfter#0",
@@ -14516,7 +14494,7 @@
         "check%1#0"
       ]
     },
-    "2299": {
+    "2301": {
       "error": "account opted into asset",
       "op": "assert // account opted into asset",
       "stack_out": [
@@ -14526,7 +14504,7 @@
         "alphaAfter#0"
       ]
     },
-    "2300": {
+    "2302": {
       "op": "swap",
       "stack_out": [
         "q_lo#0",
@@ -14535,7 +14513,7 @@
         "alphaBefore#0"
       ]
     },
-    "2301": {
+    "2303": {
       "op": "-",
       "defined_out": [
         "q_lo#0",
@@ -14547,10 +14525,10 @@
         "swapOutput#0"
       ]
     },
-    "2302": {
+    "2304": {
       "op": "dup"
     },
-    "2303": {
+    "2305": {
       "op": "uncover 2",
       "defined_out": [
         "q_lo#0",
@@ -14563,7 +14541,7 @@
         "q_lo#0"
       ]
     },
-    "2305": {
+    "2307": {
       "op": ">=",
       "defined_out": [
         "q_lo#0",
@@ -14576,7 +14554,7 @@
         "tmp%7#0"
       ]
     },
-    "2306": {
+    "2308": {
       "error": "Swap output below minimum",
       "op": "assert // Swap output below minimum",
       "stack_out": [
@@ -14584,13 +14562,13 @@
         "swapOutput#0"
       ]
     },
-    "2307": {
+    "2309": {
       "op": "intc_0 // 0"
     },
-    "2308": {
+    "2310": {
       "op": "dup"
     },
-    "2309": {
+    "2311": {
       "op": "bytec 9 // \"emissionRatio\"",
       "defined_out": [
         "\"emissionRatio\"",
@@ -14607,7 +14585,7 @@
         "\"emissionRatio\""
       ]
     },
-    "2311": {
+    "2313": {
       "op": "app_global_get_ex",
       "defined_out": [
         "farmBonus#0",
@@ -14624,7 +14602,7 @@
         "maybe_exists%7#0"
       ]
     },
-    "2312": {
+    "2314": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -14634,7 +14612,7 @@
         "maybe_value%7#0"
       ]
     },
-    "2313": {
+    "2315": {
       "op": "bz executeCompound_after_if_else@8",
       "stack_out": [
         "q_lo#0",
@@ -14642,7 +14620,7 @@
         "farmBonus#0"
       ]
     },
-    "2316": {
+    "2318": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -14651,7 +14629,7 @@
         "0"
       ]
     },
-    "2317": {
+    "2319": {
       "op": "bytec_2 // \"farmBalance\"",
       "defined_out": [
         "\"farmBalance\"",
@@ -14668,7 +14646,7 @@
         "\"farmBalance\""
       ]
     },
-    "2318": {
+    "2320": {
       "op": "app_global_get_ex",
       "defined_out": [
         "farmBonus#0",
@@ -14685,7 +14663,7 @@
         "maybe_exists%8#0"
       ]
     },
-    "2319": {
+    "2321": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -14695,7 +14673,7 @@
         "maybe_value%8#0"
       ]
     },
-    "2320": {
+    "2322": {
       "op": "bz executeCompound_after_if_else@8",
       "stack_out": [
         "q_lo#0",
@@ -14703,7 +14681,7 @@
         "farmBonus#0"
       ]
     },
-    "2323": {
+    "2325": {
       "callsub": "RareFiAlphaCompoundingVault.algo.ts::RareFiAlphaCompoundingVault.calculateDynamicEmissionRate",
       "op": "callsub calculateDynamicEmissionRate",
       "defined_out": [
@@ -14719,7 +14697,7 @@
         "currentRate#0"
       ]
     },
-    "2326": {
+    "2328": {
       "op": "frame_dig 1",
       "stack_out": [
         "q_lo#0",
@@ -14729,7 +14707,7 @@
         "swapOutput#0"
       ]
     },
-    "2328": {
+    "2330": {
       "op": "mulw",
       "stack_out": [
         "q_lo#0",
@@ -14739,7 +14717,7 @@
         "lo#0"
       ]
     },
-    "2329": {
+    "2331": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -14750,7 +14728,7 @@
         "0"
       ]
     },
-    "2330": {
+    "2332": {
       "op": "intc 4 // 10000",
       "stack_out": [
         "q_lo#0",
@@ -14762,7 +14740,7 @@
         "10000"
       ]
     },
-    "2332": {
+    "2334": {
       "op": "divmodw",
       "stack_out": [
         "q_lo#0",
@@ -14774,7 +14752,7 @@
         "_r_lo#0"
       ]
     },
-    "2333": {
+    "2335": {
       "op": "popn 2",
       "stack_out": [
         "q_lo#0",
@@ -14784,7 +14762,7 @@
         "q_lo#0"
       ]
     },
-    "2335": {
+    "2337": {
       "op": "dup",
       "stack_out": [
         "q_lo#0",
@@ -14795,7 +14773,7 @@
         "q_lo#0 (copy)"
       ]
     },
-    "2336": {
+    "2338": {
       "op": "cover 2",
       "stack_out": [
         "q_lo#0",
@@ -14806,7 +14784,7 @@
         "q_lo#0"
       ]
     },
-    "2338": {
+    "2340": {
       "op": "frame_bury 0",
       "defined_out": [
         "farmBonus#0",
@@ -14822,7 +14800,7 @@
         "q_hi#0"
       ]
     },
-    "2340": {
+    "2342": {
       "op": "!",
       "stack_out": [
         "q_lo#0",
@@ -14832,7 +14810,7 @@
         "tmp%0#0"
       ]
     },
-    "2341": {
+    "2343": {
       "error": "Multiplication overflow in mulDivFloor",
       "op": "assert // Multiplication overflow in mulDivFloor",
       "stack_out": [
@@ -14842,7 +14820,7 @@
         "q_lo#0"
       ]
     },
-    "2342": {
+    "2344": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -14852,7 +14830,7 @@
         "0"
       ]
     },
-    "2343": {
+    "2345": {
       "op": "bytec_2 // \"farmBalance\"",
       "stack_out": [
         "q_lo#0",
@@ -14863,7 +14841,7 @@
         "\"farmBalance\""
       ]
     },
-    "2344": {
+    "2346": {
       "op": "app_global_get_ex",
       "defined_out": [
         "farmBonus#0",
@@ -14881,7 +14859,7 @@
         "maybe_exists%9#0"
       ]
     },
-    "2345": {
+    "2347": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -14892,7 +14870,7 @@
         "maybe_value%9#0"
       ]
     },
-    "2346": {
+    "2348": {
       "op": "<",
       "defined_out": [
         "farmBonus#0",
@@ -14907,7 +14885,7 @@
         "tmp%12#0"
       ]
     },
-    "2347": {
+    "2349": {
       "op": "bz executeCompound_ternary_false@6",
       "stack_out": [
         "q_lo#0",
@@ -14915,7 +14893,7 @@
         "farmBonus#0"
       ]
     },
-    "2350": {
+    "2352": {
       "op": "frame_dig 0",
       "stack_out": [
         "q_lo#0",
@@ -14924,7 +14902,7 @@
         "farmBonus#0"
       ]
     },
-    "2352": {
+    "2354": {
       "op": "frame_bury 2",
       "stack_out": [
         "q_lo#0",
@@ -14932,7 +14910,7 @@
         "farmBonus#0"
       ]
     },
-    "2354": {
+    "2356": {
       "block": "executeCompound_ternary_merge@7",
       "stack_in": [
         "q_lo#0",
@@ -14950,7 +14928,7 @@
         "0"
       ]
     },
-    "2355": {
+    "2357": {
       "op": "bytec_2 // \"farmBalance\"",
       "defined_out": [
         "\"farmBalance\"",
@@ -14964,7 +14942,7 @@
         "\"farmBalance\""
       ]
     },
-    "2356": {
+    "2358": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%11#0",
@@ -14978,7 +14956,7 @@
         "maybe_exists%11#0"
       ]
     },
-    "2357": {
+    "2359": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -14988,7 +14966,7 @@
         "maybe_value%11#0"
       ]
     },
-    "2358": {
+    "2360": {
       "op": "frame_dig 2",
       "defined_out": [
         "farmBonus#0",
@@ -15002,7 +14980,7 @@
         "farmBonus#0"
       ]
     },
-    "2360": {
+    "2362": {
       "op": "-",
       "defined_out": [
         "farmBonus#0",
@@ -15015,7 +14993,7 @@
         "tmp%13#0"
       ]
     },
-    "2361": {
+    "2363": {
       "op": "bytec_2 // \"farmBalance\"",
       "stack_out": [
         "q_lo#0",
@@ -15025,7 +15003,7 @@
         "\"farmBalance\""
       ]
     },
-    "2362": {
+    "2364": {
       "op": "swap",
       "stack_out": [
         "q_lo#0",
@@ -15035,7 +15013,7 @@
         "tmp%13#0"
       ]
     },
-    "2363": {
+    "2365": {
       "op": "app_global_put",
       "stack_out": [
         "q_lo#0",
@@ -15043,7 +15021,7 @@
         "farmBonus#0"
       ]
     },
-    "2364": {
+    "2366": {
       "block": "executeCompound_after_if_else@8",
       "stack_in": [
         "q_lo#0",
@@ -15061,7 +15039,7 @@
         "swapOutput#0"
       ]
     },
-    "2366": {
+    "2368": {
       "op": "frame_dig 2",
       "defined_out": [
         "farmBonus#0",
@@ -15075,7 +15053,7 @@
         "farmBonus#0"
       ]
     },
-    "2368": {
+    "2370": {
       "op": "+",
       "defined_out": [
         "farmBonus#0",
@@ -15089,7 +15067,7 @@
         "totalOutput#0"
       ]
     },
-    "2369": {
+    "2371": {
       "op": "intc_0 // 0",
       "defined_out": [
         "0",
@@ -15105,7 +15083,7 @@
         "0"
       ]
     },
-    "2370": {
+    "2372": {
       "op": "bytec 14 // \"creatorFeeRate\"",
       "defined_out": [
         "\"creatorFeeRate\"",
@@ -15123,7 +15101,7 @@
         "\"creatorFeeRate\""
       ]
     },
-    "2372": {
+    "2374": {
       "op": "app_global_get_ex",
       "defined_out": [
         "farmBonus#0",
@@ -15141,7 +15119,7 @@
         "maybe_exists%12#0"
       ]
     },
-    "2373": {
+    "2375": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -15152,7 +15130,7 @@
         "n2#0"
       ]
     },
-    "2374": {
+    "2376": {
       "op": "dig 1",
       "defined_out": [
         "farmBonus#0",
@@ -15170,7 +15148,7 @@
         "totalOutput#0 (copy)"
       ]
     },
-    "2376": {
+    "2378": {
       "op": "mulw",
       "defined_out": [
         "farmBonus#0",
@@ -15188,7 +15166,7 @@
         "lo#0"
       ]
     },
-    "2377": {
+    "2379": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -15200,7 +15178,7 @@
         "0"
       ]
     },
-    "2378": {
+    "2380": {
       "op": "pushint 100 // 100",
       "defined_out": [
         "0",
@@ -15222,7 +15200,7 @@
         "100"
       ]
     },
-    "2380": {
+    "2382": {
       "op": "divmodw",
       "defined_out": [
         "_r_hi#0",
@@ -15244,7 +15222,7 @@
         "_r_lo#0"
       ]
     },
-    "2381": {
+    "2383": {
       "op": "popn 2",
       "stack_out": [
         "q_lo#0",
@@ -15255,7 +15233,7 @@
         "q_lo#0"
       ]
     },
-    "2383": {
+    "2385": {
       "op": "swap",
       "stack_out": [
         "q_lo#0",
@@ -15266,7 +15244,7 @@
         "q_hi#0"
       ]
     },
-    "2384": {
+    "2386": {
       "op": "!",
       "defined_out": [
         "farmBonus#0",
@@ -15284,7 +15262,7 @@
         "tmp%0#0"
       ]
     },
-    "2385": {
+    "2387": {
       "error": "Multiplication overflow in mulDivFloor",
       "op": "assert // Multiplication overflow in mulDivFloor",
       "stack_out": [
@@ -15295,7 +15273,7 @@
         "q_lo#0"
       ]
     },
-    "2386": {
+    "2388": {
       "op": "dup2",
       "defined_out": [
         "farmBonus#0",
@@ -15315,7 +15293,7 @@
         "q_lo#0 (copy)"
       ]
     },
-    "2387": {
+    "2389": {
       "op": "-",
       "defined_out": [
         "farmBonus#0",
@@ -15333,7 +15311,7 @@
         "vaultCut#0"
       ]
     },
-    "2388": {
+    "2390": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -15345,7 +15323,7 @@
         "0"
       ]
     },
-    "2389": {
+    "2391": {
       "op": "bytec 8 // \"creatorUnclaimedAlpha\"",
       "defined_out": [
         "\"creatorUnclaimedAlpha\"",
@@ -15367,7 +15345,7 @@
         "\"creatorUnclaimedAlpha\""
       ]
     },
-    "2391": {
+    "2393": {
       "op": "app_global_get_ex",
       "defined_out": [
         "farmBonus#0",
@@ -15389,7 +15367,7 @@
         "maybe_exists%13#0"
       ]
     },
-    "2392": {
+    "2394": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -15402,7 +15380,7 @@
         "maybe_value%13#0"
       ]
     },
-    "2393": {
+    "2395": {
       "op": "uncover 2",
       "stack_out": [
         "q_lo#0",
@@ -15414,7 +15392,7 @@
         "q_lo#0"
       ]
     },
-    "2395": {
+    "2397": {
       "op": "+",
       "defined_out": [
         "farmBonus#0",
@@ -15433,7 +15411,7 @@
         "tmp%17#0"
       ]
     },
-    "2396": {
+    "2398": {
       "op": "bytec 8 // \"creatorUnclaimedAlpha\"",
       "stack_out": [
         "q_lo#0",
@@ -15445,7 +15423,7 @@
         "\"creatorUnclaimedAlpha\""
       ]
     },
-    "2398": {
+    "2400": {
       "op": "swap",
       "stack_out": [
         "q_lo#0",
@@ -15457,7 +15435,7 @@
         "tmp%17#0"
       ]
     },
-    "2399": {
+    "2401": {
       "op": "app_global_put",
       "stack_out": [
         "q_lo#0",
@@ -15467,7 +15445,7 @@
         "vaultCut#0"
       ]
     },
-    "2400": {
+    "2402": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -15478,7 +15456,7 @@
         "0"
       ]
     },
-    "2401": {
+    "2403": {
       "op": "bytec_1 // \"totalAlpha\"",
       "defined_out": [
         "\"totalAlpha\"",
@@ -15499,7 +15477,7 @@
         "\"totalAlpha\""
       ]
     },
-    "2402": {
+    "2404": {
       "op": "app_global_get_ex",
       "defined_out": [
         "farmBonus#0",
@@ -15520,7 +15498,7 @@
         "maybe_exists%14#0"
       ]
     },
-    "2403": {
+    "2405": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -15532,7 +15510,7 @@
         "maybe_value%14#0"
       ]
     },
-    "2404": {
+    "2406": {
       "op": "+",
       "defined_out": [
         "farmBonus#0",
@@ -15549,7 +15527,7 @@
         "tmp%18#0"
       ]
     },
-    "2405": {
+    "2407": {
       "op": "bytec_1 // \"totalAlpha\"",
       "stack_out": [
         "q_lo#0",
@@ -15560,7 +15538,7 @@
         "\"totalAlpha\""
       ]
     },
-    "2406": {
+    "2408": {
       "op": "swap",
       "stack_out": [
         "q_lo#0",
@@ -15571,7 +15549,7 @@
         "tmp%18#0"
       ]
     },
-    "2407": {
+    "2409": {
       "op": "app_global_put",
       "stack_out": [
         "q_lo#0",
@@ -15580,7 +15558,7 @@
         "totalOutput#0"
       ]
     },
-    "2408": {
+    "2410": {
       "op": "intc_0 // 0",
       "stack_out": [
         "q_lo#0",
@@ -15590,7 +15568,7 @@
         "0"
       ]
     },
-    "2409": {
+    "2411": {
       "op": "bytec 13 // \"totalYieldCompounded\"",
       "defined_out": [
         "\"totalYieldCompounded\"",
@@ -15609,7 +15587,7 @@
         "\"totalYieldCompounded\""
       ]
     },
-    "2411": {
+    "2413": {
       "op": "app_global_get_ex",
       "defined_out": [
         "farmBonus#0",
@@ -15628,7 +15606,7 @@
         "maybe_exists%15#0"
       ]
     },
-    "2412": {
+    "2414": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "stack_out": [
@@ -15639,7 +15617,7 @@
         "maybe_value%15#0"
       ]
     },
-    "2413": {
+    "2415": {
       "op": "+",
       "defined_out": [
         "farmBonus#0",
@@ -15654,7 +15632,7 @@
         "tmp%19#0"
       ]
     },
-    "2414": {
+    "2416": {
       "op": "bytec 13 // \"totalYieldCompounded\"",
       "stack_out": [
         "q_lo#0",
@@ -15664,7 +15642,7 @@
         "\"totalYieldCompounded\""
       ]
     },
-    "2416": {
+    "2418": {
       "op": "swap",
       "stack_out": [
         "q_lo#0",
@@ -15674,7 +15652,7 @@
         "tmp%19#0"
       ]
     },
-    "2417": {
+    "2419": {
       "op": "app_global_put",
       "stack_out": [
         "q_lo#0",
@@ -15682,11 +15660,11 @@
         "farmBonus#0"
       ]
     },
-    "2418": {
+    "2420": {
       "retsub": true,
       "op": "retsub"
     },
-    "2419": {
+    "2421": {
       "block": "executeCompound_ternary_false@6",
       "stack_in": [
         "q_lo#0",
@@ -15704,7 +15682,7 @@
         "0"
       ]
     },
-    "2420": {
+    "2422": {
       "op": "bytec_2 // \"farmBalance\"",
       "defined_out": [
         "\"farmBalance\"",
@@ -15718,7 +15696,7 @@
         "\"farmBalance\""
       ]
     },
-    "2421": {
+    "2423": {
       "op": "app_global_get_ex",
       "defined_out": [
         "maybe_exists%10#0",
@@ -15732,7 +15710,7 @@
         "maybe_exists%10#0"
       ]
     },
-    "2422": {
+    "2424": {
       "error": "check GlobalState exists",
       "op": "assert // check GlobalState exists",
       "defined_out": [
@@ -15745,7 +15723,7 @@
         "farmBonus#0"
       ]
     },
-    "2423": {
+    "2425": {
       "op": "frame_bury 2",
       "defined_out": [
         "farmBonus#0"
@@ -15756,7 +15734,7 @@
         "farmBonus#0"
       ]
     },
-    "2425": {
+    "2427": {
       "op": "b executeCompound_ternary_merge@7"
     }
   }

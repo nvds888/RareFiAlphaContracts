@@ -1881,10 +1881,16 @@ updateCreatorAddress:
     assert // check GlobalState exists
     ==
     assert // Only creator can update
+    // RareFiVault.algo.ts:695
+    // assert(newCreatorAddress !== Global.zeroAddress, 'Cannot set zero address');
+    dup
+    global ZeroAddress
+    !=
+    assert // Cannot set zero address
     // RareFiVault.algo.ts:47
     // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
     bytec_2 // "creatorAddress"
-    // RareFiVault.algo.ts:695
+    // RareFiVault.algo.ts:696
     // this.creatorAddress.value = newCreatorAddress;
     swap
     app_global_put
@@ -1896,7 +1902,7 @@ updateCreatorAddress:
 
 // RareFiVault.algo.ts::RareFiVault.updateRarefiAddress[routing]() -> void:
 updateRarefiAddress:
-    // RareFiVault.algo.ts:702
+    // RareFiVault.algo.ts:703
     // @arc4.abimethod()
     txna ApplicationArgs 1
     dup
@@ -1904,40 +1910,31 @@ updateRarefiAddress:
     pushint 32 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    // RareFiVault.algo.ts:704
+    // RareFiVault.algo.ts:705
     // assert(Txn.rekeyTo === Global.zeroAddress, 'rekeyTo must be zero');
     txn RekeyTo
     global ZeroAddress
     ==
     assert // rekeyTo must be zero
-    // RareFiVault.algo.ts:705
-    // const isCreator = Txn.sender === this.creatorAddress.value;
-    txn Sender
-    intc_0 // 0
-    // RareFiVault.algo.ts:47
-    // creatorAddress = GlobalState<Account>();   // Vault creator who receives fee
-    bytec_2 // "creatorAddress"
-    // RareFiVault.algo.ts:705
-    // const isCreator = Txn.sender === this.creatorAddress.value;
-    app_global_get_ex
-    assert // check GlobalState exists
-    ==
     // RareFiVault.algo.ts:706
-    // const isRarefi = Txn.sender === this.rarefiAddress.value;
+    // assert(Txn.sender === this.rarefiAddress.value, 'Only RareFi can update');
     txn Sender
     intc_0 // 0
     // RareFiVault.algo.ts:48
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
     bytec 11 // "rarefiAddress"
     // RareFiVault.algo.ts:706
-    // const isRarefi = Txn.sender === this.rarefiAddress.value;
+    // assert(Txn.sender === this.rarefiAddress.value, 'Only RareFi can update');
     app_global_get_ex
     assert // check GlobalState exists
     ==
+    assert // Only RareFi can update
     // RareFiVault.algo.ts:707
-    // assert(isCreator || isRarefi, 'Only creator or RareFi can update');
-    ||
-    assert // Only creator or RareFi can update
+    // assert(newRarefiAddress !== Global.zeroAddress, 'Cannot set zero address');
+    dup
+    global ZeroAddress
+    !=
+    assert // Cannot set zero address
     // RareFiVault.algo.ts:48
     // rarefiAddress = GlobalState<Account>();    // RareFi platform address (can also trigger swaps)
     bytec 11 // "rarefiAddress"
@@ -1945,7 +1942,7 @@ updateRarefiAddress:
     // this.rarefiAddress.value = newRarefiAddress;
     swap
     app_global_put
-    // RareFiVault.algo.ts:702
+    // RareFiVault.algo.ts:703
     // @arc4.abimethod()
     intc_1 // 1
     return

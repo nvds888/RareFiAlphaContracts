@@ -211,7 +211,7 @@ Both vaults use Tinyman V2 for swaps.
 | Configure vault | Creator at deployment only |
 | Update creator fee rate | Creator only (0-6% range) |
 | Update creator address | Creator only (key rotation) |
-| Update RareFi address | Creator or RareFi (key rotation) |
+| Update RareFi address | RareFi only (key rotation) |
 | Trigger swaps/compounds | Anyone (permissionless) |
 | Deposit/withdraw | Any opted-in user |
 | Claim yield | Any user with pending yield |
