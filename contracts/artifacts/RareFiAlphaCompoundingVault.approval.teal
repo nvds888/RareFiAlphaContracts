@@ -3,7 +3,7 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    intcblock 0 1 8 4 10000 200000 50000000 1000000000000
+    intcblock 0 1 8 4 10000 100000 50000000 1000000000000
     bytecblock "totalShares" "totalAlpha" "farmBalance" "creatorAddress" "alphaAsset" "usdcAsset" "userShares" 0x151f7c75 "creatorUnclaimedAlpha" "emissionRatio" "rarefiAddress" "minSwapThreshold" "maxSlippageBps" "totalYieldCompounded" "creatorFeeRate" "tinymanPoolAppId" "tinymanPoolAddress" "assetsOptedIn"
     // RareFiAlphaCompoundingVault.algo.ts:37
     // export class RareFiAlphaCompoundingVault extends arc4.Contract {
@@ -157,7 +157,7 @@ createVault:
     // RareFiAlphaCompoundingVault.algo.ts:265
     // assert(minSwapThreshold >= MIN_SWAP_AMOUNT, 'Swap threshold too low');
     dig 4
-    intc 5 // 200000
+    intc 5 // 100000
     >=
     assert // Swap threshold too low
     // RareFiAlphaCompoundingVault.algo.ts:266
@@ -1593,7 +1593,7 @@ updateMinSwapThreshold:
     // RareFiAlphaCompoundingVault.algo.ts:628
     // assert(newThreshold >= MIN_SWAP_AMOUNT, 'Threshold too low');
     dup
-    intc 5 // 200000
+    intc 5 // 100000
     >=
     assert // Threshold too low
     // RareFiAlphaCompoundingVault.algo.ts:629

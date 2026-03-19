@@ -11,7 +11,7 @@
       "params": {},
       "block": "main",
       "stack_in": [],
-      "op": "intcblock 0 1 8 4 10000 1000000000000 200000 50000000"
+      "op": "intcblock 0 1 8 4 10000 1000000000000 100000 50000000"
     },
     "22": {
       "op": "bytecblock \"totalDeposits\" \"farmBalance\" \"creatorAddress\" \"depositedAmount\" \"yieldAsset\" \"swapAsset\" \"yieldPerToken\" \"earnedYield\" \"creatorUnclaimedYield\" \"emissionRatio\" \"depositAsset\" \"rarefiAddress\" 0x151f7c75 \"minSwapThreshold\" \"maxSlippageBps\" \"totalYieldGenerated\" \"userYieldPerToken\" \"creatorFeeRate\" \"tinymanPoolAppId\" \"tinymanPoolAddress\" \"assetsOptedIn\""
@@ -1642,9 +1642,9 @@
       ]
     },
     "652": {
-      "op": "intc 6 // 200000",
+      "op": "intc 6 // 100000",
       "defined_out": [
-        "200000",
+        "100000",
         "creatorFeeRate#0",
         "depositAssetId#0",
         "maxSlippageBps#0",
@@ -1667,7 +1667,7 @@
         "tinymanPoolAddress#0",
         "rarefiAddress#0",
         "minSwapThreshold#0 (copy)",
-        "200000"
+        "100000"
       ]
     },
     "654": {
@@ -10330,16 +10330,16 @@
       ]
     },
     "1743": {
-      "op": "intc 6 // 200000",
+      "op": "intc 6 // 100000",
       "defined_out": [
-        "200000",
+        "100000",
         "newThreshold#0",
         "newThreshold#0 (copy)"
       ],
       "stack_out": [
         "newThreshold#0",
         "newThreshold#0 (copy)",
-        "200000"
+        "100000"
       ]
     },
     "1745": {

@@ -11,7 +11,7 @@
       "params": {},
       "block": "main",
       "stack_in": [],
-      "op": "intcblock 0 1 8 4 10000 200000 50000000 1000000000000"
+      "op": "intcblock 0 1 8 4 10000 100000 50000000 1000000000000"
     },
     "22": {
       "op": "bytecblock \"totalShares\" \"totalAlpha\" \"farmBalance\" \"creatorAddress\" \"alphaAsset\" \"usdcAsset\" \"userShares\" 0x151f7c75 \"creatorUnclaimedAlpha\" \"emissionRatio\" \"rarefiAddress\" \"minSwapThreshold\" \"maxSlippageBps\" \"totalYieldCompounded\" \"creatorFeeRate\" \"tinymanPoolAppId\" \"tinymanPoolAddress\" \"assetsOptedIn\""
@@ -1471,9 +1471,9 @@
       ]
     },
     "598": {
-      "op": "intc 5 // 200000",
+      "op": "intc 5 // 100000",
       "defined_out": [
-        "200000",
+        "100000",
         "alphaAssetId#0",
         "creatorFeeRate#0",
         "maxSlippageBps#0",
@@ -1494,7 +1494,7 @@
         "tinymanPoolAddress#0",
         "rarefiAddress#0",
         "minSwapThreshold#0 (copy)",
-        "200000"
+        "100000"
       ]
     },
     "600": {
@@ -9267,16 +9267,16 @@
       ]
     },
     "1571": {
-      "op": "intc 5 // 200000",
+      "op": "intc 5 // 100000",
       "defined_out": [
-        "200000",
+        "100000",
         "newThreshold#0",
         "newThreshold#0 (copy)"
       ],
       "stack_out": [
         "newThreshold#0",
         "newThreshold#0 (copy)",
-        "200000"
+        "100000"
       ]
     },
     "1573": {

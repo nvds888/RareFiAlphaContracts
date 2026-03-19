@@ -27,7 +27,7 @@ const MAX_FEE_RATE: uint64 = Uint64(6);                 // 6% max fee (percentag
 const FEE_PERCENT_BASE: uint64 = Uint64(100);          // Fee percentage base (feeRate/100 = percentage)
 const MIN_FARM_EMISSION_BPS: uint64 = Uint64(1_000);    // 10% minimum when farm has balance
 const MIN_DEPOSIT_AMOUNT: uint64 = Uint64(1_000_000);  // Minimum deposit (1 token with 6 decimals)
-const MIN_SWAP_AMOUNT: uint64 = Uint64(200_000);       // Minimum swap amount (0.20 USDC)
+const MIN_SWAP_AMOUNT: uint64 = Uint64(100_000);       // Minimum swap amount (0.10 USDC)
 const MAX_SWAP_THRESHOLD: uint64 = Uint64(50_000_000);  // Maximum swap threshold (50 USDC)
 const FEE_BPS_BASE: uint64 = Uint64(10_000);           // Basis points denominator (10000 = 100%)
 const MAX_SLIPPAGE_BPS: uint64 = Uint64(10_000);        // Absolute ceiling for maxSlippageBps setting
