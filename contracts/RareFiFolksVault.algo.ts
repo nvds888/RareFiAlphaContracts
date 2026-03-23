@@ -35,7 +35,7 @@
 //
 //   ARC-4 reference type encoding in appArgs (standard AVM convention):
 //     account:     uint8 index — 0 = Txn.sender (vault), 1 = accounts[0], ...
-//     asset:       uint8 index — 1 = assets[0], 2 = assets[1], ...  (1-based)
+//     asset:       uint8 index — 0 = assets[0], 1 = assets[1], ...  (0-based)
 //     application: uint8 index — 0 = called app, 1 = apps[0], ...
 
 import {
@@ -290,8 +290,8 @@ export class RareFiFolksVault extends arc4.Contract {
           FOLKS_WITHDRAW_SELECTOR,  // withdraw(axfer,uint64,account,asset,asset,application)uint64
           itob(Uint64(0)),           // received_amount = 0 (variable: redeem all fTokens sent)
           Bytes('\x00'),             // receiver = index 0 = Txn.sender = vault address
-          Bytes('\x01'),             // asset = index 1 = foreignAssets[0] = depositAsset
-          Bytes('\x02'),             // f_asset = index 2 = foreignAssets[1] = fTokenAsset
+          Bytes('\x00'),             // asset = index 0 = foreignAssets[0] = depositAsset
+          Bytes('\x01'),             // f_asset = index 1 = foreignAssets[1] = fTokenAsset
           Bytes('\x01'),             // pool_manager = index 1 = foreignApps[0] = folksPoolManagerAppId
         ],
         assets: [Asset(this.depositAsset.value), Asset(this.fTokenAsset.value)],
@@ -550,8 +550,8 @@ export class RareFiFolksVault extends arc4.Contract {
         appArgs: [
           FOLKS_DEPOSIT_SELECTOR,  // deposit(txn,account,asset,asset,application)uint64
           Bytes('\x00'),           // receiver = index 0 = Txn.sender = vault address
-          Bytes('\x01'),           // asset = index 1 = foreignAssets[0] = depositAsset
-          Bytes('\x02'),           // f_asset = index 2 = foreignAssets[1] = fTokenAsset
+          Bytes('\x00'),           // asset = index 0 = foreignAssets[0] = depositAsset
+          Bytes('\x01'),           // f_asset = index 1 = foreignAssets[1] = fTokenAsset
           Bytes('\x01'),           // pool_manager = index 1 = foreignApps[0]
         ],
         assets: [Asset(this.depositAsset.value), Asset(this.fTokenAsset.value)],

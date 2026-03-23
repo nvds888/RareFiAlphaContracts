@@ -1,5 +1,13 @@
 # RareFiFolksVault Technical Specification
 
+> ⚠️ **CONCEPT VERSION — DO NOT USE IN PRODUCTION**
+>
+> This specification and its associated contract are an untested concept/draft. The contract has not been audited, tested on-chain, or reviewed for security. It requires significant improvements, thorough testing, and a professional audit before any real funds should be deposited or it should be deployed to mainnet.
+>
+> **USE AT YOUR OWN RISK.**
+
+---
+
 **Contract Type:** Folks Finance Lending Market Yield Aggregator
 **Version:** 1.0
 **Last Updated:** March 2026
