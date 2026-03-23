@@ -2850,7 +2850,7 @@ describe('RareFiVault Contract Tests', () => {
 
   /**
    * MIN SWAP THRESHOLD UPDATE TESTS
-   * Tests the updateMinSwapThreshold method with 0.20-50 USDC constraint
+   * Tests the updateMinSwapThreshold method with 0.10-50 USDC constraint
    */
   describe('Min Swap Threshold Update', () => {
     it('should allow creator to update threshold within valid range', async () => {
@@ -2864,14 +2864,14 @@ describe('RareFiVault Contract Tests', () => {
       console.log('Threshold updated to 10 USDC');
     });
 
-    it('should allow setting threshold to minimum (0.20 USDC)', async () => {
+    it('should allow setting threshold to minimum (0.10 USDC)', async () => {
       const deployment = await deployVaultForTest(algod, creator, {
         minSwapThreshold: 2_000_000,
       });
 
-      await performUpdateMinSwapThreshold(algod, deployment, creator, 200_000);
+      await performUpdateMinSwapThreshold(algod, deployment, creator, 100_000);
 
-      console.log('Threshold set to minimum 0.20 USDC');
+      console.log('Threshold set to minimum 0.10 USDC');
     });
 
     it('should allow setting threshold to maximum (50 USDC)', async () => {
@@ -2896,16 +2896,16 @@ describe('RareFiVault Contract Tests', () => {
       console.log('Correctly rejected threshold above 50 USDC');
     });
 
-    it('should reject threshold below minimum (0.20 USDC)', async () => {
+    it('should reject threshold below minimum (0.10 USDC)', async () => {
       const deployment = await deployVaultForTest(algod, creator, {
         minSwapThreshold: 2_000_000,
       });
 
       await expect(
-        performUpdateMinSwapThreshold(algod, deployment, creator, 100_000)
+        performUpdateMinSwapThreshold(algod, deployment, creator, 50_000)
       ).rejects.toThrow();
 
-      console.log('Correctly rejected threshold below 0.20 USDC');
+      console.log('Correctly rejected threshold below 0.10 USDC');
     });
 
     it('should reject createVault with threshold above 50 USDC', async () => {

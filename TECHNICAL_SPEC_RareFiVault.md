@@ -65,7 +65,7 @@ Users deposit Alpha tokens and earn yield in a project's ASA token. USDC airdrop
 | `SCALE` | 1e12 | Yield-per-token precision |
 | `MAX_FEE_RATE` | 6 | Max creator fee (6%) |
 | `MIN_DEPOSIT_AMOUNT` | 1,000,000 | 1 token (6 decimals) |
-| `MIN_SWAP_AMOUNT` | 200,000 | 0.20 USDC |
+| `MIN_SWAP_AMOUNT` | 100,000 | 0.10 USDC |
 | `MAX_SWAP_THRESHOLD` | 50,000,000 | 50 USDC max threshold |
 | `FEE_BPS_BASE` | 10,000 | Basis points denominator |
 | `MIN_MAX_SLIPPAGE_BPS` | 500 | 5% min for maxSlippageBps |
@@ -81,7 +81,7 @@ Users deposit Alpha tokens and earn yield in a project's ASA token. USDC airdrop
 #### `createVault(depositAssetId, yieldAssetId, swapAssetId, creatorFeeRate, minSwapThreshold, maxSlippageBps, tinymanPoolAppId, tinymanPoolAddress, rarefiAddress)`
 **Action:** `onCreate` (required)
 
-Creates vault. Validates: fee ≤ 6%, threshold 0.20-50 USDC, slippage 5-100%, all asset IDs non-zero and unique, pool app ID non-zero. Sets caller as creator.
+Creates vault. Validates: fee ≤ 6%, threshold 0.10-50 USDC, slippage 5-100%, all asset IDs non-zero and unique, pool app ID non-zero. Sets caller as creator.
 
 #### `optInAssets()`
 Creator opts contract into all 3 assets. Requires 5.5 ALGO payment in preceding txn. Can only be called once (`assetsOptedIn` guard).
@@ -135,7 +135,7 @@ Creator only. Transfers creator role to a new address (key rotation, multisig mi
 ### Admin Operations (Creator or RareFi)
 
 #### `updateMinSwapThreshold(newThreshold)`
-Must be 0.20-50 USDC (200,000-50,000,000). Prevents disabling swaps via excessive threshold.
+Must be 0.10-50 USDC (100,000-50,000,000). Prevents disabling swaps via excessive threshold.
 
 #### `updateMaxSlippage(newMaxSlippageBps)`
 Creator only. Must be 5-100% (500-10000 bps).
